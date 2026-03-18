@@ -3,89 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Maths 5ème - Diouf OSSEYNOU CRFPE KDG V1</title>
+    <title> Maths Programme Officel 5em V1- SYSTÈME PRO</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="cloud-status">
-    <div id="cloud-dot"></div>
-    <span id="cloud-text">SYNCHRONISATION...</span>
-</div>
-
-<div id="license-gate" class="gate">
-    <div class="card" style="width:100%; max-width:400px; text-align:center;">
-        <h2 style="color:#fbbf24;"><i class="fas fa-key"></i> ACCÈS ÉLÈVE</h2>
-        <p style="font-size:0.7rem; color:#666;">ID APPAREIL : <b id="display-device-id" style="color:var(--p)"></b></p>
-        <input type="number" id="input-license" placeholder="Code PIN 8 chiffres">
-        <button class="btn-3d" style="background:#fbbf24; color:black;" onclick="verifierLicence()">ACTIVER L'ACCÈS</button>
-    </div>
-</div>
-
-<div id="registration-gate" class="gate">
-    <div class="card" style="width:100%; max-width:400px;">
-        <h2 style="color:var(--p); text-align:center;">CRÉER UN PROFIL</h2>
-        <label>NOM COMPLET</label>
-        <input type="text" id="reg-nom" placeholder="Ex: Moussa Diop">
-        <label>NUMÉRO DE TÉLÉPHONE</label>
-        <input type="tel" id="reg-tel" placeholder="77XXXXXXX">
-        <button id="btn-reg" class="btn-3d" style="background:var(--p);" onclick="enregistrerProfil()">CRÉER MON COMPTE</button>
-        <p style="margin-top:15px; font-size:0.7rem; text-align:center;">
-            Déjà inscrit ? <a href="#" onclick="recupererCompte()" style="color:var(--p); font-weight:800;">Récupérer mon accès</a>
-        </p>
-    </div>
-</div>
-
-<div id="hub-accueil" style="display: none;">
-    <div class="container">
-        <h2 id="admin-trigger" style="text-align:center; margin: 30px 0; font-weight: 800;">MATHS 5ème V32</h2>
-        
-        <div class="grid-menu" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-             </div>
-    </div>
-</div>
-
-<div id="banned-screen" class="gate">
-    <i class="fas fa-user-slash" style="color:var(--d); font-size: 4rem; margin-bottom: 20px;"></i>
-    <h2 style="font-weight:800;">ACCÈS RÉVOQUÉ</h2>
-    <p style="color:#666;">Cet appareil a été désactivé par l'administrateur.</p>
-    <p id="ban-id-display" style="font-size:0.7rem; color:var(--p); opacity:0.5;"></p>
-</div>
-
-<div id="page-admin" class="full-page">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-        <h2 style="color:var(--p); margin:0;">🛡️ ADMIN</h2>
-        <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:8px 15px; border-radius:10px;">FERMER</button>
+    <div id="cloud-status">
+        <div id="cloud-dot"></div>
+        <span id="cloud-text">SYNCHRONISATION...</span>
     </div>
 
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
-        <button class="pay-btn" onclick="ouvrirHistoriquePleinEcran()">📊 HISTORIQUE</button>
-        <button class="pay-btn" onclick="ouvrirRapport()" style="background:var(--s); color:white; border:none;">📋 BILAN PDF</button>
-    </div>
-
-    <input type="text" id="admin-search" placeholder="🔍 Rechercher un élève..." oninput="filtrerClients()">
-
-    <div class="card">
-        <h3 style="margin-top:0; font-size:0.9rem; color:var(--s);">LISTE DES ÉLÈVES</h3>
-        <div id="admin-user-list">
-            <p style="text-align:center; color:#444;">Chargement de la base Cloud...</p>
+    <div id="license-gate" class="gate">
+        <div class="card-security">
+            <h2>V1 BUSINESS PRO</h2>
+            <p class="id-display">ID APPAREIL : <span id="display-device-id">...</span></p>
+            <input type="number" id="input-license" placeholder="ENTRER CODE PIN">
+            <button class="btn-main" onclick="verifierLicence()">ACTIVER L'ACCÈS</button>
         </div>
     </div>
-</div>
 
-<div id="modal-rapport" style="display:none;">
+    <div id="registration-gate" class="gate">
+        <div class="card-security">
+            <h2>CRÉER VOTRE PROFIL</h2>
+            <input type="text" id="reg-nom" placeholder="Nom Complet">
+            <input type="tel" id="reg-tel" placeholder="Numéro Téléphone">
+            <button class="btn-main" onclick="enregistrerProfil()">S'ENREGISTRER</button>
+            <button class="btn-sub" onclick="recupererCompte()">J'ai déjà un compte</button>
+        </div>
     </div>
 
-<script src="script.js"></script>
+    <div id="banned-screen" class="gate">
+        <div class="ban-content">
+            <h1>🚫</h1>
+            <h2>ACCÈS BLOQUÉ</h2>
+            <p id="ban-id-display"></p>
+            <button class="btn-main" onclick="location.reload()">RÉESSAYER</button>
+        </div>
+    </div>
 
+    <div id="hub-accueil" style="display:none;">
+        <header>
+            <h1 id="admin-trigger">DIOUF OUS V32</h1>
+        </header>
+        
+        <div class="main-menu">
+            <p style="text-align:center; color:gray;">Système Opérationnel</p>
+        </div>
+    </div>
+
+    <div id="page-admin" class="full-page">
+        <div class="admin-header">
+            <h2>🛡️ ADMINISTRATION</h2>
+            <button onclick="location.reload()">QUITTER</button>
+        </div>
+
+        <div class="admin-dashboard">
+            <div class="stat-box">Total<br><b id="dash-total-a">0</b></div>
+            <div class="stat-box">Argent<br><b id="dash-total-global">0</b></div>
+            <div class="stat-box">Retard<br><b id="dash-retard">0</b></div>
+        </div>
+
+        <div class="admin-tools">
+            <input type="text" id="admin-search" placeholder="Rechercher..." oninput="filtrerClients()">
+            
+            <div class="filter-bar">
+                <button onclick="loadUsers('TOUT')">TOUT</button>
+                <button onclick="loadUsers('A')">CAT A</button>
+                <button onclick="ouvrirRapport()">📋 BILAN</button>
+            </div>
+
+            <div class="price-settings">
+                <input type="number" id="price-A" placeholder="Prix A">
+                <input type="number" id="price-B" placeholder="Prix B">
+                <input type="number" id="price-C" placeholder="Prix C">
+                <button onclick="sauvegarderTarifs()">💾 MAJ PRIX</button>
+            </div>
+        </div>
+
+        <div id="admin-user-list"></div>
+    </div>
+
+    <div id="modal-rapport" class="modal">
+        <div class="modal-content">
+            <button onclick="fermerRapport()">FERMER</button>
+            <button onclick="sauvegarderPDF()">PDF</button>
+            <div id="contenu-rapport"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
