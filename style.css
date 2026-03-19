@@ -1,47 +1,44 @@
 :root {
     --bg: #050508;
     --gold: #fbbf24;
-    --accent: #6366f1;
     --glass: rgba(255, 255, 255, 0.05);
 }
 
-body, html {
-    margin: 0; padding: 0; height: 100%;
-    background: var(--bg); color: white;
-    font-family: 'Segoe UI', sans-serif; overflow: hidden;
+body, html { 
+    margin: 0; padding: 0; height: 100%; 
+    background: var(--bg); color: white; 
+    font-family: 'Segoe UI', sans-serif; 
 }
 
-/* Accueil & Titres */
-.hero { text-align: center; margin-top: 60px; }
-.main-title { font-size: 2.8rem; margin: 0; color: var(--gold); text-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
-.sub-title { font-size: 1.2rem; color: #666; letter-spacing: 4px; cursor: pointer; padding: 10px; transition: 0.3s; }
-.sub-title:active { color: var(--gold); transform: scale(0.95); }
+/* Titre sur la toute première ligne */
+.header-minimal {
+    width: 100%;
+    padding: 20px 10px;
+    text-align: center;
+    border-bottom: 1px solid #111;
+}
 
-/* Systèmes de Verrouillage */
+.titre-officiel {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--gold);
+    letter-spacing: 1px;
+    margin: 0;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+/* Reste de la page vide */
+.empty-body {
+    height: 100%;
+}
+
+/* Style des écrans de verrouillage et admin */
 .gate { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; background: var(--bg); }
-.glass-card { background: var(--glass); backdrop-filter: blur(15px); padding: 30px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); text-align: center; width: 85%; max-width: 320px; }
+.glass-card { background: var(--glass); padding: 30px; border-radius: 15px; text-align: center; width: 80%; border: 1px solid #222; }
+.id-display { background: #000; padding: 10px; color: var(--gold); margin: 15px 0; font-family: monospace; }
+.input-3d { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; margin-bottom: 10px; text-align: center; }
+.btn-3d { width: 100%; padding: 12px; border: none; font-weight: bold; cursor: pointer; background: var(--gold); }
 
-.id-display { background: #000; padding: 12px; border-radius: 10px; color: var(--gold); margin: 15px 0; font-family: monospace; border: 1px solid #333; }
-.input-3d { width: 100%; padding: 15px; background: #000; border: 2px solid #333; border-radius: 12px; color: white; margin-bottom: 10px; text-align: center; box-sizing: border-box; }
-.btn-3d { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
-.btn-gold { background: var(--gold); color: black; }
-.btn-accent { background: var(--accent); color: white; }
-
-/* Admin Panel */
 .full-page { position: fixed; inset: 0; background: var(--bg); display: none; padding: 20px; z-index: 2000; overflow-y: auto; }
-.user-row { background: var(--glass); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #222; }
-.row-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.actions-group { display: flex; gap: 8px; justify-content: flex-end; }
-
-.btn-action { padding: 10px 15px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
-.wa { background: #25D366; }
-.pay { background: var(--accent); }
-.ban { background: #444; }
-
-.status-badge { padding: 4px 8px; border-radius: 50px; font-size: 0.7rem; font-weight: bold; }
-.ok { background: #10b981; }
-.warning { background: #f59e0b; }
-.danger { background: #ef4444; }
-
-.anim-pop { animation: pop 0.3s ease-out; }
-@keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.user-row { background: var(--glass); padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; }
