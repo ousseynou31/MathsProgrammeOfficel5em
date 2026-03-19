@@ -134,6 +134,7 @@ function launchApp() {
 }
 function togglePreview() {
     const content = document.getElementById('preview-content');
-    content.style.display = (content.style.display === 'block') ? 'none' : 'block';
+    content.style.display = (content.style.display === "block") ? "none" : "block";
 }
+
 window.onload = launchApp;
