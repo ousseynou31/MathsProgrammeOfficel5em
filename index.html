@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MATHS 5ème - Système Admin 3D</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+    <title>Maths 5ème Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -12,123 +12,79 @@
 <body>
 
     <div id="cloud-status">
-        <div id="cloud-dot" style="background: #ef4444;"></div>
-        <span id="cloud-text">HORS-LIGNE</span>
+        <div id="cloud-dot"></div> <span id="cloud-text">SYNCHRONISATION</span>
     </div>
 
-    <div id="license-gate" class="gate">
-        <div class="glass-card anim-pop">
+    <div id="license-gate" class="screen">
+        <div class="glass-card">
             <h1 class="glow-text">ACTIVATION</h1>
-            <p style="color: #888; font-size: 0.8rem; margin-bottom: 20px;">
-                ID APPAREIL : <b id="display-device-id" style="color: var(--gold);">---</b>
-            </p>
-            <input type="number" id="input-license" class="input-3d" placeholder="ENTRER CODE PIN" style="font-size: 1.2rem; margin-bottom: 20px; width: 100%;">
-            <button class="btn-3d btn-gold" onclick="verifierLicence()">ACTIVER L'ACCÈS</button>
-            <p style="font-size: 0.7rem; color: #555; margin-top: 15px;">Système sécurisé v3.2</p>
+            <p class="small-info">ID APPAREIL : <span id="display-device-id">...</span></p>
+            <input type="number" id="input-license" class="input-3d" placeholder="CODE PIN">
+            <button class="btn-3d btn-gold" onclick="verifierLicence()">DÉVERROUILLER</button>
         </div>
     </div>
 
-    <div id="registration-gate" class="gate">
-        <div class="glass-card anim-pop">
-            <h2 class="glow-text">PROFIL CLOUD</h2>
-            <p style="color: #888; margin-bottom: 25px;">Créez votre compte élève pour synchroniser vos données.</p>
-            
-            <input type="text" id="reg-nom" class="input-3d" placeholder="NOM COMPLET" style="margin-bottom: 15px; width: 100%;">
-            <input type="tel" id="reg-tel" class="input-3d" placeholder="NUMÉRO DE TÉLÉPHONE" style="margin-bottom: 25px; width: 100%;">
-            
-            <button class="btn-3d btn-maths" onclick="enregistrerProfil()">CRÉER MON COMPTE</button>
-            <button onclick="recupererCompte()" style="background:none; border:none; color:var(--p); margin-top:15px; font-weight:bold; cursor:pointer;">
-                Déjà inscrit ? Récupérer
-            </button>
+    <div id="registration-gate" class="screen" style="display:none;">
+        <div class="glass-card">
+            <h2 class="glow-text">NOUVEAU COMPTE</h2>
+            <input type="text" id="reg-nom" class="input-3d" placeholder="NOM COMPLET">
+            <input type="tel" id="reg-tel" class="input-3d" placeholder="TÉLÉPHONE">
+            <button class="btn-3d btn-p" onclick="enregistrerProfil()">CRÉER MON ACCÈS</button>
+            <button class="btn-link" onclick="recupererCompte()">J'ai déjà un compte</button>
         </div>
     </div>
 
-    <div id="banned-screen" class="gate" style="flex-direction: column;">
-        <div class="glass-card anim-pop" style="border-color: var(--d);">
-            <h1 style="color: var(--d); font-weight: 900;">ACCÈS BLOQUÉ</h1>
-            <div id="ban-id-display" style="background: #200; padding: 10px; border-radius: 10px; margin: 20px 0; font-family: monospace;">---</div>
-            <p id="ban-reason">Votre abonnement a expiré ou votre accès a été suspendu par l'administrateur.</p>
-            <button class="btn-3d" style="background: #25D366; border: none; margin-top: 25px;" onclick="window.open('https://wa.me/221770000000')">
-                CONTACTER LE SUPPORT
-            </button>
+    <div id="banned-screen" class="screen" style="display:none;">
+        <div class="glass-card border-red">
+            <h1 class="txt-red">ACCÈS REFUSÉ</h1>
+            <p id="ban-reason" style="margin:15px 0;"></p>
+            <div id="ban-id-display" class="id-tag"></div>
+            <button class="btn-3d btn-whatsapp" onclick="window.open('https://wa.me/221770000000')">CONTACTER L'ADMIN</button>
         </div>
     </div>
 
-    <div id="hub-accueil" style="display: none;" class="anim-pop">
-        <h1 id="admin-trigger" class="main-title-3d glow-text">MATHS 5<sup>ème</sup></h1>
+    <div id="hub-accueil" class="screen" style="display:none;">
+        <h1 id="admin-trigger" class="main-title glow-text">MATHS 5<sup>ème</sup></h1>
         
-        <div class="container" style="max-width: 500px; margin: auto;">
-            <button class="btn-3d btn-maths">
-                <span style="font-size: 1.5rem;">📐</span> 
-                GÉOMÉTRIE & MESURES
-            </button>
-
-            <button class="btn-3d btn-maths">
-                <span style="font-size: 1.5rem;">🔢</span> 
-                CALCUL NUMÉRIQUE
-            </button>
-
-            <button class="btn-3d btn-maths">
-                <span style="font-size: 1.5rem;">📊</span> 
-                GESTION DE DONNÉES
-            </button>
-
-            <button class="btn-3d btn-gold" style="margin-top: 40px; opacity: 0.8;" onclick="deconnexionManuelle()">
-                DECONNEXION
-            </button>
+        <div class="button-stack">
+            <button class="btn-3d btn-p" onclick="ouvrirChapitre(1)">📐 GÉOMÉTRIE</button>
+            <button class="btn-3d btn-p" onclick="ouvrirChapitre(2)">🔢 CALCULS</button>
+            <button class="btn-3d btn-p" onclick="ouvrirChapitre(3)">📊 DONNÉES</button>
         </div>
+
+        <button class="btn-3d btn-exit" onclick="deconnexionManuelle()">DÉCONNEXION</button>
     </div>
 
-    <div id="page-admin" class="full-page">
-        <div class="admin-nav">
-            <h2 style="color: var(--gold); letter-spacing: 1px;">🛡️ ADMIN PANEL</h2>
-            <button class="btn-admin-master red" style="padding: 5px 15px; box-shadow: 0 4px 0 #900;" onclick="naviguer('hub-accueil')">FERMER</button>
+    <div id="page-admin" class="screen" style="display:none; align-items:flex-start; padding:20px;">
+        <div class="admin-top">
+            <h2 class="txt-gold">🛡️ GESTIONNAIRE</h2>
+            <button class="btn-close" onclick="naviguer('hub-accueil')">RETOUR</button>
         </div>
 
         <div class="stats-row">
-            <div class="stat-item green-b">ÉLÈVES<b id="dash-total-a">0</b></div>
-            <div class="stat-item gold-b">TOTAL<b id="dash-total-global" style="font-size: 0.7rem;">0 F</b></div>
-            <div class="stat-item red-b">RETARDS<b id="dash-retard">0</b></div>
+            <div class="stat-card">TOTAL ÉLÈVES<b id="dash-total-a">0</b></div>
+            <div class="stat-card">CAISSE<b id="dash-total-global">0 F</b></div>
         </div>
 
-        <div class="admin-actions-grid">
-            <button class="btn-admin-master purp" onclick="chargerHistoriquePaiements()">
-                <span>📜</span> HISTORIQUE
-            </button>
-            <button class="btn-admin-master blue" onclick="ouvrirRapport()">
-                <span>📄</span> BILAN PDF
-            </button>
-            <button class="btn-admin-master gold" onclick="forceReparationDates()">
-                <span>🔄</span> RÉPARER
-            </button>
-            <button class="btn-admin-master red" onclick="alert('Action Critique')">
-                <span>⚠️</span> PURGER
-            </button>
+        <div class="admin-grid">
+            <button class="btn-3d btn-sm purp" onclick="chargerHistoriquePaiements()">📊 HISTO</button>
+            <button class="btn-3d btn-sm blue" onclick="ouvrirRapport()">📋 BILAN</button>
+            <button class="btn-3d btn-sm gold" onclick="forceReparationDates()">🔄 FIX</button>
+            <button class="btn-3d btn-sm red" onclick="nettoyerHistoriqueComplet()">⚠️ PURGE</button>
         </div>
 
-        <div class="card-admin-glow">
-            <h3 style="font-size: 0.6rem; color: #888; text-transform: uppercase; margin-bottom: 15px;">Réglages Tarifs (FCFA)</h3>
-            <div class="price-inputs">
-                <input type="number" id="price-A" class="input-3d" placeholder="CAT A">
-                <input type="number" id="price-B" class="input-3d" placeholder="CAT B">
-                <input type="number" id="price-C" class="input-3d" placeholder="CAT C">
-                <button class="btn-save-3d" onclick="sauvegarderTarifs()">SYNCHRONISER LES TARIFS</button>
+        <div class="admin-card">
+            <h3>TARIFS ABONNEMENTS (FCFA)</h3>
+            <div class="price-row">
+                <input type="number" id="price-A" class="input-3d-sm" placeholder="Cat A">
+                <input type="number" id="price-B" class="input-3d-sm" placeholder="Cat B">
+                <input type="number" id="price-C" class="input-3d-sm" placeholder="Cat C">
             </div>
+            <button class="btn-3d btn-save" onclick="sauvegarderTarifs()">SYNCHRONISER TARIFS</button>
         </div>
 
-        <input type="text" id="admin-search" class="search-input" placeholder="RECHERCHER UN ÉLÈVE..." oninput="filtrerClients()">
-        
-        <div id="admin-user-list">
-            </div>
-    </div>
-
-    <div id="modal-rapport" class="full-page" style="background: white; color: black; display: none; padding: 40px 20px;">
-        <button onclick="fermerRapport()" style="position:fixed; top:10px; right:10px; background:#000; color:#fff; border:none; padding:10px; border-radius:5px; font-weight:bold;">FERMER</button>
-        <div id="contenu-rapport"></div>
-        <div style="display: flex; gap: 10px; margin-top: 30px;">
-            <button onclick="sauvegarderPDF()" style="flex: 1; background: #d32f2f; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold;">TÉLÉCHARGER PDF</button>
-            <button onclick="genererCSV()" style="flex: 1; background: #2e7d32; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold;">EXCEL (CSV)</button>
-        </div>
+        <input type="text" id="admin-search" class="search-3d" placeholder="Rechercher un élève..." oninput="filtrerClients()">
+        <div id="admin-user-list" class="user-list-container"></div>
     </div>
 
     <script src="script.js"></script>
