@@ -171,19 +171,23 @@ function togglePreview() {
     content.style.display = (content.style.display === "block") ? "none" : "block";
 }
 
+// ==========================================
+// 8. INITIALISATION ET SURVEILLANCE
+// ==========================================
 
-// 4. LANCEMENT OBLIGATOIRE
+// ON UTILISE UNE SEULE FONCTION DE DÉMARRAGE
 window.addEventListener('load', () => {
-    surveillerConnexion();
-    if (typeof launchApp === 'function') launchApp();
-});
-// --- INITIALISATION AU CHARGEMENT (LA SEULE ET UNIQUE) ---
-window.onload = () => {
-    // 1. On allume le voyant Cloud (Connexion Firebase)
-    surveillerConnexion(); 
+    console.log("🚀 Application lancée...");
     
-    // 2. On affiche le bon écran (Activation, Inscription ou Accueil)
-    launchApp(); 
-};
+    // 1. Lancer la surveillance Cloud
+    surveillerConnexion();
+    
+    // 2. Gérer l'affichage de l'ID appareil
+    const devIdDisplay = document.getElementById('display-device-id');
+    if(devIdDisplay) devIdDisplay.innerText = getDeviceId();
+
+    // 3. Lancer la logique de navigation (LaunchApp)
+    launchApp();
+});
 
 
