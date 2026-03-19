@@ -10,14 +10,45 @@
 </head>
 <body>
 
-    <div id="license-gate" class="gate">
-        <div class="glass-card anim-pop">
-            <h1 class="glow-text">ACTIVATION</h1>
-            <div id="display-device-id" class="id-display">...</div>
-            <input type="number" id="input-license" class="input-3d" placeholder="CODE PIN">
-            <button class="btn-3d btn-gold" onclick="verifierLicence()"><span>DÉVERROUILLER</span></button>
+   <div id="license-gate" class="gate">
+    <div class="glass-card anim-pop">
+        <h1 class="glow-text">ACTIVATION</h1>
+
+        <div class="marketing-teaser" style="margin-bottom: 20px;">
+            <button class="btn-pulse-preview" onclick="togglePreview()" style="width: 100%; cursor: pointer;">
+                <span class="online-dot"></span>
+                DÉCOUVRIR LE PROGRAMME
+            </button>
+            
+            <div id="preview-content" class="preview-box" style="display: none;">
+                <h4 style="color: var(--gold); margin-bottom: 10px;">📚 PROGRAMME OFFICIEL V1</h4>
+                <ul style="text-align: left; font-size: 0.8rem; color: #ccc; list-style: none; padding-left: 5px;">
+                    <li>🔹 Nombres décimaux & Opérations</li>
+                    <li>🔹 Géométrie : Angles & Triangles</li>
+                    <li>🔹 Calcul littéral & Équations</li>
+                    <li>🔹 Quiz interactifs & Corrigés</li>
+                </ul>
+
+                <a href="https://wa.me/221XXXXXXXXX?text=Bonjour,%20je%20souhaite%20acheter%20le%20code%20PIN%20pour%20l'application%20Maths%205ème" 
+                   target="_blank" class="btn-whatsapp">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="18" alt="wa">
+                    COMMANDER MON CODE PIN
+                </a>
+                
+                <p class="premium-badge" style="font-size: 0.6rem; color: #555; margin-top: 10px;">SYSTÈME SÉCURISÉ DIOUF © 2026</p>
+            </div>
         </div>
+
+        <p class="label" style="font-size: 0.7rem; color: #888;">ID UNIQUE DE VOTRE APPAREIL :</p>
+        <div id="display-device-id" class="id-display">...</div>
+        
+        <input type="number" id="input-license" class="input-3d" placeholder="CODE PIN">
+        
+        <button class="btn-3d btn-gold" onclick="verifierLicence()">
+            <span>DÉVERROUILLER</span>
+        </button>
     </div>
+</div>
 
     <div id="registration-gate" class="gate">
         <div class="glass-card anim-pop">
