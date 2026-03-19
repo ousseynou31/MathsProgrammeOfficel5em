@@ -9,6 +9,56 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
+<div id="page-admin" class="full-page" style="display:none;">
+    <div class="admin-header">
+        <button onclick="naviguer('hub-accueil')" class="btn-back">← Retour</button>
+        <h2>📊 DASHBOARD ÉCONOMIQUE</h2>
+    </div>
+
+    <div class="admin-stats-grid">
+        <div class="stat-card">
+            <span>Attendu (Total)</span>
+            <h3 id="total-attendu">0 F</h3>
+        </div>
+        <div class="stat-card">
+            <span>Encaissé (Réel)</span>
+            <h3 id="total-encaisse" style="color: #10b981;">0 F</h3>
+        </div>
+        <div class="stat-card">
+            <span>Reste à percevoir</span>
+            <h3 id="reste-percevoir" style="color: #ef4444;">0 F</h3>
+        </div>
+    </div>
+
+    <div class="admin-section">
+        <h3>⚙️ RÉGLAGE DES TARIFS (F)</h3>
+        <div class="tarifs-inputs">
+            <input type="number" id="tarif-a" placeholder="Tarif A" onchange="sauvegarderTarifs()">
+            <input type="number" id="tarif-b" placeholder="Tarif B" onchange="sauvegarderTarifs()">
+            <input type="number" id="tarif-c" placeholder="Tarif C" onchange="sauvegarderTarifs()">
+        </div>
+    </div>
+
+    <div class="admin-section">
+        <h3>📋 AUDIT DES PAIEMENTS</h3>
+        <input type="text" id="admin-search" placeholder="Rechercher une date ou un nom..." onkeyup="filtrerAudit()">
+        <div class="table-wrapper">
+            <table id="table-audit">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Élève</th>
+                        <th>Catégorie</th>
+                        <th>Montant</th>
+                    </tr>
+                </thead>
+                <tbody id="body-audit">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+    
 <div id="cloud-status" class="led-fixe-top">
         <div class="led-circle"></div>
         <span class="led-text">LIVE</span>
