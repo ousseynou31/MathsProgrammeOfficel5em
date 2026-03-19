@@ -147,19 +147,16 @@ window.onload = () => {
 };
 
 // --- LA FONCTION SURVEILLER (À copier-coller aussi) ---
+
 function surveillerConnexion() {
     const cloudDiv = document.getElementById('cloud-status');
-    const statusTxt = document.getElementById('status-text');
-    
-    if(!cloudDiv || !statusTxt) return; // Sécurité si les IDs n'existent pas
+    if(!cloudDiv) return;
 
     database.ref(".info/connected").on("value", (snap) => {
         if (snap.val() === true) {
             cloudDiv.classList.add('cloud-online');
-            statusTxt.innerText = "CLOUD CONNECTÉ";
         } else {
             cloudDiv.classList.remove('cloud-online');
-            statusTxt.innerText = "HORS-LIGNE";
         }
     });
 }
