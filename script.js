@@ -150,12 +150,14 @@ window.onload = () => {
 
 function surveillerConnexion() {
     const cloudDiv = document.getElementById('cloud-status');
-    if(!cloudDiv) return;
-
-    database.ref(".info/connected").on("value", (snap) => {
-        if (snap.val() === true) {
+    
+    // On écoute la connexion Firebase
+    firebase.database().ref(".info/connected").on("value", (snapshot) => {
+        if (snapshot.val() === true) {
+            console.log("Système : Connecté au Cloud");
             cloudDiv.classList.add('cloud-online');
         } else {
+            console.log("Système : Recherche de connexion...");
             cloudDiv.classList.remove('cloud-online');
         }
     });
