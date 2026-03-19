@@ -206,78 +206,7 @@ function marquerPresence() {
     presenceRef.onDisconnect().remove();
 }
 
-// --- 1.2 GESTION DES TARIFS DANS LE LOCALSTORAGE ---
-function sauvegarderTarifs() {
-    const tarifs = {
-        A: document.getElementById('tarif-a').value || 0,
-        B: document.getElementById('tarif-b').value || 0,
-        C: document.getElementById('tarif-c').value || 0
-    };
-    localStorage.setItem('tarifs_app', JSON.stringify(tarifs));
-    mettreAJourDashboard(); // Recalcule tout immédiatement
-}
 
-function chargerTarifs() {
-    const saved = JSON.parse(localStorage.getItem('tarifs_app'));
-    if(saved) {
-        document.getElementById('tarif-a').value = saved.A;
-        document.getElementById('tarif-b').value = saved.B;
-        document.getElementById('tarif-c').value = saved.C;
-    }
-}
-
-// --- 1.1 LE DASHBOARD DYNAMIQUE ---
-async function mettreAJourDashboard() {
-    const snapshot = await database.ref('clients').once('value');
-    const clients = snapshot.val() || {};
-    const tarifs = JSON.parse(localStorage.getItem('tarifs_app')) || {A:0, B:0, C:0};
-
-    let attendu = 0;
-    let encaisse = 0;
-    const bodyAudit = document.getElementById('body-audit');
-    bodyAudit.innerHTML = ""; // On vide pour reconstruire
-
-    Object.values(clients).forEach(client => {
-        const info = client.infos_client;
-        const paiement = client.paiement || { montant: 0, date: "" };
-
-        // Calcul de l'attendu selon la catégorie (A, B ou C)
-        const tarifApplique = tarifs[info.categorie] || 0;
-        attendu += parseInt(tarifApplique);
-        
-        // Calcul de l'encaissé réel
-        encaisse += parseInt(paiement.montant || 0);
-
-        // --- 3.1 FORMATAGE DATE POUR AUDIT ---
-        const dateHumaine = paiement.date ? new Date(paiement.date).toLocaleDateString('fr-FR') : "---";
-
-        // Ajout à la table d'audit
-        bodyAudit.innerHTML += `
-            <tr>
-                <td>${dateHumaine}</td>
-                <td>${info.nom}</td>
-                <td>Cat. ${info.categorie || 'N/A'}</td>
-                <td>${paiement.montant || 0} F</td>
-            </tr>
-        `;
-    });
-
-    // Mise à jour des cartes
-    document.getElementById('total-attendu').innerText = attendu + " F";
-    document.getElementById('total-encaisse').innerText = encaisse + " F";
-    document.getElementById('reste-percevoir').innerText = (attendu - encaisse) + " F";
-}
-
-// --- 3.2 FILTRE DE RECHERCHE RAPIDE ---
-function filtrerAudit() {
-    const input = document.getElementById('admin-search').value.toUpperCase();
-    const rows = document.getElementById('table-audit').getElementsByTagName('tr');
-
-    for (let i = 1; i < rows.length; i++) {
-        const text = rows[i].innerText.toUpperCase();
-        rows[i].style.display = text.includes(input) ? "" : "none";
-    }
-}
 // ==========================================
 // 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
 // ==========================================
