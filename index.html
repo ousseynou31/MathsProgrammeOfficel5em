@@ -8,14 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
-<body>
-  <div class="admin-filters" style="display: flex; gap: 10px; padding: 15px; overflow-x: auto; background: #111;">
-    <button onclick="loadUsers('TOUT')" class="filter-btn active">TOUS</button>
-    <button onclick="loadUsers('A')" class="filter-btn">CAT A</button>
-    <button onclick="loadUsers('B')" class="filter-btn">CAT B</button>
-    <button onclick="loadUsers('C')" class="filter-btn">CAT C</button>
-</div>
-    
+<body>  
 <div id="page-admin" class="full-page" style="display:none;">
     <div class="admin-header" style="display:flex; align-items:center; padding:15px; background:#111; border-bottom:1px solid #222;">
         <button onclick="naviguer('hub-accueil')" class="btn-back" style="background:none; border:none; color:var(--p); font-size:1.2rem; cursor:pointer; margin-right:10px;">←</button>
