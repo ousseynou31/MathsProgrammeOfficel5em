@@ -131,3 +131,27 @@ body, html {
 .premium-badge { font-size: 0.6rem; color: #555; text-align: center; margin-top: 10px; font-weight: bold; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.preview-box {
+    display: none;
+    background: rgba(0, 0, 0, 0.6);
+    margin-top: 10px;
+    padding: 15px;
+    border-radius: 20px;
+    text-align: left;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    
+    /* Fenêtre fixe avec scroll interne */
+    max-height: 250px; 
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold) transparent;
+}
+
+/* On stylise la barre de défilement pour qu'elle soit discrète */
+.preview-box::-webkit-scrollbar {
+    width: 3px;
+}
+.preview-box::-webkit-scrollbar-thumb {
+    background-color: var(--gold);
+    border-radius: 10px;
+}
