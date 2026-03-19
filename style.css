@@ -1,62 +1,47 @@
-:root { 
-    --p: #6366f1; --s: #10b981; --d: #f43f5e; --gold: #fbbf24;
-    --bg: #000000; --card: #111111; --text: #ffffff;
-}
-
-* { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-body { background: var(--bg); color: var(--text); margin: 0; padding: 20px; overflow-x: hidden; }
-
-/* --- BOUTONS 3D ATTIRANTS --- */
+/* --- BOUTONS MAGIQUES 3D --- */
 .btn-3d {
-    width: 100%; padding: 22px; border-radius: 18px; border: 2px solid #ffffff;
-    background: #1a1a1a; color: white; font-weight: 800; cursor: pointer;
-    position: relative; transition: all 0.1s;
-    box-shadow: 0 6px 0px 0px rgba(255, 255, 255, 0.2);
-    display: flex; align-items: center; justify-content: center; gap: 15px;
+    position: relative;
+    width: 100%;
+    margin-bottom: 25px;
+    padding: 20px;
+    border-radius: 20px;
+    border: none;
+    background: #1e1e2e;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    
+    /* L'effet d'épaisseur 3D */
+    box-shadow: 0 8px 0 #0f0f1a, 0 15px 20px rgba(0,0,0,0.5);
+    transition: all 0.1s ease;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
 }
-.btn-3d:active { transform: translateY(4px); box-shadow: 0 2px 0px 0px rgba(255, 255, 255, 0.2); }
-.btn-gold { border-color: var(--gold); background: #2b2300; color: var(--gold); }
-.btn-primary { border-color: var(--p); background: #1e1b4b; }
 
-/* --- GATES & MODALS --- */
-.gate { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; align-items: center; justify-content: center; padding: 20px; }
-.glass-card { 
-    background: #111; padding: 30px; border-radius: 28px; border: 1px solid #333; 
-    width: 100%; max-width: 400px; text-align: center;
+/* Effet quand on clique : le bouton s'enfonce */
+.btn-3d:active {
+    transform: translateY(4px);
+    box-shadow: 0 4px 0 #0f0f1a, 0 8px 10px rgba(0,0,0,0.5);
 }
-.full-page { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: none; overflow-y: auto; padding: 20px; }
 
-/* --- TITRE ACCUEIL (TRIGGER ADMIN) --- */
-.main-title-3d {
-    text-align: center; margin: 40px 0; font-weight: 800; font-size: 1.8rem;
-    cursor: pointer; user-select: none; transition: opacity 0.3s;
+/* Bordures lumineuses (Glow) selon le type */
+.btn-maths { border: 2px solid var(--p); box-shadow: 0 8px 0 #3f41a8, 0 15px 25px rgba(99, 102, 241, 0.3); }
+.btn-admin-access { border: 2px solid var(--gold); box-shadow: 0 8px 0 #b48608, 0 15px 25px rgba(251, 191, 36, 0.2); }
+
+/* Icônes circulaires à l'intérieur des boutons */
+.icon-box {
+    width: 45px;
+    height: 45px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
 }
-.badge-v { background: var(--p); font-size: 0.7rem; padding: 3px 10px; border-radius: 7px; vertical-align: middle; }
-
-/* --- STATS ET DASHBOARD ADMIN --- */
-.stats-row { display: flex; gap: 10px; margin-bottom: 20px; }
-.stat-item { flex: 1; background: #0a0a0a; padding: 15px; border-radius: 12px; text-align: center; border-left: 4px solid #333; }
-.gold-b { border-left-color: var(--gold); }
-.green-b { border-left-color: var(--s); }
-.red-b { border-left-color: var(--d); }
-
-/* --- VOYANT CLOUD --- */
-#cloud-status {
-    position: fixed; top: 15px; right: 15px; z-index: 25000;
-    display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.8);
-    padding: 8px 15px; border-radius: 30px; border: 1px solid #333; font-size: 9px; font-weight: 800;
-}
-#cloud-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; }
-
-/* --- TABLES --- */
-.history-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 20px; }
-.history-table th { background: #1a1a1a; padding: 15px; text-align: left; }
-.history-table td { padding: 15px; border-bottom: 1px solid #222; }
-
-/* --- ANIMATIONS --- */
-.anim-pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-@keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-/* CSS RAPPORT (BLANC POUR IMPRESSION) */
-.report-overlay { position: fixed; inset: 0; background: #000; z-index: 99999; overflow-y: auto; padding: 20px; }
-#contenu-rapport { background: white; color: black; padding: 40px; border-radius: 5px; min-height: 100%; }
