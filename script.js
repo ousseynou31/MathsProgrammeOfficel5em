@@ -136,7 +136,39 @@ function togglePreview() {
     const content = document.getElementById('preview-content');
     content.style.display = (content.style.display === "block") ? "none" : "block";
 }
+// 3. LA FONCTION MIRACLE (Faites un copier-coller exact)
+function surveillerConnexion() {
+    const cloudDiv = document.getElementById('cloud-status');
+    const ledCircle = document.querySelector('.led-circle');
+    
+    if (!cloudDiv || !ledCircle) {
+        console.error("ERREUR : Les éléments HTML du voyant sont introuvables !");
+        return;
+    }
 
+    // On écoute la connexion
+    database.ref(".info/connected").on("value", (snap) => {
+        if (snap.val() === true) {
+            // FORCE LE VERT SANS PASSER PAR LE CSS
+            cloudDiv.classList.add('cloud-online');
+            ledCircle.style.background = "#10b981";
+            ledCircle.style.boxShadow = "0 0 15px #10b981";
+            console.log("FONCTIONNEL : Passage au VERT");
+        } else {
+            // FORCE LE GRIS
+            cloudDiv.classList.remove('cloud-online');
+            ledCircle.style.background = "#475569";
+            ledCircle.style.boxShadow = "none";
+            console.log("ERREUR : Reste en GRIS");
+        }
+    });
+}
+
+// 4. LANCEMENT OBLIGATOIRE
+window.addEventListener('load', () => {
+    surveillerConnexion();
+    if (typeof launchApp === 'function') launchApp();
+});
 // --- INITIALISATION AU CHARGEMENT (LA SEULE ET UNIQUE) ---
 window.onload = () => {
     // 1. On allume le voyant Cloud (Connexion Firebase)
@@ -146,30 +178,4 @@ window.onload = () => {
     launchApp(); 
 };
 
-// --- LA FONCTION SURVEILLER (À copier-coller aussi) ---
 
-function surveillerConnexion() {
-    const cloudDiv = document.getElementById('cloud-status');
-    const ledCircle = document.querySelector('.led-circle');
-    const ledText = document.querySelector('.led-text');
-
-    firebase.database().ref(".info/connected").on("value", (snap) => {
-        if (snap.val() === true) {
-            console.log("✅ MODE VERT ACTIVÉ");
-            // On ajoute la classe CSS
-            cloudDiv.classList.add('cloud-online');
-            // FORCE LE STYLE (Sécurité supplémentaire)
-            ledCircle.style.backgroundColor = "#10b981";
-            ledCircle.style.boxShadow = "0 0 15px #10b981";
-            ledText.style.color = "#10b981";
-            ledText.innerText = "ONLINE";
-        } else {
-            console.log("❌ MODE GRIS ACTIVÉ");
-            cloudDiv.classList.remove('cloud-online');
-            ledCircle.style.backgroundColor = "#475569";
-            ledCircle.style.boxShadow = "none";
-            ledText.style.color = "#475569";
-            ledText.innerText = "OFFLINE";
-        }
-    });
-}
