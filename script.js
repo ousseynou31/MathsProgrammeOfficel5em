@@ -132,5 +132,8 @@ function launchApp() {
         naviguer('hub-accueil');
     }
 }
-
+function togglePreview() {
+    const content = document.getElementById('preview-content');
+    content.style.display = (content.style.display === 'block') ? 'none' : 'block';
+}
 window.onload = launchApp;
