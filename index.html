@@ -3,141 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Maths Programme Officiel 5em - DioufOusseynou</title>
+    <title>MATHS 5ème - SÉCURITÉ V1</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="cloud-status">
-        <div id="cloud-dot"></div>
-        <span id="cloud-text">SYNCHRONISATION...</span>
-    </div>
-
-    <div id="license-gate" class="gate">
-        <div class="card-security">
-            <h2>V32 BUSINESS PRO</h2>
-            <p class="id-display">ID APPAREIL : <span id="display-device-id">...</span></p>
-            <input type="number" id="input-license" placeholder="ENTRER CODE PIN">
-            <button class="btn-main" onclick="verifierLicence()">ACTIVER L'ACCÈS</button>
-        </div>
-    </div>
-
-    <div id="registration-gate" class="gate">
-        <div class="card-security">
-            <h2>CRÉER VOTRE PROFIL</h2>
-            <input type="text" id="reg-nom" placeholder="Nom Complet">
-            <input type="tel" id="reg-tel" placeholder="Numéro Téléphone">
-            <button class="btn-main" onclick="enregistrerProfil()">S'ENREGISTRER</button>
-            <button class="btn-sub" onclick="recupererCompte()">J'ai déjà un compte</button>
-        </div>
-    </div>
-
-    <div id="banned-screen" class="gate">
-        <div class="ban-content">
-            <h1 style="font-size: 3rem;">🚫</h1>
-            <h2 id="ban-title">ACCÈS BLOQUÉ</h2>
-            <p id="ban-id-display" style="color: gray;"></p>
-            <button class="btn-main" onclick="location.reload()">RÉESSAYER</button>
-        </div>
-    </div>
-<div style="text-align: right; padding: 10px;">
-    <button onclick="testerDeconnexion()" style="background: #444; color: white; border: 1px solid #666; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; cursor: pointer;">
-        🔄 RE-VERROUILLER (TEST)
-    </button>
+<div id="cloud-status">
+    <div id="cloud-dot"></div>
+    <span id="cloud-text">SYSTÈME SÉCURISÉ</span>
 </div>
-    <div id="hub-accueil" style="display:none;">
-        <header>
-            <h1 id="admin-trigger" style="cursor: pointer; user-select: none;">Maths Programme Officiel 5em</h1>
-        </header>
+
+<div id="license-gate" class="gate">
+    <div class="glass-card anim-pop">
+        <h2 class="glow-text">MATHS 5ème</h2>
+        <p class="id-tag">DISPOSITIF : <b id="display-device-id"></b></p>
+        <input type="number" id="input-license" placeholder="Code PIN d'accès">
+        <button class="btn-3d btn-gold" onclick="verifierLicence()">ACTIVER L'ACCÈS</button>
+    </div>
+</div>
+
+<div id="registration-gate" class="gate">
+    <div class="glass-card">
+        <h2 style="color:var(--p);">INSCRIPTION</h2>
+        <input type="text" id="reg-nom" placeholder="Votre Nom">
+        <input type="tel" id="reg-tel" placeholder="Votre Téléphone">
+        <button class="btn-3d btn-primary" onclick="enregistrerProfil()">CRÉER MON COMPTE</button>
+        <p class="sub-link">Déjà inscrit ? <a href="#" onclick="recupererCompte()">Récupérer l'accès</a></p>
+    </div>
+</div>
+
+<div id="hub-accueil" style="display: none;">
+    <h1 id="admin-trigger" class="main-title-3d">MATHS 5ème <span class="badge-v">V1</span></h1>
+    
+    <div class="container">
+        <div id="empty-content" style="text-align: center; padding: 40px; color: #444; border: 2px dashed #222; border-radius: 20px;">
+            <p>Contenu du programme en attente...</p>
+        </div>
         
-        <div class="main-menu" style="padding: 20px; text-align: center;">
-            <p style="color: #10b981; font-weight: bold;">SYSTÈME OPÉRATIONNEL</p>
-            <p style="color: gray; font-size: 0.8rem; margin-top: 20px;">Appuyez longuement sur le titre pour l'administration</p>
-        </div>
+        <button class="btn-3d" style="margin-top: 20px;" onclick="deconnexionManuelle()">🚪 DÉCONNEXION</button>
+    </div>
+</div>
+
+<div id="banned-screen" class="gate">
+    <div class="glass-card" style="border-color: var(--d);">
+        <h1 style="color:var(--d); font-size: 4rem; margin:0;">🚫</h1>
+        <h2 style="font-weight:800;">ACCÈS RÉVOQUÉ</h2>
+        <p style="color:#666;">Cet appareil a été désactivé par l'administrateur.</p>
+        <p id="ban-id-display" style="font-size:0.7rem; color:var(--p); opacity:0.5;"></p>
+    </div>
+</div>
+
+<div id="page-admin" class="full-page">
+    <div class="admin-nav">
+        <h2>🛡️ CONTRÔLE MASTER</h2>
+        <button class="btn-close" onclick="naviguer('hub-accueil')">FERMER</button>
     </div>
 
-    <div id="page-admin" class="full-page" style="display:none; background: black; color: white; position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; z-index: 9000;">
-        <div class="admin-header" style="display:flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #333;">
-            <h2 style="margin: 0; font-size: 1.2rem;">🛡️ ADMINISTRATION</h2>
-            <button onclick="location.reload()" style="background: #ff4444; color: white; border: none; padding: 5px 15px; border-radius: 5px;">QUITTER</button>
-        </div>
-
-        <div class="admin-dashboard" style="display: flex; gap: 10px; padding: 15px;">
-            <div class="stat-box">Clients<br><b id="dash-total-a">0</b></div>
-            <div class="stat-box">Attendu<br><b id="dash-total-global">0 F</b></div>
-            <div class="stat-box">Retards<br><b id="dash-retard">0</b></div>
-        </div>
-
-        <div class="price-settings" style="padding: 15px; background: #111; margin: 10px; border-radius: 10px;">
-            <h3 style="font-size: 0.9rem; color: #fbbf24;">RÉGLAGES DES TARIFS (FCFA)</h3>
-            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                <input type="number" id="price-A" placeholder="Prix A" style="width: 33%; padding: 8px; background: #222; border: 1px solid #444; color: white;">
-                <input type="number" id="price-B" placeholder="Prix B" style="width: 33%; padding: 8px; background: #222; border: 1px solid #444; color: white;">
-                <input type="number" id="price-C" placeholder="Prix C" style="width: 33%; padding: 8px; background: #222; border: 1px solid #444; color: white;">
-            </div>
-            <button onclick="sauvegarderTarifs()" style="width: 100%; padding: 10px; background: #fbbf24; border: none; border-radius: 5px; font-weight: bold;">💾 SYNCHRONISER LES PRIX</button>
-        </div>
-
-        <div class="admin-tools" style="padding: 15px;">
-            <input type="text" id="admin-search" placeholder="🔍 Rechercher un client..." oninput="filtrerClients()" style="width: 100%; padding: 12px; border-radius: 8px; background: #1a1a1a; border: 1px solid #444; color: white; margin-bottom: 15px;">
-            
-            <div class="filter-bar" style="display: flex; gap: 5px; margin-bottom: 15px;">
-                <button onclick="loadUsers('TOUT')" style="flex:1; padding: 10px; background: #333; color: white; border: none; border-radius: 5px;">TOUT</button>
-                <button onclick="loadUsers('A')" style="flex:1; padding: 10px; background: #333; color: white; border: none; border-radius: 5px;">CAT A</button>
-                <button onclick="ouvrirHistoriquePleinEcran()" style="flex:1; padding: 10px; background: #25D366; color: black; border: none; border-radius: 5px; font-weight: bold;">📋 COMPTA</button>
-                <button onclick="ouvrirRapport()" style="flex:1; padding: 10px; background: #00a8ff; color: white; border: none; border-radius: 5px; font-weight: bold;">📊 BILAN</button>
-            </div>
-        </div>
-
-        <div id="admin-user-list"></div>
+    <div class="admin-actions-grid">
+        <button onclick="ouvrirHistoriquePleinEcran()" class="btn-admin purp">📊 HISTORIQUE COMPLET</button>
+        <button onclick="nettoyerHistoriqueComplet()" class="btn-admin red">🗑️ EFFACER HISTORIQUE</button>
+        <button onclick="forceReparationDates()" class="btn-admin gold">🔄 RÉPARER BUG DATES</button>
     </div>
 
-    <div id="modal-rapport" class="modal" style="display:none; background: white; color: black; z-index: 11000;">
-        <div class="modal-content" style="padding: 20px; width: 100%; height: 100%; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                <button onclick="fermerRapport()" style="background: #333; color: white; padding: 10px 20px; border-radius: 5px;">RETOUR</button>
-                <button onclick="sauvegarderPDF()" style="background: #00a8ff; color: white; padding: 10px 20px; border-radius: 5px;">📥 TÉLÉCHARGER PDF</button>
-            </div>
-            <div id="contenu-rapport"></div>
-        </div>
-    </div>
+    <input type="text" id="admin-search" placeholder="🔍 Rechercher un utilisateur..." oninput="filtrerClients()" class="search-input">
 
-    <div id="modal-historique" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: black; z-index:10001; overflow-y:auto; padding:20px; box-sizing:border-box;">
-        
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px; flex-wrap: wrap; gap: 10px;">
-            <h2 style="color:#fbbf24; font-size:1.1rem; margin:0;">📋 HISTORIQUE DES PAIEMENTS</h2>
-            
-            <div style="display:flex; gap:10px; flex-wrap: wrap;">
-                <button onclick="telechargerCSV()" style="background:#2ecc71; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:0.8rem;">📊 EXCEL</button>
-                <button onclick="telechargerHistorique()" style="background:#00a8ff; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:0.8rem;">📥 PDF</button>
-                <button onclick="fermerHistoriquePleinEcran()" style="background:#ff4444; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:0.8rem;">FERMER</button>
+    <div class="card admin-core">
+        <div id="admin-prices-config" class="config-panel">
+            <label>TARIFS MENSUELS PAR CATÉGORIE (A, B, C)</label>
+            <div class="price-inputs">
+                <input type="number" id="price-A" placeholder="A">
+                <input type="number" id="price-B" placeholder="B">
+                <input type="number" id="price-C" placeholder="C">
+                <button onclick="sauvegarderTarifs()">💾 OK</button>
             </div>
         </div>
 
-        <div style="margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
-            <input type="text" id="search-historique" onkeyup="filtrerHistorique()" 
-                   placeholder="🔍 Rechercher un nom, une date ou un montant..." 
-                   style="width: 100%; padding: 12px; border: 1px solid #444; border-radius: 8px; background: #1a1a1a; color: white; font-size: 1rem; box-sizing: border-box; outline: none;">
+        <div id="admin-dashboard" class="stats-row">
+            <div class="stat-item gold-b">
+                <small>ATTENDU</small>
+                <b id="dash-total-a">0</b>
+            </div>
+            <div class="stat-item green-b">
+                <small>TOTAL ESTIMÉ</small>
+                <b id="dash-total-global">0 FCFA</b>
+            </div>
+            <div class="stat-item red-b">
+                <small>EN RETARD</small>
+                <b id="dash-retard">0</b>
+            </div>
         </div>
 
-        <table style="width:100%; border-collapse: collapse; font-size:0.8rem; color:white;">
-            <thead>
-                <tr style="background:#1a1a1a; text-align:left;">
-                    <th style="padding:12px; border-bottom:2px solid #333;">DATE</th>
-                    <th style="padding:12px; border-bottom:2px solid #333;">NOM</th>
-                    <th style="padding:12px; border-bottom:2px solid #333;">TÉLÉPHONE</th>
-                    <th style="padding:12px; border-bottom:2px solid #333; text-align:center;">SITUATION</th>
-                </tr>
-            </thead>
-            <tbody id="table-paiements-body-fullscreen"></tbody>
-            <tfoot id="table-paiements-footer" style="background:#1a1a1a; font-weight:bold; border-top:2px solid #25D366;"></tfoot>
-        </table>
-    </div>
+        <div class="filter-bar">
+            <button onclick="loadUsers('TOUT')" class="f-btn">TOUT</button>
+            <button onclick="loadUsers('A')" class="f-btn">CAT A</button>
+            <button onclick="loadUsers('B')" class="f-btn">CAT B</button>
+            <button onclick="loadUsers('C')" class="f-btn">CAT C</button>
+            <button onclick="ouvrirRapport()" class="btn-report">📋 GÉNÉRER BILAN</button>
+        </div>
 
-    <script src="script.js"></script>
+        <div id="admin-user-list">
+            <p style="text-align:center; color:#333; padding:20px;">Accès au Cloud sécurisé...</p>
+        </div>
+    </div>
+</div>
+
+<div id="modal-rapport" class="report-overlay" style="display:none;">
+    <div class="no-print report-header">
+        <button onclick="fermerRapport()">⬅️ RETOUR</button>
+        <div style="display:flex; gap:10px;">
+            <button onclick="sauvegarderPDF()" class="pdf-b">📥 PDF</button>
+            <button onclick="genererCSV()" class="csv-b">📊 CSV</button>
+        </div>
+    </div>
+    <div id="contenu-rapport"></div>
+</div>
+
+<div id="modal-historique" class="full-page" style="display:none; z-index: 30000;">
+    <div class="history-head">
+        <h2>📋 HISTORIQUE PAIEMENTS</h2>
+        <div class="history-btns">
+            <button onclick="telechargerCSV()">EXCEL</button>
+            <button onclick="telechargerHistorique()">PDF</button>
+            <button onclick="fermerHistoriquePleinEcran()" style="background:var(--d);">× FERMER</button>
+        </div>
+    </div>
+    <input type="text" id="search-historique" onkeyup="filtrerHistorique()" placeholder="🔍 Filtrer l'historique..." class="search-input">
+    <table class="history-table">
+        <thead>
+            <tr><th>DATE</th><th>NOM</th><th>TÉLÉPHONE</th><th>SITUATION</th></tr>
+        </thead>
+        <tbody id="table-paiements-body-fullscreen"></tbody>
+    </table>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
