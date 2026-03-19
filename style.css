@@ -215,3 +215,22 @@ body, html {
 .cloud-online .led-text {
     color: #10b981 !important;
 }
+/* Le titre qui cache le menu */
+#admin-trigger {
+    cursor: default; /* Curseur normal pour ne pas deviner que c'est cliquable */
+    user-select: none; /* Empêche de sélectionner le texte par erreur */
+    -webkit-user-select: none;
+}
+
+/* Style de la page admin pour qu'elle recouvre tout */
+#page-admin {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0f172a; /* Fond sombre pro */
+    z-index: 2000; /* Passe par dessus tout le reste */
+    overflow-y: auto;
+    padding: 20px;
+}
