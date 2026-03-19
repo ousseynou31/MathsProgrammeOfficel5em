@@ -293,3 +293,54 @@ function telechargerCSV() {
     link.download = `JOURNAL_DIOUF_V32_${new Date().toLocaleDateString()}.csv`;
     link.click();
 }
+// ==========================================
+// PARTIE À COLLER À LA TOUTE FIN DU FICHIER
+// ==========================================
+
+let adminTimer;
+const adminTrigger = document.getElementById('admin-trigger');
+
+if (adminTrigger) {
+    // Événements pour Mobile (Touch)
+    adminTrigger.addEventListener('touchstart', function(e) {
+        adminTimer = setTimeout(() => {
+            openAdmin(); 
+        }, 3000); // 3 secondes pile
+    }, { passive: true });
+
+    adminTrigger.addEventListener('touchend', function() {
+        clearTimeout(adminTimer);
+    });
+
+    adminTrigger.addEventListener('touchmove', function() {
+        clearTimeout(adminTimer);
+    });
+
+    // Événements pour Ordinateur (Souris)
+    adminTrigger.addEventListener('mousedown', function() {
+        adminTimer = setTimeout(() => {
+            openAdmin();
+        }, 3000);
+    });
+
+    adminTrigger.addEventListener('mouseup', function() {
+        clearTimeout(adminTimer);
+    });
+}
+
+// Fonction qui déclenche l'ouverture
+function openAdmin() {
+    const code = prompt("🔑 ACCÈS RÉSERVÉ - CODE PIN :");
+    if (code === ADMIN_PASS) {
+        // On cache le hub et on affiche l'admin
+        document.getElementById('hub-accueil').style.display = 'none';
+        document.getElementById('page-admin').style.display = 'block';
+        
+        // Optionnel : On lance le chargement des utilisateurs immédiatement
+        if (typeof loadUsers === "function") {
+            loadUsers('TOUT');
+        }
+    } else if (code !== null) {
+        alert("❌ CODE INCORRECT");
+    }
+}
