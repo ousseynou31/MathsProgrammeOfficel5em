@@ -69,14 +69,7 @@ async function enregistrerProfil() {
     } catch(e) { alert("Erreur Cloud"); }
 }
 
-// --- FONCTION DÉCONNEXION ---
-function deconnecterApp() {
-    if(confirm("Voulez-vous déconnecter l'application ?")) {
-        localStorage.removeItem('v32_active');
-        localStorage.removeItem('v32_registered');
-        location.reload();
-    }
-}
+
 
 // --- NAVIGATION ---
 function naviguer(id) {
@@ -85,16 +78,39 @@ function naviguer(id) {
     if(target) target.style.display = (id === 'hub-accueil' || id === 'page-admin') ? 'block' : 'flex';
 }
 
-function launchApp() {
-    const devId = document.getElementById('display-device-id');
-    if(devId) devId.innerText = getDeviceId();
+// --- FONCTION DE DÉCONNEXION CORRIGÉE ---
+function deconnecterApp() {
+    if(confirm("Voulez-vous verrouiller l'application ?")) {
+        // 1. On retire SEULEMENT l'activation (le PIN)
+        localStorage.removeItem('v32_active');
+        
+        // 2. On NE SUPPRIME PAS 'v32_registered' 
+        // comme ça, l'application se souvient du nom de l'élève.
+        
+        // 3. On recharge pour revenir à l'écran du Code PIN
+        location.reload();
+    }
+}
+
+// --- MISE À JOUR DE LA LOGIQUE DE LANCEMENT ---
+async function launchApp() {
+    const devIdDisplay = document.getElementById('display-device-id');
+    if(devIdDisplay) devIdDisplay.innerText = getDeviceId();
 
     const isActive = localStorage.getItem('v32_active') === 'true';
     const isReg = localStorage.getItem('v32_registered') === 'true';
 
-    if (!isActive) naviguer('license-gate');
-    else if (!isReg) naviguer('registration-gate');
-    else naviguer('hub-accueil');
+    // ORDRE DE PRIORITÉ :
+    if (!isActive) {
+        // Si non activé -> Écran PIN (même si déjà inscrit)
+        naviguer('license-gate');
+    } else if (!isReg) {
+        // Si activé mais jamais inscrit -> Écran Inscription
+        naviguer('registration-gate');
+    } else {
+        // Si activé ET inscrit -> Accueil
+        naviguer('hub-accueil');
+    }
 }
 
 window.onload = launchApp;
