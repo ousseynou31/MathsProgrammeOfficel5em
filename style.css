@@ -203,3 +203,15 @@ body, html {
     background-color: #475569; /* Gris par défaut */
     margin-right: 8px;
 }
+
+
+/* ÉTAT CONNECTÉ (VERT) */
+/* TRÈS IMPORTANT : L'espace entre les deux classes */
+.cloud-online .led-circle {
+    background-color: #10b981 !important;
+    box-shadow: 0 0 10px #10b981, 0 0 20px rgba(16, 185, 129, 0.5) !important;
+}
+
+.cloud-online .led-text {
+    color: #10b981 !important;
+}
