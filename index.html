@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MATHS 5ème - V1</title>
+    <title>MATHS 5ème - PROGRAMME OFFICIEL</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -11,42 +11,44 @@
 <body>
 
     <div id="license-gate" class="gate">
-        <div class="glass-card">
-            <h1>ACTIVATION</h1>
+        <div class="glass-card anim-pop">
+            <h1 class="glow-text">ACTIVATION</h1>
+            <p class="label">ID UNIQUE :</p>
             <div id="display-device-id" class="id-display">...</div>
-            <input type="number" id="input-license" class="input-3d" placeholder="CODE PIN">
-            <button class="btn-3d btn-gold" onclick="verifierLicence()">ACTIVER</button>
+            <input type="number" id="input-license" class="input-3d" placeholder="CODE PIN 8 CHIFFRES">
+            <button class="btn-3d btn-gold" onclick="verifierLicence()">
+                <span>DÉVERROUILLER</span>
+            </button>
         </div>
     </div>
 
     <div id="registration-gate" class="gate">
-        <div class="glass-card">
-            <h1>INSCRIPTION</h1>
+        <div class="glass-card anim-pop">
+            <h1 class="glow-text">MON PROFIL</h1>
             <input type="text" id="reg-nom" class="input-3d" placeholder="NOM COMPLET">
-            <input type="tel" id="reg-tel" class="input-3d" placeholder="TÉLÉPHONE">
-            <button class="btn-3d btn-accent" onclick="enregistrerProfil()">CRÉER COMPTE</button>
+            <input type="tel" id="reg-tel" class="input-3d" placeholder="TÉLÉPHONE (SANS INDICATIF)">
+            <button class="btn-3d btn-accent" onclick="enregistrerProfil()">
+                <span>CRÉER MON COMPTE</span>
+            </button>
         </div>
     </div>
 
     <div id="hub-accueil" class="main-app" style="display:none;">
-         <header class="header-minimal" style="text-align: center;">
-    <h1 id="admin-trigger" class="titre-officiel">
-        BIENVENU DANS MATHS 5em PROGRAMME OFFICIEL V1
-    </h1>
-       </header>
-        
-        <main class="empty-body">
-            </main>
+        <div class="hero-container">
+            <div id="admin-trigger" class="titre-officiel-premium">
+                BIENVENU DANS MATHS 5em<br>
+                <span>PROGRAMME OFFICIEL V1</span>
+            </div>
+        </div>
     </div>
 
     <div id="page-admin" class="full-page">
         <div class="admin-header">
-            <h2>ADMINISTRATION V1</h2>
-            <button class="btn-3d btn-gold" onclick="verifierLicence()">
-    <span>DÉVERROUILLER</span> </button>
+            <h2>GESTIONNAIRE DIOUF</h2>
             <button onclick="naviguer('hub-accueil')" class="btn-close">RETOUR</button>
         </div>
-        <div id="admin-user-list" class="user-list"></div>
+        <div id="admin-user-list" class="user-list">
+            </div>
     </div>
 
     <script src="script.js"></script>
