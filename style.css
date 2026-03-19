@@ -234,3 +234,73 @@ body, html {
     overflow-y: auto;
     padding: 20px;
 }
+/* --- DESIGN DES CARTES CLIENTS --- */
+.user-card {
+    background: linear-gradient(145deg, #1e1e1e, #141414) !important;
+    border: 1px solid #222 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.user-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--p) !important;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+}
+
+/* --- LE CERCLE DE JOURS (EFFET NÉON) --- */
+.stat-circle {
+    border: 2px solid rgba(255,255,255,0.05);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+.c-green { 
+    background: linear-gradient(135deg, #10b981, #064e3b) !important; 
+    box-shadow: 0 0 15px rgba(16,185,129,0.2);
+}
+.c-orange { 
+    background: linear-gradient(135deg, #f59e0b, #78350f) !important; 
+    box-shadow: 0 0 15px rgba(245,158,11,0.2);
+}
+.c-red { 
+    background: linear-gradient(135deg, #ef4444, #7f1d1d) !important; 
+    box-shadow: 0 0 20px rgba(239,68,68,0.4);
+    animation: pulse-red 2s infinite;
+}
+
+/* --- BOUTONS FILTRES --- */
+.filter-btn {
+    background: #1a1a1a;
+    color: #888;
+    border: 1px solid #333;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+
+.filter-btn.active {
+    background: var(--p);
+    color: white;
+    border-color: var(--p);
+    box-shadow: 0 4px 10px rgba(99,102,241,0.3);
+}
+
+/* --- LES BOUTONS D'ACTION --- */
+.action-buttons button {
+    transition: transform 0.1s active;
+}
+.action-buttons button:active {
+    transform: scale(0.9);
+}
+
+/* --- ANIMATION DE PULSATION --- */
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
