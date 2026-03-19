@@ -26,26 +26,27 @@ function naviguer(idCible) {
 }
 
 // --- 4. SÉCURITÉ & ACCÈS ---
+const SECRET_KEY = 2026;
+
 function verifierLicence() {
-    const pin = document.getElementById('input-license').value;
-    const dot = document.getElementById('cloud-dot');
-
-    db.ref('licences/' + pin).once('value').then(snapshot => {
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            if (data.used && data.owner !== deviceID) {
-                alert("Ce code est déjà utilisé sur un autre appareil.");
-            } else {
-                // Valider l'accès et lier l'appareil
-                db.ref('licences/' + pin).update({ used: true, owner: deviceID });
-                verifierProfilExistant();
-            }
-        } else {
-            alert("Code PIN invalide.");
-        }
-    });
+    const input = document.getElementById('input-license').value.trim();
+    const device = "DEV-Z028CUWBC"; // Votre ID de test
+    
+    let hash = 0;
+    for (let i = 0; i < device.length; i++) {
+        hash = ((hash << 5) - hash) + device.charCodeAt(i);
+        hash |= 0; // Conversion en entier 32 bits
+    }
+    
+    // C'est cette ligne qui génère le code 14886866
+    const codeAttendu = Math.abs(hash + SECRET_KEY).toString().substring(0, 8);
+    
+    if(input === codeAttendu) {
+        alert("Activation réussie !");
+    } else {
+        alert("PIN Incorrect");
+    }
 }
-
 function verifierProfilExistant() {
     db.ref('users/' + deviceID).once('value').then(snapshot => {
         if (snapshot.exists()) {
