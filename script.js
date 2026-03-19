@@ -205,7 +205,187 @@ function marquerPresence() {
     // TRÈS IMPORTANT : Supprime la ligne automatiquement quand vous fermez l'app
     presenceRef.onDisconnect().remove();
 }
+async function loadUsers(filtre = 'TOUT') {
+    const list = document.getElementById('admin-user-list');
+    list.innerHTML = `
+        <div style="text-align:center; padding:30px;">
+            <div class="spinner" style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--p); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: auto;"></div>
+            <p style="color:gray; margin-top:10px; font-size:0.8rem;">Synchronisation Cloud...</p>
+        </div>`;
+    
+    try {
+        const usersSnap = await database.ref('clients').once('value');
+        const blackSnap = await database.ref('blacklist').once('value');
+        const blacklisted = blackSnap.val() || {};
+        
+        list.innerHTML = ""; 
+        let count = 0;
 
+        usersSnap.forEach(u => {
+            const data = u.val().infos_client;
+            if(!data) return;
+
+            // Système de filtre par catégorie (A, B, C)
+            if (filtre !== 'TOUT' && data.categorie !== filtre) return;
+            count++;
+
+            const jours = calculerJours(data.date_inscription);
+            const isBanned = blacklisted[u.key] === true;
+            
+            // Formatage de la date d'inscription
+            const dateObj = new Date(data.date_inscription);
+            const dateAffiche = isNaN(dateObj.getTime()) ? "Date inconnue" : dateObj.toLocaleDateString('fr-FR');
+
+            // --- LOGIQUE DYNAMIQUE DES COULEURS ---
+            let colorClass = "c-green";  // 0-25 jours
+            if (jours >= 26 && jours <= 34) colorClass = "c-orange"; // 26-34 jours
+            if (jours >= 35) colorClass = "c-red"; // 35+ jours (Expiré)
+
+            list.innerHTML += `
+                <div class="user-card" style="display:flex; align-items:center; background:#181818; margin:10px 5px; padding:15px; border-radius:12px; border-left: 4px solid ${isBanned ? '#ff4444' : '#222'}; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+                    
+                    <div class="stat-circle ${colorClass}" style="width:52px; height:52px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0;">
+                        <span style="font-size:1.1rem; font-weight:900; color:white; line-height:1;">${jours}</span>
+                        <span style="font-size:0.5rem; color:rgba(255,255,255,0.7); text-transform:uppercase; font-weight:bold;">JOURS</span>
+                    </div>
+
+                    <div style="flex:1; margin-left:12px; min-width:0;">
+                        <div style="font-weight:700; font-size:0.95rem; color:#fff; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            ${data.nom}
+                        </div>
+                        <div style="font-size:0.7rem; color:#777; margin-top:2px;">
+                            Inscrit le : <span style="color:#bbb;">${dateAffiche}</span>
+                        </div>
+                        <div style="display:flex; gap:5px; margin-top:4px;">
+                            <span style="font-size:0.6rem; background:#333; color:var(--p); padding:2px 5px; border-radius:4px; font-weight:bold;">CAT ${data.categorie}</span>
+                            <span style="font-size:0.6rem; color:#555;">ID: ${u.key.slice(-6)}</span>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; margin-left:8px;">
+                        <button onclick="validerPaiement('${u.key}')" style="background:#10b981; border:none; border-radius:6px; padding:8px; color:white; cursor:pointer;" title="Payer">💰</button>
+                        <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" style="background:#25D366; border:none; border-radius:6px; padding:8px; color:white; cursor:pointer;" title="WhatsApp">💬</button>
+                        <button onclick="toggleBan('${u.key}')" style="background:${isBanned ? '#6366f1' : '#f59e0b'}; border:none; border-radius:6px; padding:8px; color:white; cursor:pointer;" title="Suspendre">
+                            ${isBanned ? '🔓' : '🚫'}
+                        </button>
+                        <button onclick="deleteClient('${u.key}')" style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; border-radius:6px; padding:8px; color:#ef4444; cursor:pointer;" title="Supprimer">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        if(count === 0) list.innerHTML = "<p style='text-align:center; color:gray; padding:20px;'>Aucun abonné dans cette catégorie.</p>";
+
+    } catch(e) {
+        console.error(e);
+        list.innerHTML = "<p style='color:#ef4444; text-align:center;'>Erreur Cloud.</p>";
+    }
+}
+function calculerJours(dateInscription) {
+    if(!dateInscription) return 0;
+    const debut = new Date(dateInscription);
+    const fin = new Date();
+    
+    // On remet les compteurs à zéro (minuit) pour ne comparer que les jours
+    debut.setHours(0, 0, 0, 0);
+    fin.setHours(0, 0, 0, 0);
+    
+    const diffTemps = Math.abs(fin - debut);
+    return Math.ceil(diffTemps / (1000 * 60 * 60 * 24)); 
+}
+// Sauvegarder les prix dans Firebase
+async function sauvegarderTarifs() {
+    const tarifs = {
+        A: document.getElementById('price-A').value || 0,
+        B: document.getElementById('price-B').value || 0,
+        C: document.getElementById('price-C').value || 0
+    };
+    await database.ref('reglages/tarifs').set(tarifs);
+    alert("✅ Tarifs mis à jour !");
+    mettreAJourDashboard(); // Rafraîchir les calculs
+}
+
+// Charger les prix au démarrage de l'admin
+async function chargerTarifs() {
+    const snap = await database.ref('reglages/tarifs').once('value');
+    if(snap.exists()){
+        const t = snap.val();
+        document.getElementById('price-A').value = t.A;
+        document.getElementById('price-B').value = t.B;
+        document.getElementById('price-C').value = t.C;
+    }
+}
+
+async function mettreAJourDashboard() {
+    const usersSnap = await database.ref('clients').once('value');
+    const tarifsSnap = await database.ref('reglages/tarifs').once('value');
+    const tarifs = tarifsSnap.val() || {A:0, B:0, C:0};
+
+    let totalAttendu = 0;
+    let nbRetards = 0;
+
+    usersSnap.forEach(u => {
+        const data = u.val().infos_client;
+        if(data) {
+            const jours = calculerJours(data.date_inscription);
+            const prix = parseInt(tarifs[data.categorie]) || 0;
+            
+            totalAttendu += prix;
+            if(jours >= 35) nbRetards++;
+        }
+    });
+
+    // Mise à jour visuelle des chiffres en haut
+    document.getElementById('dash-total-a').innerText = totalAttendu.toLocaleString() + " F";
+    document.getElementById('dash-retard').innerText = nbRetards;
+    
+    // On lance aussi le chargement de la liste des abonnés
+    loadUsers('TOUT');
+}
+
+// 1. PAYER : Réinitialise la date à aujourd'hui
+async function validerPaiement(telId) {
+    if(confirm("Confirmer le paiement et réinitialiser l'abonnement ?")) {
+        const nouvelleDate = new Date().toISOString();
+        await database.ref(`clients/${telId}/infos_client/date_inscription`).set(nouvelleDate);
+        // Optionnel : Enregistrer dans l'historique des revenus ici
+        loadUsers(); 
+    }
+}
+
+// 2. WHATSAPP : Message automatique
+function envoyerRappel(tel, nom, cat) {
+    const msg = `Bonjour ${nom}, votre abonnement (Catégorie ${cat}) arrive à échéance. Merci de régulariser votre situation.`;
+    const url = `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+}
+
+// 3. SUSPENDRE : Utilise la liste noire (Blacklist)
+async function toggleBan(telId) {
+    const snap = await database.ref(`blacklist/${telId}`).once('value');
+    const isCurrentlyBanned = snap.val() === true;
+    
+    await database.ref(`blacklist/${telId}`).set(!isCurrentlyBanned);
+    loadUsers();
+}
+
+// 4. SUPPRIMER : Effacement définitif
+async function deleteClient(telId) {
+    if(confirm("❗ Action irréversible. Supprimer ce client de la base ?")) {
+        await database.ref(`clients/${telId}`).remove();
+        await database.ref(`blacklist/${telId}`).remove();
+        loadUsers();
+    }
+}
+function filtrerClients() {
+    const query = document.getElementById('admin-search').value.toLowerCase();
+    const cards = document.querySelectorAll('.user-card');
+    
+    cards.forEach(card => {
+        const contenu = card.innerText.toLowerCase();
+        card.style.display = contenu.includes(query) ? "flex" : "none";
+    });
+}
 
 // ==========================================
 // 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
