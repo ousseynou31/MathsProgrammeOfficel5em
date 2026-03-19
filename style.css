@@ -11,26 +11,37 @@ body, html {
     font-family: 'Segoe UI', sans-serif; overflow: hidden;
 }
 
-/* Titres Accueil */
-.main-title { font-size: 2.5rem; margin-bottom: 0; color: var(--gold); text-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
-.sub-title { font-size: 1.2rem; margin-top: 5px; color: #888; letter-spacing: 2px; }
+/* Accueil & Titres */
+.hero { text-align: center; margin-top: 60px; }
+.main-title { font-size: 2.8rem; margin: 0; color: var(--gold); text-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+.sub-title { font-size: 1.2rem; color: #666; letter-spacing: 4px; cursor: pointer; padding: 10px; transition: 0.3s; }
+.sub-title:active { color: var(--gold); transform: scale(0.95); }
 
-/* Gates & Cards */
-.gate { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; background: #050508; }
-.glass-card { background: var(--glass); backdrop-filter: blur(15px); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: center; width: 85%; max-width: 320px; }
+/* Systèmes de Verrouillage */
+.gate { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; background: var(--bg); }
+.glass-card { background: var(--glass); backdrop-filter: blur(15px); padding: 30px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); text-align: center; width: 85%; max-width: 320px; }
 
-.id-display { background: #000; padding: 10px; border-radius: 10px; color: var(--gold); margin: 15px 0; font-family: monospace; border: 1px solid #333; }
+.id-display { background: #000; padding: 12px; border-radius: 10px; color: var(--gold); margin: 15px 0; font-family: monospace; border: 1px solid #333; }
 .input-3d { width: 100%; padding: 15px; background: #000; border: 2px solid #333; border-radius: 12px; color: white; margin-bottom: 10px; text-align: center; box-sizing: border-box; }
 .btn-3d { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
 .btn-gold { background: var(--gold); color: black; }
+.btn-accent { background: var(--accent); color: white; }
 
-/* Admin UI */
-.full-page { position: fixed; inset: 0; background: #050508; display: none; padding: 20px; z-index: 2000; overflow-y: auto; }
-.user-row { background: var(--glass); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #222; }
-.stats-circle { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; }
-.status-ok { background: #10b981; }
-.status-warning { background: #f59e0b; }
-.status-danger { background: #ef4444; }
+/* Admin Panel */
+.full-page { position: fixed; inset: 0; background: var(--bg); display: none; padding: 20px; z-index: 2000; overflow-y: auto; }
+.user-row { background: var(--glass); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #222; }
+.row-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.actions-group { display: flex; gap: 8px; justify-content: flex-end; }
 
-.admin-dot { width: 45px; height: 45px; border-radius: 50%; background: var(--glass); }
-#cloud-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.btn-action { padding: 10px 15px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+.wa { background: #25D366; }
+.pay { background: var(--accent); }
+.ban { background: #444; }
+
+.status-badge { padding: 4px 8px; border-radius: 50px; font-size: 0.7rem; font-weight: bold; }
+.ok { background: #10b981; }
+.warning { background: #f59e0b; }
+.danger { background: #ef4444; }
+
+.anim-pop { animation: pop 0.3s ease-out; }
+@keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
