@@ -344,3 +344,15 @@ function openAdmin() {
         alert("❌ CODE INCORRECT");
     }
 }
+// --- FONCTION DE TEST DE SÉCURITÉ ---
+function testerDeconnexion() {
+    if (confirm("Voulez-vous simuler une déconnexion pour tester la sécurité ?")) {
+        // On efface les accès temporaires
+        localStorage.removeItem('v32_active');
+        localStorage.removeItem('v32_registered');
+        
+        // On relance la vérification de sécurité
+        alert("🔒 Accès réinitialisés. Relancement du protocole...");
+        location.reload(); 
+    }
+}
