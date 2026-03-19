@@ -1,9 +1,9 @@
-// CONFIGURATION DE DÉPART
+// CONFIGURATION AVEC LA BONNE RÉGION (EUROPE)
 const firebaseConfig = {
-    databaseURL: "https://maths5eme-v1-default-rtdb.firebaseio.com/"
+    databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
-// INITIALISATION SÉCURISÉE
+// INITIALISATION
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
