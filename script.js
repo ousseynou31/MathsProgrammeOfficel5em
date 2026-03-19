@@ -161,6 +161,10 @@ function naviguer(id) {
     if(target) {
         target.style.display = (id === 'hub-accueil' || id === 'page-admin') ? 'block' : 'flex';
     }
+    if(id === 'page-admin') {
+    chargerTarifs();
+    mettreAJourDashboard();
+}
 }
 
 function launchApp() {
