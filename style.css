@@ -206,3 +206,51 @@ body, html {
     50% { transform: scale(1.1); opacity: 0.7; }
     100% { transform: scale(1); opacity: 1; }
 }
+/* --- LA LED TOUJOURS AU PREMIER PLAN --- */
+.led-fixe-top {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999; /* Priorité maximale */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.8); /* Fond sombre translucide */
+    padding: 6px 12px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    pointer-events: none; /* Pour ne pas gêner les clics en dessous */
+}
+
+.led-circle {
+    width: 10px;
+    height: 10px;
+    background: #475569; /* Gris si coupé */
+    border-radius: 50%;
+    transition: 0.4s;
+}
+
+.led-text {
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: #475569;
+    letter-spacing: 1px;
+}
+
+/* --- ÉTAT CONNECTÉ (VERT NÉON) --- */
+.cloud-online .led-circle {
+    background: #10b981;
+    box-shadow: 0 0 10px #10b981, 0 0 20px rgba(16, 185, 129, 0.4);
+    animation: led-glow 1.5s infinite;
+}
+
+.cloud-online .led-text {
+    color: #10b981;
+}
+
+@keyframes led-glow {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
