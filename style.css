@@ -75,3 +75,59 @@ body, html {
 .full-page { position: fixed; inset: 0; background: var(--bg); display: none; z-index: 2000; }
 .anim-pop { animation: pop 0.4s ease-out; }
 @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* --- BOUTON PREVIEW CLIGNOTANT --- */
+.marketing-teaser {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.btn-pulse-preview {
+    background: rgba(251, 191, 36, 0.05);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    color: var(--gold);
+    padding: 10px 15px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    animation: pulse-gold 2.5s infinite;
+}
+
+.online-dot {
+    width: 6px;
+    height: 6px;
+    background: #10b981;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #10b981;
+}
+
+@keyframes pulse-gold {
+    0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.3); }
+    70% { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+}
+
+/* BOITE DE PREVIEW */
+.preview-box {
+    display: none;
+    background: rgba(0, 0, 0, 0.3);
+    margin-top: 10px;
+    padding: 15px;
+    border-radius: 15px;
+    text-align: left;
+    border-left: 3px solid var(--gold);
+    animation: fadeIn 0.3s ease;
+}
+
+.preview-box h4 { color: var(--gold); margin: 0 0 10px 0; font-size: 0.85rem; }
+.preview-box ul { padding-left: 15px; margin: 0; list-style: none; }
+.preview-box li { color: #ccc; font-size: 0.75rem; margin-bottom: 5px; }
+.premium-badge { font-size: 0.6rem; color: #555; text-align: center; margin-top: 10px; font-weight: bold; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
