@@ -11,71 +11,26 @@ body, html {
     font-family: 'Segoe UI', sans-serif; overflow: hidden;
 }
 
-/* Écrans de Verrouillage */
-.gate {
-    position: fixed; inset: 0; display: none;
-    flex-direction: column; align-items: center; justify-content: center;
-    background: radial-gradient(circle at center, #1a1a2e 0%, #050508 100%);
-    z-index: 1000; padding: 20px;
-}
+/* Titres Accueil */
+.main-title { font-size: 2.5rem; margin-bottom: 0; color: var(--gold); text-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+.sub-title { font-size: 1.2rem; margin-top: 5px; color: #888; letter-spacing: 2px; }
 
-.glass-card {
-    background: var(--glass); backdrop-filter: blur(15px);
-    padding: 30px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.1);
-    text-align: center; width: 100%; max-width: 320px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-}
+/* Gates & Cards */
+.gate { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; background: #050508; }
+.glass-card { background: var(--glass); backdrop-filter: blur(15px); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: center; width: 85%; max-width: 320px; }
 
-.id-display {
-    background: #000; padding: 12px; border-radius: 10px;
-    color: var(--gold); font-family: monospace; margin: 15px 0; border: 1px dashed #444;
-}
+.id-display { background: #000; padding: 10px; border-radius: 10px; color: var(--gold); margin: 15px 0; font-family: monospace; border: 1px solid #333; }
+.input-3d { width: 100%; padding: 15px; background: #000; border: 2px solid #333; border-radius: 12px; color: white; margin-bottom: 10px; text-align: center; box-sizing: border-box; }
+.btn-3d { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
+.btn-gold { background: var(--gold); color: black; }
 
-.input-3d {
-    width: 100%; padding: 15px; background: #000; border: 2px solid #333;
-    border-radius: 12px; color: white; margin-bottom: 15px; text-align: center;
-    box-sizing: border-box; font-size: 1rem;
-}
-
-.btn-3d {
-    width: 100%; padding: 15px; border: none; border-radius: 12px;
-    font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.2s;
-}
-
-.btn-gold { background: var(--gold); color: black; box-shadow: 0 4px 0 #b4890a; }
-.btn-gold:active { transform: translateY(2px); box-shadow: 0 2px 0 #b4890a; }
-
-/* Admin & Liste */
-.full-page {
-    position: fixed; inset: 0; background: var(--bg);
-    display: none; padding: 15px; overflow-y: auto; z-index: 2000;
-}
-
-.user-row {
-    background: rgba(255,255,255,0.03); border-radius: 12px;
-    padding: 12px; margin-bottom: 8px; border: 1px solid #222;
-}
-
-.stats-circle {
-    width: 35px; height: 35px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;
-}
-
+/* Admin UI */
+.full-page { position: fixed; inset: 0; background: #050508; display: none; padding: 20px; z-index: 2000; overflow-y: auto; }
+.user-row { background: var(--glass); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #222; }
+.stats-circle { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; }
 .status-ok { background: #10b981; }
 .status-warning { background: #f59e0b; }
 .status-danger { background: #ef4444; }
 
-.btn-action {
-    padding: 6px 10px; border-radius: 6px; border: none; font-size: 0.65rem; 
-    font-weight: bold; cursor: pointer; color: white;
-}
-
-.btn-wa { background: #25D366; }
-.btn-pay { background: var(--accent); }
-.btn-ban { background: #444; }
-
-.admin-dot { width: 40px; height: 40px; border-radius: 50%; background: var(--glass); cursor: pointer; }
+.admin-dot { width: 45px; height: 45px; border-radius: 50%; background: var(--glass); }
 #cloud-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-
-.anim-pop { animation: pop 0.3s ease-out; }
-@keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
