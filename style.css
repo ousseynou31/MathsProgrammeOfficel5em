@@ -44,4 +44,40 @@
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
+}/* Arrière-plan dégradé subtil */
+body {
+    background: radial-gradient(circle at top, #1a1a2e 0%, #000000 100%);
+    min-height: 100vh;
 }
+
+/* Carte de progression avec effet de verre (Glassmorphism) */
+.progression-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 25px;
+    margin-bottom: 35px;
+}
+
+.prog-bar-bg {
+    height: 10px;
+    background: #111;
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+#prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--p), var(--s));
+    box-shadow: 0 0 15px var(--p);
+    transition: width 1s ease-in-out;
+}
+
+.glow-text {
+    text-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+    font-weight: 900;
+    letter-spacing: -1px;
+}
+
