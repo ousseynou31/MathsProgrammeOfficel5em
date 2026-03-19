@@ -137,23 +137,22 @@ function togglePreview() {
     content.style.display = (content.style.display === "block") ? "none" : "block";
 }
 
-// ... (vos autres fonctions : verifierLicence, naviguer, etc.)
-
-// --- INITIALISATION AU CHARGEMENT ---
+// --- INITIALISATION AU CHARGEMENT (LA SEULE ET UNIQUE) ---
 window.onload = () => {
-    // 1. On lance la surveillance du Cloud immédiatement
+    // 1. On allume le voyant Cloud (Connexion Firebase)
     surveillerConnexion(); 
     
-    // 2. On lance la logique d'affichage de l'app (PIN ou Accueil)
+    // 2. On affiche le bon écran (Activation, Inscription ou Accueil)
     launchApp(); 
 };
 
-// --- FONCTION DE SURVEILLANCE CLOUD ---
+// --- LA FONCTION SURVEILLER (À copier-coller aussi) ---
 function surveillerConnexion() {
     const cloudDiv = document.getElementById('cloud-status');
     const statusTxt = document.getElementById('status-text');
     
-    // Firebase vérifie lui-même l'état de la connexion en temps réel
+    if(!cloudDiv || !statusTxt) return; // Sécurité si les IDs n'existent pas
+
     database.ref(".info/connected").on("value", (snap) => {
         if (snap.val() === true) {
             cloudDiv.classList.add('cloud-online');
@@ -164,4 +163,3 @@ function surveillerConnexion() {
         }
     });
 }
-
