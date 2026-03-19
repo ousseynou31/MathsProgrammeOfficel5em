@@ -1,137 +1,130 @@
 :root {
-    --bg: #0f172a; /* Bleu nuit profond */
+    --bg: #0f172a;
     --gold: #fbbf24;
-    --accent: #8b5cf6; /* Violet électrique pour la visibilité */
-    --success: #22c55e;
+    --accent: #8b5cf6;
     --glass: rgba(255, 255, 255, 0.03);
-    --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+    --text: #f8fafc;
 }
 
-/* Arrière-plan global plus moderne */
-body {
+body, html {
+    margin: 0; padding: 0; height: 100%;
     background: radial-gradient(circle at top right, #1e293b, #0f172a);
-    color: #f8fafc;
+    color: var(--text);
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
 }
 
-/* Titre Officiel stylisé */
-.titre-officiel {
-    font-size: 1.1rem;
-    background: linear-gradient(to right, #fbbf24, #f59e0b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    padding: 25px 15px;
-    border-radius: 50px; /* Bords très arrondis */
-    background-color: rgba(251, 191, 36, 0.1);
+/* --- CENTRAGE PAGE ACCUEIL --- */
+.hero-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.titre-officiel-premium {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1.6;
+    color: var(--gold);
+    background: rgba(251, 191, 36, 0.05);
+    padding: 35px 45px;
+    border-radius: 40px; /* Bords très arrondis */
     border: 1px solid rgba(251, 191, 36, 0.2);
-    display: inline-block;
-    margin-top: 20px;
-}
-
-/* Boutons Modernes et Arrondis */
-.btn-3d {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: 50px; /* Effet pilule très arrondi */
-    font-weight: 700;
-    font-size: 1rem;
-    letter-spacing: 1px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     text-transform: uppercase;
+    transition: transform 0.2s ease;
 }
 
-/* Bouton Gold (Activation) */
-.btn-gold {
-    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-    color: #000;
+.titre-officiel-premium span {
+    display: block;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-top: 12px;
+    letter-spacing: 3px;
+    font-weight: 400;
 }
 
-/* Bouton Accent (Inscription) */
-.btn-accent {
-    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-    color: white;
+.titre-officiel-premium:active {
+    transform: scale(0.95);
 }
 
-/* Effet au survol/clic */
-.btn-3d:active {
-    transform: scale(0.96);
-    filter: brightness(1.2);
+/* --- ÉCRANS DE SÉCURITÉ (GATES) --- */
+.gate {
+    position: fixed; inset: 0; display: none;
+    align-items: center; justify-content: center;
+    background: var(--bg); z-index: 1000;
 }
 
-/* Cartes d'entrée (Glassmorphism) */
 .glass-card {
     background: rgba(30, 41, 59, 0.7);
     backdrop-filter: blur(20px);
-    border-radius: 30px; /* Bords arrondis */
     padding: 40px;
+    border-radius: 35px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: var(--shadow);
+    text-align: center;
+    width: 85%;
+    max-width: 340px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-/* Champs de saisie (Inputs) */
+/* --- BOUTONS ET INPUTS --- */
 .input-3d {
-    width: 100%;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.2);
+    width: 100%; padding: 16px;
+    background: rgba(0, 0, 0, 0.3);
     border: 2px solid #334155;
-    border-radius: 50px; /* Arrondi comme les boutons */
-    color: white;
-    margin-bottom: 15px;
-    outline: none;
-    transition: border 0.3s;
+    border-radius: 50px; /* Effet pilule */
+    color: white; margin-bottom: 15px;
+    text-align: center; font-size: 1rem;
+    box-sizing: border-box; outline: none;
 }
 
-.input-3d:focus {
-    border-color: var(--gold);
+.input-3d:focus { border-color: var(--gold); }
+
+.btn-3d {
+    width: 100%; padding: 18px; border: none;
+    border-radius: 50px; font-weight: 800;
+    cursor: pointer; text-transform: uppercase;
+    position: relative; overflow: hidden;
+    transition: 0.3s;
 }
 
-/* Lignes Admin plus propres */
+.btn-gold { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: #000; }
+.btn-accent { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; }
+
+/* Animation de brillance sur le bouton Gold */
+.btn-gold::after {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 4s infinite; transform: skewX(-20deg);
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-150%) skewX(-20deg); }
+    20%, 100% { transform: translateX(150%) skewX(-20deg); }
+}
+
+/* --- ADMIN UI --- */
+.full-page {
+    position: fixed; inset: 0; background: var(--bg);
+    display: none; padding: 20px; z-index: 2000; overflow-y: auto;
+}
+
 .user-row {
     background: rgba(255, 255, 255, 0.03);
-    border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-/* --- ANIMATION DE BRILLANCE DISCRÈTE --- */
-
-/* 1. Définir l'animation 'shimmer' */
-@keyframes shimmer {
-    0% { transform: translateX(-150%) skewX(-15deg); }
-    15%, 100% { transform: translateX(150%) skewX(-15deg); }
+    padding: 20px; border-radius: 25px;
+    margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* 2. Appliquer l'effet sur le bouton Gold d'activation */
-.btn-gold {
-    position: relative; /* Nécessaire pour positionner l'effet brillant */
-    overflow: hidden; /* Cache la brillance quand elle sort du bouton */
-    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-    color: #000;
+.id-display {
+    background: #000; padding: 12px; border-radius: 15px;
+    color: var(--gold); font-family: monospace; margin-bottom: 20px;
 }
 
-/* 3. Créer l'élément brillant 'after' qui traversera le bouton */
-.btn-gold::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(
-        to right,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.5) 50%, /* La brillance elle-même */
-        rgba(255, 255, 255, 0) 100%
-    );
-    animation: shimmer 5s infinite; /* L'animation se joue toutes les 5 secondes */
-    transform: skewX(-15deg); /* Incline la brillance pour un effet plus dynamique */
-    filter: blur(5px); /* Adoucit les bords de la brillance */
-}
-
-/* S'assurer que le texte reste visible au-dessus de la brillance */
-.btn-gold span {
-    position: relative;
-    z-index: 1;
-}
+.anim-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
