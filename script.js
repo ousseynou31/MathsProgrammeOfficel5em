@@ -1,12 +1,22 @@
-// --- CONFIGURATION FIREBASE ---
-const firebaseConfig = { databaseURL: "https://gestion-boutiques-diouf-default-rtdb.firebaseio.com" };
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+// ==========================================
+// 1. CONFIGURATION FIREBASE (VOTRE PROJET)
+// ==========================================
+const firebaseConfig = { 
+    databaseURL: "https://maths5eme-v1-default-rtdb.firebaseio.com/" 
+};
+
+// Initialisation de Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const database = firebase.database();
 
 const SECRET_KEY = 7391;
 const ADMIN_PASS = "0000";
 
-// --- GESTION ID UNIQUE ---
+// ==========================================
+// 2. IDENTIFIANT APPAREIL UNIQUE
+// ==========================================
 function getDeviceId() {
     let id = localStorage.getItem('diouf_device_id');
     if(!id) {
@@ -16,28 +26,35 @@ function getDeviceId() {
     return id;
 }
 
-// --- DÉTECTEUR APPUI LONG (3s) ---
+// ==========================================
+// 3. MENU CACHÉ (APPUI LONG 3S SUR LE TITRE)
+// ==========================================
 let adminTimer;
 const trigger = document.getElementById('admin-trigger');
 
-const startT = () => adminTimer = setTimeout(() => {
-    const p = prompt("🔑 CODE ACCÈS :");
-    if(p === ADMIN_PASS) naviguer('page-admin');
-}, 3000);
+const startAdminTimer = () => {
+    adminTimer = setTimeout(() => {
+        const p = prompt("🔑 CODE ADMIN :");
+        if(p === ADMIN_PASS) naviguer('page-admin');
+    }, 3000); 
+};
 
-const stopT = () => clearTimeout(adminTimer);
+const stopAdminTimer = () => clearTimeout(adminTimer);
 
 if(trigger) {
-    trigger.addEventListener('touchstart', startT);
-    trigger.addEventListener('touchend', stopT);
-    trigger.addEventListener('mousedown', startT);
-    trigger.addEventListener('mouseup', stopT);
+    trigger.addEventListener('touchstart', startAdminTimer);
+    trigger.addEventListener('touchend', stopAdminTimer);
+    trigger.addEventListener('mousedown', startAdminTimer);
+    trigger.addEventListener('mouseup', stopAdminTimer);
 }
 
-// --- LOGIQUE SÉCURITÉ & ACTIVATION ---
+// ==========================================
+// 4. LOGIQUE D'ACTIVATION (PIN)
+// ==========================================
 function verifierLicence() {
     const input = document.getElementById('input-license').value.trim();
     const device = getDeviceId();
+    
     let hash = 0;
     for (let i = 0; i < device.length; i++) {
         hash = ((hash << 5) - hash) + device.charCodeAt(i);
@@ -48,67 +65,70 @@ function verifierLicence() {
     if(input === codeAttendu) {
         localStorage.setItem('v32_active', 'true');
         launchApp();
-    } else {
-        alert("❌ PIN INCORRECT");
+    } else { 
+        alert("❌ PIN INCORRECT"); 
     }
 }
 
+// ==========================================
+// 5. INSCRIPTION (PROFIL ÉLÈVE)
+// ==========================================
 async function enregistrerProfil() {
     const nom = document.getElementById('reg-nom').value.trim();
     const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
-    if(!nom || tel.length < 8) return alert("Infos invalides");
+    
+    if(!nom || tel.length < 8) return alert("Veuillez remplir tous les champs.");
 
     try {
+        // Enregistrement sur votre nouvelle base maths5eme-v1
         await database.ref('clients/' + tel + '/infos_client').set({
-            nom: nom, tel: tel, date_inscription: new Date().toISOString(),
+            nom: nom,
+            tel: tel,
+            date_inscription: new Date().toISOString(),
             device_source: getDeviceId()
         });
         localStorage.setItem('user_tel_id', tel);
         localStorage.setItem('v32_registered', 'true');
         launchApp();
-    } catch(e) { alert("Erreur Cloud"); }
+    } catch(e) { 
+        alert("Erreur de connexion à la base de données."); 
+    }
 }
 
-
-
-// --- NAVIGATION ---
-function naviguer(id) {
-    document.querySelectorAll('.gate, .full-page, #hub-accueil').forEach(e => e.style.display = 'none');
-    const target = document.getElementById(id);
-    if(target) target.style.display = (id === 'hub-accueil' || id === 'page-admin') ? 'block' : 'flex';
-}
-
-// --- FONCTION DE DÉCONNEXION CORRIGÉE ---
+// ==========================================
+// 6. VERROUILLAGE (DÉCONNEXION)
+// ==========================================
 function deconnecterApp() {
-    if(confirm("Voulez-vous verrouiller l'application ?")) {
-        // 1. On retire SEULEMENT l'activation (le PIN)
+    if(confirm("Voulez-vous verrouiller l'accès ?")) {
+        // On retire l'activation PIN mais on garde le profil en mémoire
         localStorage.removeItem('v32_active');
-        
-        // 2. On NE SUPPRIME PAS 'v32_registered' 
-        // comme ça, l'application se souvient du nom de l'élève.
-        
-        // 3. On recharge pour revenir à l'écran du Code PIN
         location.reload();
     }
 }
 
-// --- MISE À JOUR DE LA LOGIQUE DE LANCEMENT ---
-async function launchApp() {
+// ==========================================
+// 7. NAVIGATION ET ÉTATS
+// ==========================================
+function naviguer(id) {
+    document.querySelectorAll('.gate, .full-page, #hub-accueil').forEach(e => e.style.display = 'none');
+    const target = document.getElementById(id);
+    if(target) {
+        target.style.display = (id === 'hub-accueil' || id === 'page-admin') ? 'block' : 'flex';
+    }
+}
+
+function launchApp() {
     const devIdDisplay = document.getElementById('display-device-id');
     if(devIdDisplay) devIdDisplay.innerText = getDeviceId();
 
     const isActive = localStorage.getItem('v32_active') === 'true';
     const isReg = localStorage.getItem('v32_registered') === 'true';
 
-    // ORDRE DE PRIORITÉ :
     if (!isActive) {
-        // Si non activé -> Écran PIN (même si déjà inscrit)
         naviguer('license-gate');
     } else if (!isReg) {
-        // Si activé mais jamais inscrit -> Écran Inscription
         naviguer('registration-gate');
     } else {
-        // Si activé ET inscrit -> Accueil
         naviguer('hub-accueil');
     }
 }
