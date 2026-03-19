@@ -27,23 +27,21 @@ function naviguer(idCible) {
 
 // --- 4. SÉCURITÉ & ACCÈS ---
 function verifierLicence() {
-    const pin = document.getElementById('input-license').value;
-    const dot = document.getElementById('cloud-dot');
+    const codeSaisi = document.getElementById('input-license').value.trim().toUpperCase();
+    const deviceID = localStorage.getItem('deviceId').toUpperCase();
+    const SECRET = "DIOUF_2026"; 
 
-    db.ref('licences/' + pin).once('value').then(snapshot => {
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            if (data.used && data.owner !== deviceID) {
-                alert("Ce code est déjà utilisé sur un autre appareil.");
-            } else {
-                // Valider l'accès et lier l'appareil
-                db.ref('licences/' + pin).update({ used: true, owner: deviceID });
-                verifierProfilExistant();
-            }
-        } else {
-            alert("Code PIN invalide.");
-        }
-    });
+    // L'application recalcule la clé attendue pour cet appareil
+    const cleAttendue = btoa(deviceID + SECRET).substring(0, 12).toUpperCase();
+
+    if (codeSaisi === cleAttendue) {
+        // SUCCESS : On enregistre que l'appareil est activé
+        localStorage.setItem('isActivated', 'true');
+        alert("Activation réussie ! Bienvenue.");
+        verifierProfilExistant(); // Passe à l'inscription ou au Hub
+    } else {
+        alert("Code d'activation invalide pour cet appareil.");
+    }
 }
 
 function verifierProfilExistant() {
