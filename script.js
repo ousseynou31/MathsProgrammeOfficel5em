@@ -229,3 +229,67 @@ if(trig) {
     trig.onmousedown = trig.ontouchstart = () => timer = setTimeout(openAdmin, 3000);
     trig.onmouseup = trig.ontouchend = () => clearTimeout(timer);
 }
+// --- LOGIQUE DE L'HISTORIQUE ---
+
+async function ouvrirHistoriquePleinEcran() {
+    const modal = document.getElementById('modal-historique');
+    const tbody = document.getElementById('table-paiements-body-fullscreen');
+    modal.style.display = 'block';
+    tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Chargement du journal...</td></tr>";
+
+    try {
+        const snap = await database.ref('historique_paiements').once('value');
+        let html = "";
+        let totalGeneral = 0;
+
+        snap.forEach(p => {
+            const d = p.val();
+            totalGeneral += Number(d.montant || 0);
+            html += `
+                <tr style="border-bottom:1px solid #222;">
+                    <td style="padding:12px;">${d.date}</td>
+                    <td style="padding:12px; font-weight:bold;">${d.nom}</td>
+                    <td style="padding:12px;">${d.telephone}</td>
+                    <td style="padding:12px; text-align:center;">
+                        <span style="background:#25D366; color:black; padding:2px 6px; border-radius:4px; font-weight:800;">${d.montant} F</span>
+                    </td>
+                </tr>`;
+        });
+
+        tbody.innerHTML = html;
+        document.getElementById('table-paiements-footer').innerHTML = `
+            <tr>
+                <td colspan="3" style="padding:15px; text-align:right;">TOTAL ENCAISSÉ :</td>
+                <td style="padding:15px; text-align:center; color:#25D366; font-size:1rem;">${totalGeneral.toLocaleString()} F</td>
+            </tr>`;
+    } catch(e) { alert("Erreur de chargement de l'historique."); }
+}
+
+function fermerHistoriquePleinEcran() {
+    document.getElementById('modal-historique').style.display = 'none';
+}
+
+function filtrerHistorique() {
+    const filter = document.getElementById('search-historique').value.toUpperCase();
+    const rows = document.getElementById('table-paiements-body-fullscreen').getElementsByTagName('tr');
+    for (let i = 0; i < rows.length; i++) {
+        const txt = rows[i].textContent || rows[i].innerText;
+        rows[i].style.display = txt.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+    }
+}
+
+function telechargerCSV() {
+    let csv = ["DATE;NOM;TELEPHONE;MONTANT"];
+    const rows = document.querySelectorAll("#table-paiements-body-fullscreen tr");
+    rows.forEach(tr => {
+        let cols = tr.querySelectorAll("td");
+        if(cols.length > 0) {
+            csv.push(`${cols[0].innerText};${cols[1].innerText};${cols[2].innerText};${cols[3].innerText}`);
+        }
+    });
+    const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `JOURNAL_DIOUF_V32_${new Date().toLocaleDateString()}.csv`;
+    link.click();
+}
