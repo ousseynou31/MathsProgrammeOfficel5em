@@ -95,3 +95,43 @@ body {
     margin-bottom: 12px;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
+/* --- ANIMATION DE BRILLANCE DISCRÈTE --- */
+
+/* 1. Définir l'animation 'shimmer' */
+@keyframes shimmer {
+    0% { transform: translateX(-150%) skewX(-15deg); }
+    15%, 100% { transform: translateX(150%) skewX(-15deg); }
+}
+
+/* 2. Appliquer l'effet sur le bouton Gold d'activation */
+.btn-gold {
+    position: relative; /* Nécessaire pour positionner l'effet brillant */
+    overflow: hidden; /* Cache la brillance quand elle sort du bouton */
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+    color: #000;
+}
+
+/* 3. Créer l'élément brillant 'after' qui traversera le bouton */
+.btn-gold::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.5) 50%, /* La brillance elle-même */
+        rgba(255, 255, 255, 0) 100%
+    );
+    animation: shimmer 5s infinite; /* L'animation se joue toutes les 5 secondes */
+    transform: skewX(-15deg); /* Incline la brillance pour un effet plus dynamique */
+    filter: blur(5px); /* Adoucit les bords de la brillance */
+}
+
+/* S'assurer que le texte reste visible au-dessus de la brillance */
+.btn-gold span {
+    position: relative;
+    z-index: 1;
+}
