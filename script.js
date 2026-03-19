@@ -137,4 +137,31 @@ function togglePreview() {
     content.style.display = (content.style.display === "block") ? "none" : "block";
 }
 
-window.onload = launchApp;
+// ... (vos autres fonctions : verifierLicence, naviguer, etc.)
+
+// --- INITIALISATION AU CHARGEMENT ---
+window.onload = () => {
+    // 1. On lance la surveillance du Cloud immédiatement
+    surveillerConnexion(); 
+    
+    // 2. On lance la logique d'affichage de l'app (PIN ou Accueil)
+    launchApp(); 
+};
+
+// --- FONCTION DE SURVEILLANCE CLOUD ---
+function surveillerConnexion() {
+    const cloudDiv = document.getElementById('cloud-status');
+    const statusTxt = document.getElementById('status-text');
+    
+    // Firebase vérifie lui-même l'état de la connexion en temps réel
+    database.ref(".info/connected").on("value", (snap) => {
+        if (snap.val() === true) {
+            cloudDiv.classList.add('cloud-online');
+            statusTxt.innerText = "CLOUD CONNECTÉ";
+        } else {
+            cloudDiv.classList.remove('cloud-online');
+            statusTxt.innerText = "HORS-LIGNE";
+        }
+    });
+}
+
