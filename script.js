@@ -27,18 +27,23 @@ function naviguer(idCible) {
 
 // --- 4. SÉCURITÉ & ACCÈS ---
 function verifierLicence() {
-    const input = document.getElementById('input-license').value.trim();
-    const device = getDeviceId(); // On utilise l'ID physique pour la licence
-    let hash = 0;
-    for (let i = 0; i < device.length; i++) {
-        hash = ((hash << 5) - hash) + device.charCodeAt(i);
-        hash |= 0;
-    }
-    const codeAttendu = Math.abs(hash + SECRET_KEY).toString().substring(0, 8);
-    if(input === codeAttendu) {
-        localStorage.setItem('v32_active', 'true');
-        launchApp();
-    } else { alert("❌ CODE PIN INCORRECT"); }
+    const pin = document.getElementById('input-license').value;
+    const dot = document.getElementById('cloud-dot');
+
+    db.ref('licences/' + pin).once('value').then(snapshot => {
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            if (data.used && data.owner !== deviceID) {
+                alert("Ce code est déjà utilisé sur un autre appareil.");
+            } else {
+                // Valider l'accès et lier l'appareil
+                db.ref('licences/' + pin).update({ used: true, owner: deviceID });
+                verifierProfilExistant();
+            }
+        } else {
+            alert("Code PIN invalide.");
+        }
+    });
 }
 
 function verifierProfilExistant() {
