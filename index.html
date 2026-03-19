@@ -3,88 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Maths 5ème Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+    <title>Système Diouf - Maths 5ème</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
 
-    <div id="cloud-status">
-        <div id="cloud-dot"></div> <span id="cloud-text">SYNCHRONISATION</span>
+    <div id="license-gate" class="gate">
+        <div class="glass-card anim-pop">
+            <h1 class="glow-text">ACTIVATION V3.2</h1>
+            <p style="color:#888; font-size:0.7rem;">ID APPAREIL À COMMUNIQUER :</p>
+            <div id="display-device-id" class="id-display">CHARGEMENT...</div>
+            <input type="number" id="input-license" class="input-3d" placeholder="CODE PIN 8 CHIFFRES">
+            <button class="btn-3d btn-gold" onclick="verifierLicence()">DÉVERROUILLER L'ACCÈS</button>
+        </div>
     </div>
 
-    <div id="license-gate" class="screen">
+    <div id="registration-gate" class="gate">
+        <div class="glass-card anim-pop">
+            <h1 class="glow-text">PROFIL CLOUD</h1>
+            <p style="font-size:0.7rem; margin-bottom:15px;">Enregistrez votre compte pour synchroniser vos cours.</p>
+            <input type="text" id="reg-nom" class="input-3d" placeholder="VOTRE NOM COMPLET">
+            <input type="tel" id="reg-tel" class="input-3d" placeholder="VOTRE TÉLÉPHONE">
+            <button class="btn-3d btn-accent" onclick="enregistrerProfil()">CRÉER MON COMPTE</button>
+        </div>
+    </div>
+
+    <div id="banned-screen" class="gate" style="background: #450a0a;">
         <div class="glass-card">
-            <h1 class="glow-text">ACTIVATION</h1>
-            <p class="small-info">ID APPAREIL : <span id="display-device-id">...</span></p>
-            <input type="number" id="input-license" class="input-3d" placeholder="CODE PIN">
-            <button class="btn-3d btn-gold" onclick="verifierLicence()">DÉVERROUILLER</button>
+            <h1 style="color:#ef4444">ACCÈS REFUSÉ</h1>
+            <p id="ban-id-display" style="font-family: monospace; color: #fca5a5; font-size: 0.8rem;"></p>
+            <h2 id="ban-reason" style="font-size: 0.9rem; margin: 15px 0; color:white;">Accès suspendu ou expiré</h2>
+            <button class="btn-3d" onclick="location.reload()" style="background:white; color:black;">RÉESSAYER</button>
         </div>
     </div>
 
-    <div id="registration-gate" class="screen" style="display:none;">
-        <div class="glass-card">
-            <h2 class="glow-text">NOUVEAU COMPTE</h2>
-            <input type="text" id="reg-nom" class="input-3d" placeholder="NOM COMPLET">
-            <input type="tel" id="reg-tel" class="input-3d" placeholder="TÉLÉPHONE">
-            <button class="btn-3d btn-p" onclick="enregistrerProfil()">CRÉER MON ACCÈS</button>
-            <button class="btn-link" onclick="recupererCompte()">J'ai déjà un compte</button>
-        </div>
-    </div>
-
-    <div id="banned-screen" class="screen" style="display:none;">
-        <div class="glass-card border-red">
-            <h1 class="txt-red">ACCÈS REFUSÉ</h1>
-            <p id="ban-reason" style="margin:15px 0;"></p>
-            <div id="ban-id-display" class="id-tag"></div>
-            <button class="btn-3d btn-whatsapp" onclick="window.open('https://wa.me/221770000000')">CONTACTER L'ADMIN</button>
-        </div>
-    </div>
-
-    <div id="hub-accueil" class="screen" style="display:none;">
-        <h1 id="admin-trigger" class="main-title glow-text">MATHS 5<sup>ème</sup></h1>
-        
-        <div class="button-stack">
-            <button class="btn-3d btn-p" onclick="ouvrirChapitre(1)">📐 GÉOMÉTRIE</button>
-            <button class="btn-3d btn-p" onclick="ouvrirChapitre(2)">🔢 CALCULS</button>
-            <button class="btn-3d btn-p" onclick="ouvrirChapitre(3)">📊 DONNÉES</button>
-        </div>
-
-        <button class="btn-3d btn-exit" onclick="deconnexionManuelle()">DÉCONNEXION</button>
-    </div>
-
-    <div id="page-admin" class="screen" style="display:none; align-items:flex-start; padding:20px;">
-        <div class="admin-top">
-            <h2 class="txt-gold">🛡️ GESTIONNAIRE</h2>
-            <button class="btn-close" onclick="naviguer('hub-accueil')">RETOUR</button>
-        </div>
-
-        <div class="stats-row">
-            <div class="stat-card">TOTAL ÉLÈVES<b id="dash-total-a">0</b></div>
-            <div class="stat-card">CAISSE<b id="dash-total-global">0 F</b></div>
-        </div>
-
-        <div class="admin-grid">
-            <button class="btn-3d btn-sm purp" onclick="chargerHistoriquePaiements()">📊 HISTO</button>
-            <button class="btn-3d btn-sm blue" onclick="ouvrirRapport()">📋 BILAN</button>
-            <button class="btn-3d btn-sm gold" onclick="forceReparationDates()">🔄 FIX</button>
-            <button class="btn-3d btn-sm red" onclick="nettoyerHistoriqueComplet()">⚠️ PURGE</button>
-        </div>
-
-        <div class="admin-card">
-            <h3>TARIFS ABONNEMENTS (FCFA)</h3>
-            <div class="price-row">
-                <input type="number" id="price-A" class="input-3d-sm" placeholder="Cat A">
-                <input type="number" id="price-B" class="input-3d-sm" placeholder="Cat B">
-                <input type="number" id="price-C" class="input-3d-sm" placeholder="Cat C">
+    <div id="hub-accueil" class="main-app" style="display:none;">
+        <header class="header">
+            <div class="status-bar">
+                <span id="cloud-dot"></span>
+                <span id="cloud-text">SYNCHRO...</span>
             </div>
-            <button class="btn-3d btn-save" onclick="sauvegarderTarifs()">SYNCHRONISER TARIFS</button>
+            <div id="admin-trigger" class="admin-dot"></div>
+        </header>
+        
+        <div class="content">
+            <h1 id="user-welcome">Bonjour</h1>
+            <p>Bienvenue dans votre espace Maths 5ème.</p>
+            </div>
+    </div>
+
+    <div id="page-admin" class="full-page">
+        <div class="admin-header">
+            <h2>GESTION ÉLÈVES</h2>
+            <button onclick="naviguer('hub-accueil')" class="btn-close">RETOUR</button>
+        </div>
+        
+        <div class="admin-tools">
+            <div class="stat-item">Clients: <b id="dash-total">0</b></div>
+            <input type="text" id="admin-search" onkeyup="filtrerClients()" class="input-3d" placeholder="Chercher un nom...">
         </div>
 
-        <input type="text" id="admin-search" class="search-3d" placeholder="Rechercher un élève..." oninput="filtrerClients()">
-        <div id="admin-user-list" class="user-list-container"></div>
+        <div id="admin-user-list" class="user-list">
+            </div>
     </div>
 
     <script src="script.js"></script>
