@@ -42,6 +42,18 @@ function surveillerConnexion() {
     });
 }
 
+// FORCE L'APPARITION DANS LA BASE DE DONNÉES
+function signalerPresence() {
+    const device = getDeviceId();
+    database.ref('appareils_en_ligne/' + device).set({
+        dernier_acces: new Date().toISOString(),
+        statut: "Connecté"
+    });
+    // Supprimer l'entrée quand l'utilisateur ferme l'application
+    database.ref('appareils_en_ligne/' + device).onDisconnect().remove();
+}
+
+// Appelle cette fonction dans ton window.onload ou addEventListener
 // LANCEMENT AUTOMATIQUE
 window.addEventListener('DOMContentLoaded', surveillerConnexion);
 
