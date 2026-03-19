@@ -1,15 +1,49 @@
-// ==========================================
-// 1. CONFIGURATION FIREBASE (VOTRE PROJET)
-// ==========================================
-const firebaseConfig = { 
-    databaseURL: "https://maths5eme-v1-default-rtdb.firebaseio.com/" 
+// CONFIGURATION DE DÉPART
+const firebaseConfig = {
+    databaseURL: "https://maths5eme-v1-default-rtdb.firebaseio.com/"
 };
 
-// Initialisation de Firebase
+// INITIALISATION SÉCURISÉE
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const database = firebase.database();
+
+// --- LA FONCTION DE SURVEILLANCE (MISE À JOUR) ---
+function surveillerConnexion() {
+    // On récupère les éléments par ID et Classe
+    const ledContainer = document.getElementById('cloud-status');
+    
+    // On vérifie la connexion réelle
+    database.ref(".info/connected").on("value", (snap) => {
+        if (snap.val() === true) {
+            console.log("!!! CONNECTÉ !!!");
+            // ON FORCE LE STYLE EN JAVASCRIPT DIRECT (PASSE PAR-DESSUS LE CSS)
+            ledContainer.style.border = "1px solid #10b981";
+            ledContainer.style.background = "rgba(16, 185, 129, 0.2)";
+            
+            const cercle = ledContainer.querySelector('.led-circle');
+            const texte = ledContainer.querySelector('.led-text');
+            
+            if(cercle) {
+                cercle.style.backgroundColor = "#10b981";
+                cercle.style.boxShadow = "0 0 15px #10b981";
+            }
+            if(texte) {
+                texte.style.color = "#10b981";
+                texte.innerText = "ONLINE";
+            }
+        } else {
+            console.log("... RECHERCHE ...");
+            // REVIENT AU GRIS SI COUPÉ
+            ledContainer.style.border = "1px solid rgba(255,255,255,0.1)";
+            ledContainer.style.background = "rgba(0,0,0,0.6)";
+        }
+    });
+}
+
+// LANCEMENT AUTOMATIQUE
+window.addEventListener('DOMContentLoaded', surveillerConnexion);
 
 const SECRET_KEY = 7391;
 const ADMIN_PASS = "0000";
@@ -136,33 +170,7 @@ function togglePreview() {
     const content = document.getElementById('preview-content');
     content.style.display = (content.style.display === "block") ? "none" : "block";
 }
-// 3. LA FONCTION MIRACLE (Faites un copier-coller exact)
-function surveillerConnexion() {
-    const cloudDiv = document.getElementById('cloud-status');
-    const ledCircle = document.querySelector('.led-circle');
-    
-    if (!cloudDiv || !ledCircle) {
-        console.error("ERREUR : Les éléments HTML du voyant sont introuvables !");
-        return;
-    }
 
-    // On écoute la connexion
-    database.ref(".info/connected").on("value", (snap) => {
-        if (snap.val() === true) {
-            // FORCE LE VERT SANS PASSER PAR LE CSS
-            cloudDiv.classList.add('cloud-online');
-            ledCircle.style.background = "#10b981";
-            ledCircle.style.boxShadow = "0 0 15px #10b981";
-            console.log("FONCTIONNEL : Passage au VERT");
-        } else {
-            // FORCE LE GRIS
-            cloudDiv.classList.remove('cloud-online');
-            ledCircle.style.background = "#475569";
-            ledCircle.style.boxShadow = "none";
-            console.log("ERREUR : Reste en GRIS");
-        }
-    });
-}
 
 // 4. LANCEMENT OBLIGATOIRE
 window.addEventListener('load', () => {
