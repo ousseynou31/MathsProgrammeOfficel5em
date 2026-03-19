@@ -183,23 +183,43 @@ function togglePreview() {
     content.style.display = (content.style.display === "block") ? "none" : "block";
 }
 
-// ==========================================
-// 8. INITIALISATION ET SURVEILLANCE
-// ==========================================
 
-// ON UTILISE UNE SEULE FONCTION DE DÉMARRAGE
+// --- FONCTION POUR APPARAÎTRE DANS L'ONGLET DATA ---
+function marquerPresence() {
+    const idAppareil = getDeviceId(); // Récupère votre D-XXXXXX
+    
+    // On crée une référence dans la base
+    const presenceRef = database.ref('appareils_actifs/' + idAppareil);
+
+    // On écrit les infos
+    presenceRef.set({
+        statut: "EN LIGNE",
+        derniere_connexion: new Date().toLocaleString(),
+        plateforme: navigator.platform
+    });
+
+    // TRÈS IMPORTANT : Supprime la ligne automatiquement quand vous fermez l'app
+    presenceRef.onDisconnect().remove();
+}
+// ==========================================
+// 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
+// ==========================================
 window.addEventListener('load', () => {
-    console.log("🚀 Application lancée...");
+    console.log("🚀 Lancement du système...");
+
+    // 1. Allume la LED (Vérification de la connexion)
+    surveillerConnexion(); 
     
-    // 1. Lancer la surveillance Cloud
-    surveillerConnexion();
+    // 2. Enregistre l'appareil dans l'onglet "Data" de Firebase
+    marquerPresence();    
     
-    // 2. Gérer l'affichage de l'ID appareil
+    // 3. Affiche l'ID de l'appareil dans le HTML
     const devIdDisplay = document.getElementById('display-device-id');
     if(devIdDisplay) devIdDisplay.innerText = getDeviceId();
 
-    // 3. Lancer la logique de navigation (LaunchApp)
-    launchApp();
+    // 4. Décide quelle page afficher (Activation ou Accueil)
+    launchApp();          
+    
+    console.log("✅ Initialisation terminée.");
 });
-
 
