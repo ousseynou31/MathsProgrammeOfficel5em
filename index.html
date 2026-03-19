@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MATHS 5ème - V1 OFFICIAL</title>
+    <title>MATHS 5ème - PROGRAMME OFFICIEL</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -13,9 +13,9 @@
     <div id="license-gate" class="gate">
         <div class="glass-card anim-pop">
             <h1 class="glow-text">ACTIVATION</h1>
-            <p class="label">ID DE VOTRE APPAREIL :</p>
+            <p class="label">ID UNIQUE :</p>
             <div id="display-device-id" class="id-display">...</div>
-            <input type="number" id="input-license" class="input-3d" placeholder="ENTRER LE CODE PIN">
+            <input type="number" id="input-license" class="input-3d" placeholder="CODE PIN">
             <button class="btn-3d btn-gold" onclick="verifierLicence()">
                 <span>DÉVERROUILLER</span>
             </button>
@@ -26,7 +26,7 @@
         <div class="glass-card anim-pop">
             <h1 class="glow-text">MON PROFIL</h1>
             <input type="text" id="reg-nom" class="input-3d" placeholder="NOM COMPLET">
-            <input type="tel" id="reg-tel" class="input-3d" placeholder="VOTRE TÉLÉPHONE">
+            <input type="tel" id="reg-tel" class="input-3d" placeholder="TÉLÉPHONE">
             <button class="btn-3d btn-accent" onclick="enregistrerProfil()">
                 <span>CRÉER MON COMPTE</span>
             </button>
@@ -39,18 +39,23 @@
                 BIENVENU DANS MATHS 5em PROGRAMME OFFICIEL V1
             </div>
         </header>
-        
-        <main class="empty-content">
-            </main>
+        <main class="empty-content"></main>
     </div>
 
     <div id="page-admin" class="full-page">
-        <div class="admin-header">
-            <h2>TABLEAU DE BORD</h2>
-            <button onclick="naviguer('hub-accueil')" class="btn-close">RETOUR</button>
+        <div class="hero-container" style="flex-direction: column; height: 100vh; gap: 25px;">
+            <h2 style="color: var(--gold); margin-bottom: 20px;">OPTIONS SYSTÈME</h2>
+            
+            <button onclick="naviguer('hub-accueil')" class="btn-3d btn-accent">
+                <span>RETOUR À L'ACCUEIL</span>
+            </button>
+
+            <button onclick="deconnecterApp()" class="btn-3d" style="background: linear-gradient(135deg, #ef4444, #991b1b); color: white;">
+                <span>DÉCONNECTER L'APPLICATION</span>
+            </button>
+            
+            <p style="color: #444; font-size: 0.7rem; margin-top: 20px;">SYSTEM DIOUF SECURE V1</p>
         </div>
-        <div id="admin-user-list" class="user-list">
-            </div>
     </div>
 
     <script src="script.js"></script>
