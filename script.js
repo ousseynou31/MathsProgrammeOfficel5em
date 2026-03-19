@@ -27,24 +27,37 @@ function naviguer(idCible) {
 
 // --- 4. SÉCURITÉ & ACCÈS ---
 const SECRET_KEY = 2026;
+// --- CONFIGURATION ---
+const SECRET_KEY = 2026; // Assurez-vous que c'est bien un NOMBRE
 
 function verifierLicence() {
+    // 1. On récupère la saisie et on nettoie les espaces
     const input = document.getElementById('input-license').value.trim();
-    const device = "DEV-Z028CUWBC"; // Votre ID de test
+    
+    // 2. On récupère l'ID et on FORCE les minuscules + suppression espaces
+    // C'est l'étape CRITIQUE pour que le calcul soit identique partout
+    let device = getDeviceId().toLowerCase().replace(/\s/g, ''); 
     
     let hash = 0;
     for (let i = 0; i < device.length; i++) {
+        // L'algorithme Bitwise exact
         hash = ((hash << 5) - hash) + device.charCodeAt(i);
-        hash |= 0; // Conversion en entier 32 bits
+        hash |= 0; // Force l'entier 32 bits
     }
     
-    // C'est cette ligne qui génère le code 14886866
+    // 3. Calcul du code attendu (8 chiffres)
     const codeAttendu = Math.abs(hash + SECRET_KEY).toString().substring(0, 8);
     
+    // LOG DE DÉBOGAGE (Affichez la console F12 pour voir)
+    console.log("ID nettoyé utilisé : '" + device + "'");
+    console.log("Code calculé par l'app : " + codeAttendu);
+
     if(input === codeAttendu) {
-        alert("Activation réussie !");
-    } else {
-        alert("PIN Incorrect");
+        localStorage.setItem('v32_active', 'true');
+        alert("✅ ACTIVATION RÉUSSIE");
+        naviguer('registration-gate'); // Ou votre fonction de suite
+    } else { 
+        alert("❌ CODE PIN INCORRECT\nID détecté : " + device); 
     }
 }
 function verifierProfilExistant() {
