@@ -10,53 +10,53 @@
 </head>
 <body>
 <div id="page-admin" class="full-page" style="display:none;">
-    <div class="admin-header">
-        <button onclick="naviguer('hub-accueil')" class="btn-back">← Retour</button>
-        <h2>📊 DASHBOARD ÉCONOMIQUE</h2>
+    <div class="admin-header" style="display:flex; align-items:center; padding:15px; background:#111; border-bottom:1px solid #222;">
+        <button onclick="naviguer('hub-accueil')" class="btn-back" style="background:none; border:none; color:var(--p); font-size:1.2rem; cursor:pointer; margin-right:10px;">←</button>
+        <h2 style="margin:0; font-size:1.1rem; color:white;">📊 DASHBOARD ADMIN</h2>
     </div>
 
-    <div class="admin-stats-grid">
-        <div class="stat-card">
-            <span>Attendu (Total)</span>
-            <h3 id="total-attendu">0 F</h3>
+    <div class="admin-stats-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; padding:15px;">
+        <div class="stat-card" style="background:#1a1a1a; padding:12px; border-radius:10px; text-align:center;">
+            <span style="font-size:0.6rem; color:gray; text-transform:uppercase;">Attendu</span>
+            <h3 id="dash-total-a" style="margin:5px 0; font-size:0.9rem; color:white;">0 F</h3>
         </div>
-        <div class="stat-card">
-            <span>Encaissé (Réel)</span>
-            <h3 id="total-encaisse" style="color: #10b981;">0 F</h3>
+        <div class="stat-card" style="background:#1a1a1a; padding:12px; border-radius:10px; text-align:center; border-bottom: 2px solid #10b981;">
+            <span style="font-size:0.6rem; color:gray; text-transform:uppercase;">Encaissé</span>
+            <h3 id="dash-total-global" style="margin:5px 0; font-size:0.9rem; color:#10b981;">0 F</h3>
         </div>
-        <div class="stat-card">
-            <span>Reste à percevoir</span>
-            <h3 id="reste-percevoir" style="color: #ef4444;">0 F</h3>
-        </div>
-    </div>
-
-    <div class="admin-section">
-        <h3>⚙️ RÉGLAGE DES TARIFS (F)</h3>
-        <div class="tarifs-inputs">
-            <input type="number" id="tarif-a" placeholder="Tarif A" onchange="sauvegarderTarifs()">
-            <input type="number" id="tarif-b" placeholder="Tarif B" onchange="sauvegarderTarifs()">
-            <input type="number" id="tarif-c" placeholder="Tarif C" onchange="sauvegarderTarifs()">
+        <div class="stat-card" style="background:#1a1a1a; padding:12px; border-radius:10px; text-align:center; border-bottom: 2px solid #ef4444;">
+            <span style="font-size:0.6rem; color:gray; text-transform:uppercase;">Retards</span>
+            <h3 id="dash-retard" style="margin:5px 0; font-size:0.9rem; color:#ef4444;">0</h3>
         </div>
     </div>
 
-    <div class="admin-section">
-        <h3>📋 AUDIT DES PAIEMENTS</h3>
-        <input type="text" id="admin-search" placeholder="Rechercher une date ou un nom..." onkeyup="filtrerAudit()">
-        <div class="table-wrapper">
-            <table id="table-audit">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Élève</th>
-                        <th>Catégorie</th>
-                        <th>Montant</th>
-                    </tr>
-                </thead>
-                <tbody id="body-audit">
-                    </tbody>
-            </table>
+    <div class="admin-section" style="padding:0 15px 15px 15px;">
+        <div style="background:#1a1a1a; padding:15px; border-radius:12px;">
+            <h3 style="font-size:0.75rem; color:var(--p); margin-bottom:10px; text-transform:uppercase;">⚙️ Réglage des Tarifs (FCFA)</h3>
+            <div class="tarifs-inputs" style="display:flex; gap:8px;">
+                <input type="number" id="price-A" placeholder="CAT A" style="flex:1; background:#000; border:1px solid #333; color:white; padding:10px; border-radius:8px; font-size:0.8rem;">
+                <input type="number" id="price-B" placeholder="CAT B" style="flex:1; background:#000; border:1px solid #333; color:white; padding:10px; border-radius:8px; font-size:0.8rem;">
+                <input type="number" id="price-C" placeholder="CAT C" style="flex:1; background:#000; border:1px solid #333; color:white; padding:10px; border-radius:8px; font-size:0.8rem;">
+                <button onclick="sauvegarderTarifs()" style="background:var(--p); border:none; border-radius:8px; padding:0 15px; color:white;">OK</button>
+            </div>
         </div>
     </div>
+
+    <div class="admin-section" style="padding:0 15px;">
+        <input type="text" id="admin-search" placeholder="🔍 Rechercher un client..." onkeyup="filtrerClients()" 
+               style="width:100%; background:#1a1a1a; border:1px solid #333; color:white; padding:12px; border-radius:10px; margin-bottom:10px; box-sizing:border-box;">
+        
+        <div class="filter-bar" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:10px;">
+            <button onclick="loadUsers('TOUT')" class="filter-btn active">TOUS</button>
+            <button onclick="loadUsers('A')" class="filter-btn">CAT A</button>
+            <button onclick="loadUsers('B')" class="filter-btn">CAT B</button>
+            <button onclick="loadUsers('C')" class="filter-btn">CAT C</button>
+            <button onclick="ouvrirRapport()" style="background:#444; color:white; border:none; padding:8px 15px; border-radius:20px; font-size:0.7rem; font-weight:bold;">📄 BILAN</button>
+        </div>
+    </div>
+
+    <div id="admin-user-list" style="padding:5px 15px 100px 15px;">
+        </div>
 </div>
     
 <div id="cloud-status" class="led-fixe-top">
