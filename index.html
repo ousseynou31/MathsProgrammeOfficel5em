@@ -13,7 +13,6 @@
     <div id="license-gate" class="gate">
         <div class="glass-card anim-pop">
             <h1>ACTIVATION</h1>
-            <p style="color:#888; font-size:0.7rem;">ID APPAREIL :</p>
             <div id="display-device-id" class="id-display">...</div>
             <input type="number" id="input-license" class="input-3d" placeholder="CODE PIN">
             <button class="btn-3d btn-gold" onclick="verifierLicence()">DÉVERROUILLER</button>
@@ -25,50 +24,42 @@
             <h1>PROFIL CLOUD</h1>
             <input type="text" id="reg-nom" class="input-3d" placeholder="NOM COMPLET">
             <input type="tel" id="reg-tel" class="input-3d" placeholder="TÉLÉPHONE">
-            <button class="btn-3d btn-accent" onclick="enregistrerProfil()">CRÉER MON COMPTE</button>
+            <button class="btn-3d btn-accent" onclick="enregistrerProfil()">CRÉER COMPTE</button>
         </div>
     </div>
 
-    <div id="banned-screen" class="gate" style="background: #450a0a;">
+    <div id="banned-screen" class="gate" style="background: #330000;">
         <div class="glass-card">
-            <h1 style="color:#ef4444">ACCÈS REFUSÉ</h1>
-            <p id="ban-reason" style="margin: 15px 0;"></p>
-            <button class="btn-3d" onclick="location.reload()" style="background:white; color:black;">RÉESSAYER</button>
+            <h1 style="color:#ff4444">ACCÈS REFUSÉ</h1>
+            <p id="ban-reason"></p>
+            <button class="btn-3d" onclick="location.reload()">RÉESSAYER</button>
         </div>
     </div>
 
     <div id="hub-accueil" class="main-app" style="display:none;">
         <header class="header">
             <div class="status-bar">
-                <span id="cloud-dot"></span>
-                <span id="cloud-text">SYNCHRO...</span>
+                <span id="cloud-dot"></span> <span id="cloud-text">...</span>
             </div>
         </header>
         
-        <div class="hero">
+        <div class="hero-center">
             <h1 class="main-title">MATHS 5ème</h1>
             <h2 id="admin-trigger" class="sub-title">SYSTÈME DIOUF</h2>
-            <p id="user-welcome">Chargement du profil...</p>
-        </div>
-
-        <div class="content-grid">
-            <p style="text-align:center; color:gray; margin-top:50px;">Contenu des cours disponible après activation.</p>
+            <p id="user-welcome" style="color: #444; font-size: 0.9rem;"></p>
         </div>
     </div>
 
     <div id="page-admin" class="full-page">
         <div class="admin-header">
-            <h2>GESTION ÉLÈVES</h2>
-            <button onclick="naviguer('hub-accueil')" class="btn-close">RETOUR</button>
+            <h2>GESTIONNAIRE</h2>
+            <button onclick="naviguer('hub-accueil')" class="btn-close">QUITTER</button>
         </div>
-        
         <div class="admin-tools">
-            <input type="text" id="admin-search" onkeyup="filtrerClients()" class="input-3d" placeholder="Rechercher un nom...">
-            <div class="stats-box">Total: <b id="dash-total">0</b></div>
+            <input type="text" id="admin-search" onkeyup="filtrerClients()" class="input-3d" placeholder="Chercher un nom...">
+            <div class="stats-box">Élèves : <b id="dash-total">0</b></div>
         </div>
-
-        <div id="admin-user-list" class="user-list">
-            </div>
+        <div id="admin-user-list" class="user-list"></div>
     </div>
 
     <script src="script.js"></script>
