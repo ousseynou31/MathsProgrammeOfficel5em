@@ -29,11 +29,11 @@
     </div>
 
     <div id="hub-accueil" class="main-app" style="display:none;">
-        <header class="header-minimal">
-            <h1 id="admin-trigger" class="titre-officiel">
-                BIENVENU DANS MATHS 5em PROGRAMME OFFICIEL V1
-            </h1>
-        </header>
+         <header class="header-minimal" style="text-align: center;">
+    <h1 id="admin-trigger" class="titre-officiel">
+        BIENVENU DANS MATHS 5em PROGRAMME OFFICIEL V1
+    </h1>
+       </header>
         
         <main class="empty-body">
             </main>
@@ -42,6 +42,8 @@
     <div id="page-admin" class="full-page">
         <div class="admin-header">
             <h2>ADMINISTRATION V1</h2>
+            <button class="btn-3d btn-gold" onclick="verifierLicence()">
+    <span>DÉVERROUILLER</span> </button>
             <button onclick="naviguer('hub-accueil')" class="btn-close">RETOUR</button>
         </div>
         <div id="admin-user-list" class="user-list"></div>
