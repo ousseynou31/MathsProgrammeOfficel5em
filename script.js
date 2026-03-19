@@ -150,15 +150,26 @@ window.onload = () => {
 
 function surveillerConnexion() {
     const cloudDiv = document.getElementById('cloud-status');
-    
-    // On écoute la connexion Firebase
-    firebase.database().ref(".info/connected").on("value", (snapshot) => {
-        if (snapshot.val() === true) {
-            console.log("Système : Connecté au Cloud");
+    const ledCircle = document.querySelector('.led-circle');
+    const ledText = document.querySelector('.led-text');
+
+    firebase.database().ref(".info/connected").on("value", (snap) => {
+        if (snap.val() === true) {
+            console.log("✅ MODE VERT ACTIVÉ");
+            // On ajoute la classe CSS
             cloudDiv.classList.add('cloud-online');
+            // FORCE LE STYLE (Sécurité supplémentaire)
+            ledCircle.style.backgroundColor = "#10b981";
+            ledCircle.style.boxShadow = "0 0 15px #10b981";
+            ledText.style.color = "#10b981";
+            ledText.innerText = "ONLINE";
         } else {
-            console.log("Système : Recherche de connexion...");
+            console.log("❌ MODE GRIS ACTIVÉ");
             cloudDiv.classList.remove('cloud-online');
+            ledCircle.style.backgroundColor = "#475569";
+            ledCircle.style.boxShadow = "none";
+            ledText.style.color = "#475569";
+            ledText.innerText = "OFFLINE";
         }
     });
 }
