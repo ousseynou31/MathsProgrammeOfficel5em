@@ -208,7 +208,7 @@ function marquerPresence() {
 // --- 1. CHARGEMENT DE LA LISTE ---
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.7rem;">Synchronisation Cloud...</p>`;
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:15px; font-size:0.7rem;">Chargement...</p>`;
     
     try {
         const usersSnap = await database.ref('clients').once('value');
@@ -227,61 +227,57 @@ async function loadUsers(filtre = 'TOUT') {
             const jours = calculerJours(data.date_inscription);
             const isBanned = blacklisted[u.key] === true;
             
-            // Logique de couleur Diouf Ous
             let statusClass = "status-ok";
             if (jours >= 26 && jours <= 34) statusClass = "status-warning";
             if (jours >= 35) statusClass = "status-danger";
 
-            // --- NOUVEAU HTML AVEC COLONNES FIXES ---
+            // --- STRUCTURE ULTRA-COMPACTE ---
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:10px 5px; border-bottom:1px solid #222; background: rgba(255,255,255,0.01); margin-bottom:4px; border-radius:8px; overflow:hidden;">
+                <div class="user-row" style="display:flex; align-items:center; padding:8px 4px; border-bottom:1px solid #222; background: rgba(255,255,255,0.01); margin-bottom:2px; overflow:hidden;">
                     
-                    <div style="width:45px; flex-shrink:0; display:flex; justify-content:center;">
-                        <div class="stats-circle ${statusClass}" style="width:34px; height:34px; font-size:0.6rem; border-width:2px; flex-shrink:0;">
+                    <div style="width:35px; flex-shrink:0; display:flex; justify-content:center;">
+                        <div class="stats-circle ${statusClass}" style="width:28px; height:28px; font-size:0.55rem; border-width:1px; flex-shrink:0;">
                             ${jours}J
                         </div>
                     </div>
 
-                    <div style="flex:1; margin-left:8px; min-width:0; overflow:hidden;">
-                        <div style="font-weight:800; font-size:0.75rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    <div style="flex:1; margin-left:6px; min-width:0;">
+                        <div style="font-weight:800; font-size:0.7rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                             ${data.nom}
                         </div>
-                        <div style="font-size:0.5rem; color:#444;">ID:${u.key.slice(-4)}</div>
                     </div>
 
-                    <div style="width:45px; flex-shrink:0; display:flex; justify-content:center;">
+                    <div style="width:35px; flex-shrink:0; display:flex; justify-content:center;">
                         <select onchange="changerCategorie('${u.key}', this.value)" 
-                                style="width:38px; background:#000; color:var(--p); border:1px solid #333; border-radius:4px; font-size:0.65rem; font-weight:900; height:26px; padding:0; text-align:center; cursor:pointer;">
+                                style="width:32px; background:#000; color:var(--p); border:1px solid #444; border-radius:3px; font-size:0.6rem; font-weight:900; height:22px; padding:0; text-align:center;">
                             <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>A</option>
                             <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>B</option>
                             <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
                         </select>
                     </div>
 
-                    <div style="width:65px; flex-shrink:0; display:grid; grid-template-columns: 1fr 1fr; gap:3px; justify-items: center; align-items: center;">
-                        <button onclick="validerPaiement('${u.key}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; display:flex; align-items:center; justify-content:center;">💰</button>
+                    <div style="width:55px; flex-shrink:0; display:grid; grid-template-columns: 1fr 1fr; gap:2px; margin-left:4px;">
+                        <button onclick="validerPaiement('${u.key}')" class="pay-btn" style="width:24px; height:24px; font-size:0.65rem; padding:0; display:flex; align-items:center; justify-content:center;">💰</button>
                         
-                        <button onclick="envoyerRappel('${u.key}', '${data.nom}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:#25D366; color:#25D366; display:flex; align-items:center; justify-content:center;">💬</button>
+                        <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:24px; height:24px; font-size:0.65rem; padding:0; border-color:#25D366; color:#25D366; display:flex; align-items:center; justify-content:center;">💬</button>
                         
-                        <button onclick="toggleBan('${u.key}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'}; display:flex; align-items:center; justify-content:center;">
+                        <button onclick="toggleBan('${u.key}')" class="pay-btn" style="width:24px; height:24px; font-size:0.65rem; padding:0; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'}; display:flex; align-items:center; justify-content:center;">
                             ${isBanned ? '🔓' : '🚫'}
                         </button>
                         
-                        <button onclick="deleteClient('${u.key}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:var(--d); color:var(--d); display:flex; align-items:center; justify-content:center;">🗑️</button>
+                        <button onclick="deleteClient('${u.key}')" class="pay-btn" style="width:24px; height:24px; font-size:0.65rem; padding:0; border-color:var(--d); color:var(--d); display:flex; align-items:center; justify-content:center;">🗑️</button>
                     </div>
 
                 </div>`;
         });
 
-        // Mise à jour des compteurs du dashboard
         if (typeof calculerGlobalStats === "function") calculerGlobalStats();
 
     } catch(e) { 
         console.error(e); 
-        list.innerHTML = "<p style='text-align:center; color:red;'>Erreur de chargement.</p>";
+        list.innerHTML = "<p style='text-align:center; color:red; font-size:0.6rem;'>Erreur de chargement.</p>";
     }
 }
-
 // FONCTION POUR CALCULER LES STATS DU DASHBOARD
 async function calculerGlobalStats() {
     try {
