@@ -205,17 +205,31 @@ function marquerPresence() {
     // TRÈS IMPORTANT : Supprime la ligne automatiquement quand vous fermez l'app
     presenceRef.onDisconnect().remove();
 }
+// CALCUL DES JOURS (Essentiel pour afficher la liste)
 function calculerJours(dateInsc) {
     if (!dateInsc) return 0;
-    const diff = new Date() - new Date(dateInsc);
-    return Math.floor(diff / (1000 * 60 * 60 * 24));
+    const debut = new Date(dateInsc);
+    const aujourdhui = new Date();
+    const diff = aujourdhui - debut;
+    const result = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return result < 0 ? 0 : result;
 }
 // --- 1. CHARGEMENT DE LA LISTE ---
+/**
+ * Charge la liste des utilisateurs avec colonnes fixes et calculs synchronisés
+ * @param {string} filtre - 'TOUT', 'A', 'B' ou 'C'
+ */
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Synchronisation des données...</p>`;
+    
+    // État de chargement visuel
+    list.innerHTML = `
+        <div style="text-align:center; padding:30px; opacity:0.5;">
+            <div style="color:var(--p); font-size:0.8rem; font-weight:800;">CHARGEMENT DE LA BASE...</div>
+        </div>`;
     
     try {
+        // Récupération des données Firebase (Clients + Liste Noire)
         const usersSnap = await database.ref('clients').once('value');
         const blackSnap = await database.ref('blacklist').once('value');
         const blacklisted = blackSnap.val() || {};
@@ -226,97 +240,115 @@ async function loadUsers(filtre = 'TOUT') {
         usersSnap.forEach(u => {
             const data = u.val().infos_client;
             if(!data) return;
+
+            // --- FILTRAGE LOGIQUE ---
             if (filtre !== 'TOUT' && data.categorie !== filtre) return;
             count++;
 
             const jours = calculerJours(data.date_inscription);
             const isBanned = blacklisted[u.key] === true;
             
+            // Logique de couleur (Vert/Orange/Rouge)
             let statusClass = "status-ok";
             if (jours >= 26 && jours <= 34) statusClass = "status-warning";
             if (jours >= 35) statusClass = "status-danger";
 
-            // --- STRUCTURE AVEC MARGE DE SÉCURITÉ À DROITE (PC) ---
+            // --- STRUCTURE HTML AVEC COLONNES ET MARGE DE SÉCURITÉ ---
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin-bottom:5px; border-radius:10px; margin-right: 10px; margin-left: 10px;">
+                <div class="user-row" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 10px 6px 10px; border-radius:12px; transition: 0.3s;">
                     
-                    <div style="width:50px; flex-shrink:0;">
-                        <div class="stats-circle ${statusClass}" style="width:38px; height:38px; font-size:0.7rem; border-width:2px;">
+                    <div style="width:45px; flex-shrink:0;">
+                        <div class="stats-circle ${statusClass}" style="width:36px; height:36px; font-size:0.65rem; border-width:2px; font-weight:900;">
                             ${jours}J
                         </div>
                     </div>
 
-                    <div style="flex:1; min-width:0; padding-right:10px;">
-                        <div style="font-weight:800; font-size:0.9rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    <div style="flex:1; margin-left:12px; min-width:0; padding-right:15px;">
+                        <div style="font-weight:800; font-size:0.85rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                             ${data.nom}
                         </div>
-                        <div style="font-size:0.6rem; color:#666;">ID: ${u.key.slice(-4)} | Tel: ${u.key}</div>
+                        <div style="font-size:0.6rem; color:#555;">ID: ${u.key.slice(-4)} | Catégorie: ${data.categorie || 'Non définie'}</div>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:15px; flex-shrink:0; background: rgba(0,0,0,0.3); padding:5px 12px; border-radius:8px; border:1px solid #333;">
+                    <div style="display:flex; align-items:center; gap:10px; flex-shrink:0; background:rgba(0,0,0,0.4); padding:6px 10px; border-radius:10px; border:1px solid #333;">
                         
-                        <div style="display:flex; flex-direction:column; align-items:center;">
-                            <label style="font-size:0.5rem; color:gray; margin-bottom:2px;">CAT.</label>
+                        <div style="text-align:center;">
                             <select onchange="changerCategorie('${u.key}', this.value)" 
-                                    style="width:45px; background:#111; color:var(--p); border:1px solid var(--p); border-radius:4px; font-size:0.75rem; font-weight:900; height:28px; text-align:center; cursor:pointer;">
+                                    style="width:42px; background:#000; color:var(--p); border:1px solid #444; border-radius:5px; font-size:0.7rem; font-weight:900; height:28px; cursor:pointer;">
                                 <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>A</option>
                                 <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>B</option>
                                 <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
                             </select>
                         </div>
 
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
-                            <button onclick="validerPaiement('${u.key}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem;" title="Payer">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
-                            <button onclick="toggleBan('${u.key}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'};" title="Bannir">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
+                            <button onclick="validerPaiement('${u.key}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0;" title="Renouveler">💰</button>
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
+                            <button onclick="toggleBan('${u.key}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'};">
                                 ${isBanned ? '🔓' : '🚫'}
                             </button>
-                            <button onclick="deleteClient('${u.key}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; border-color:var(--d); color:var(--d);" title="Supprimer">🗑️</button>
+                            <button onclick="deleteClient('${u.key}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:var(--d); color:var(--d);">🗑️</button>
                         </div>
                     </div>
-
                 </div>`;
         });
 
-        if (typeof calculerGlobalStats === "function") calculerGlobalStats();
+        // Gestion liste vide
+        if(count === 0) {
+            list.innerHTML = `<p style="text-align:center; color:#444; padding:40px; font-size:0.8rem; font-weight:800;">AUCUN RÉSULTAT POUR LA CATÉGORIE ${filtre}</p>`;
+        }
 
-    } catch(e) { 
-        console.error(e); 
-        list.innerHTML = "<p style='text-align:center; color:red;'>Erreur système.</p>";
+        // --- SYNCHRONISATION DES STATS DU DASHBOARD ---
+        // On passe le filtre pour que les calculs en haut correspondent à ce qu'on voit
+        calculerGlobalStats(filtre);
+
+    } catch (error) {
+        console.error("Erreur loadUsers:", error);
+        list.innerHTML = `<p style="color:var(--d); text-align:center; padding:20px;">Erreur de synchronisation.</p>`;
     }
 }
 // FONCTION POUR CALCULER LES STATS DU DASHBOARD
-async function calculerGlobalStats() {
+async function calculerGlobalStats(filtre = 'TOUT') {
     try {
         const clientsSnap = await database.ref('clients').once('value');
-        const tarifsSnap = await database.ref('tarifs').once('value');
+        const tarifsSnap = await database.ref('reglages/tarifs').once('value');
         
         const clients = clientsSnap.val() || {};
-        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 }; // Valeurs par défaut
+        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
 
         let totalAttendu = 0;
         let nbRetards = 0;
+        let nbAbonnesAffiches = 0;
 
         Object.values(clients).forEach(c => {
             const info = c.infos_client;
             if (!info) return;
 
-            // Somme du montant attendu
-            const prix = tarifs[info.categorie] || 0;
-            totalAttendu += parseInt(prix);
+            // CONDITION DE FILTRE : On ne calcule que si ça correspond au filtre choisi
+            if (filtre !== 'TOUT' && info.categorie !== filtre) return;
 
-            // Compte des retards (> 30 jours)
+            // Calcul du montant selon la catégorie du client
+            const prix = parseInt(tarifs[info.categorie]) || 0;
+            totalAttendu += prix;
+
+            // Calcul des retards
             const jours = calculerJours(info.date_inscription);
-            if (jours > 30) nbRetards++;
+            if (jours >= 30) nbRetards++;
+            
+            nbAbonnesAffiches++;
         });
 
-        // Mise à jour du HTML (Vos IDs d'origine)
-        document.getElementById('dash-total-a').innerText = totalAttendu + " F";
-        document.getElementById('dash-total-global').innerText = totalAttendu + " FCFA"; // Ici on estime le total
-        document.getElementById('dash-retard').innerText = nbRetards;
+        // Mise à jour des IDs du Dashboard
+        const elAttendu = document.getElementById('dash-total-a');
+        const elGlobal = document.getElementById('dash-total-global');
+        const elRetard = document.getElementById('dash-retard');
+
+        if(elAttendu) elAttendu.innerText = totalAttendu.toLocaleString() + " F";
+        if(elGlobal) elGlobal.innerText = (filtre === 'TOUT' ? "TOTAL GLOBAL" : "TOTAL CAT " + filtre);
+        if(elRetard) elRetard.innerText = nbRetards;
 
     } catch (e) {
-        console.error("Erreur stats:", e);
+        console.error("Erreur stats filtrées:", e);
     }
 }
 // Sauvegarder les prix dans Firebase
@@ -413,14 +445,14 @@ function filtrerClients() {
     });
 }
 
+// CHANGEMENT DE CATÉGORIE (Enregistre le choix A/B/C)
 async function changerCategorie(telId, nouvelleCat) {
     try {
         await database.ref(`clients/${telId}/infos_client/categorie`).set(nouvelleCat);
-        // On rafraîchit les stats et la liste
-        mettreAJourDashboard(); 
+        // On relance le chargement pour mettre à jour les calculs d'argent
+        loadUsers(document.querySelector('.filter-btn.active')?.innerText || 'TOUT');
     } catch (e) {
-        console.error("Erreur changement catégorie:", e);
-        alert("Erreur de sauvegarde");
+        alert("Erreur de sauvegarde dans la base.");
     }
 }
 // ==========================================
