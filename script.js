@@ -205,15 +205,10 @@ function marquerPresence() {
     // TRÈS IMPORTANT : Supprime la ligne automatiquement quand vous fermez l'app
     presenceRef.onDisconnect().remove();
 }
+// --- 1. CHARGEMENT DE LA LISTE ---
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
-    
-    // Affichage du chargement
-    list.innerHTML = `
-        <div style="text-align:center; padding:30px;">
-            <div class="spinner" style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--p); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: auto;"></div>
-            <p style="color:gray; margin-top:10px; font-size:0.8rem;">Synchronisation Cloud...</p>
-        </div>`;
+    list.innerHTML = `<div style="text-align:center; padding:30px;"><p style="color:gray;">Chargement...</p></div>`;
     
     try {
         const usersSnap = await database.ref('clients').once('value');
@@ -227,94 +222,83 @@ async function loadUsers(filtre = 'TOUT') {
             const data = u.val().infos_client;
             if(!data) return;
 
-            // 1. Système de filtre par catégorie (A, B, C)
             if (filtre !== 'TOUT' && data.categorie !== filtre) return;
             count++;
 
-            // 2. Calculs de dates et d'état (Ban)
             const jours = calculerJours(data.date_inscription);
             const isBanned = blacklisted[u.key] === true;
-            const dateObj = new Date(data.date_inscription);
-            const dateAffiche = isNaN(dateObj.getTime()) ? "Date inconnue" : dateObj.toLocaleDateString('fr-FR');
+            const dateAffiche = new Date(data.date_inscription).toLocaleDateString('fr-FR');
 
-            // 3. Couleurs selon l'ancienneté
-            let colorClass = "c-green"; 
-            if (jours >= 26 && jours <= 34) colorClass = "c-orange";
-            if (jours >= 35) colorClass = "c-red";
+            let colorClass = jours >= 35 ? "c-red" : (jours >= 26 ? "c-orange" : "c-green");
 
-            // 4. Génération du HTML avec le menu déroulant
             list.innerHTML += `
-                <div class="user-card" style="display:flex; align-items:center; background:#181818; margin:10px 5px; padding:15px; border-radius:12px; border-left: 4px solid ${isBanned ? '#ff4444' : '#222'}; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+                <div class="user-card" style="display:flex; align-items:center; background:#181818; margin-bottom:10px; padding:12px; border-radius:12px; border-left: 4px solid ${isBanned ? '#ff4444' : '#222'};">
                     
-                    <div class="stat-circle ${colorClass}" style="width:52px; height:52px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0;">
-                        <span style="font-size:1.1rem; font-weight:900; color:white; line-height:1;">${jours}</span>
-                        <span style="font-size:0.5rem; color:rgba(255,255,255,0.7); text-transform:uppercase; font-weight:bold;">JOURS</span>
+                    <div class="stat-circle ${colorClass}" style="width:45px; height:45px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0;">
+                        <span style="font-size:0.9rem; font-weight:bold; color:white;">${jours}</span>
+                        <span style="font-size:0.4rem; color:white; opacity:0.7;">J</span>
                     </div>
 
-                    <div style="flex:1; margin-left:12px; min-width:0;">
-                        <div style="font-weight:700; font-size:0.95rem; color:#fff; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    <div style="flex:1; margin-left:10px; min-width:0;">
+                        <div style="font-weight:bold; font-size:0.85rem; color:#fff; text-transform:uppercase; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                             ${data.nom}
                         </div>
+                        <div style="font-size:0.6rem; color:#666;">${dateAffiche}</div>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:8px;">
                         
-                        <div style="margin-top:5px; display:flex; align-items:center; gap:8px;">
-                            <select onchange="changerCategorie('${u.key}', this.value)" 
-                                    style="background:#000; color:var(--p); border:1px solid #333; padding:2px 5px; border-radius:4px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
-                                <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>CAT A</option>
-                                <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>CAT B</option>
-                                <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>CAT C</option>
-                            </select>
-                            <span style="font-size:0.6rem; color:#555;">ID: ${u.key.slice(-6)}</span>
-                        </div>
+                        <select onchange="changerCategorie('${u.key}', this.value)" 
+                                style="background:#000; color:var(--p); border:1px solid #333; padding:5px; border-radius:6px; font-size:0.7rem; font-weight:bold; height:32px;">
+                            <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>A</option>
+                            <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>B</option>
+                            <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
+                        </select>
 
-                        <div style="font-size:0.7rem; color:#777; margin-top:2px;">
-                            Inscrit le : <span style="color:#bbb;">${dateAffiche}</span>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:3px;">
+                            <button onclick="validerPaiement('${u.key}')" style="background:#10b981; border:none; border-radius:4px; width:28px; height:28px; color:white;">💰</button>
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" style="background:#25D366; border:none; border-radius:4px; width:28px; height:28px; color:white;">💬</button>
+                            <button onclick="toggleBan('${u.key}')" style="background:${isBanned ? '#6366f1' : '#f59e0b'}; border:none; border-radius:4px; width:28px; height:28px; color:white;">${isBanned ? '🔓' : '🚫'}</button>
+                            <button onclick="deleteClient('${u.key}')" style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; border-radius:4px; width:28px; height:28px; color:#ef4444;">🗑️</button>
                         </div>
                     </div>
-
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; margin-left:8px;">
-                        <button onclick="validerPaiement('${u.key}')" style="background:#10b981; border:none; border-radius:6px; padding:8px; color:white; cursor:pointer;" title="Payer">💰</button>
-                        <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" style="background:#25D366; border:none; border-radius:6px; padding:8px; color:white; cursor:pointer;" title="WhatsApp">💬</button>
-                        <button onclick="toggleBan('${u.key}')" style="background:${isBanned ? '#6366f1' : '#f59e0b'}; border:none; border-radius:6px; padding:8px; color:white; cursor:pointer;" title="Suspendre">
-                            ${isBanned ? '🔓' : '🚫'}
-                        </button>
-                        <button onclick="deleteClient('${u.key}')" style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; border-radius:6px; padding:8px; color:#ef4444; cursor:pointer;" title="Supprimer">🗑️</button>
-                    </div>
-                </div>
-            `;
+                </div>`;
         });
+        
+        // Mettre à jour les stats après chargement
+        calculerGlobalStats();
 
-        if(count === 0) {
-            list.innerHTML = "<p style='text-align:center; color:gray; padding:20px;'>Aucun abonné dans cette catégorie.</p>";
-        }
-
-    } catch(e) {
-        console.error(e);
-        list.innerHTML = "<p style='color:#ef4444; text-align:center;'>Erreur de connexion au Cloud.</p>";
-    }
+    } catch(e) { console.error(e); }
 }
-function changerCategorie(userId, nouvelleCat) {
-    // 1. Mise à jour dans Firebase
-    firebase.database().ref('users/' + userId).update({
-        categorie: nouvelleCat
-    }).then(() => {
-        console.log("Catégorie mise à jour !");
-        // 2. On rafraîchit les calculs pour que le Dashboard se mette à jour
-        calculerGlobalStats(); 
-    }).catch((error) => {
-        alert("Erreur lors de la mise à jour : " + error.message);
+
+// --- 2. MISE À JOUR CATÉGORIE ---
+async function changerCategorie(id, nouvelleCat) {
+    try {
+        await database.ref(`clients/${id}/infos_client`).update({ categorie: nouvelleCat });
+        calculerGlobalStats(); // Recalculer les stats immédiatement
+    } catch (e) { alert("Erreur mise à jour"); }
+}
+
+// --- 3. CALCUL DES STATISTIQUES ---
+async function calculerGlobalStats() {
+    const tarifsSnap = await database.ref('tarifs').once('value');
+    const clientsSnap = await database.ref('clients').once('value');
+    const t = tarifsSnap.val() || { A: 0, B: 0, C: 0 };
+    const clients = clientsSnap.val() || {};
+
+    let attendu = 0, encaisse = 0, retards = 0;
+
+    Object.values(clients).forEach(c => {
+        if (!c.infos_client) return;
+        const cat = c.infos_client.categorie;
+        attendu += parseInt(t[cat] || 0);
+        
+        const jours = calculerJours(c.infos_client.date_inscription);
+        if (jours > 30) retards++;
     });
-}
-function calculerJours(dateInscription) {
-    if(!dateInscription) return 0;
-    const debut = new Date(dateInscription);
-    const fin = new Date();
-    
-    // On remet les compteurs à zéro (minuit) pour ne comparer que les jours
-    debut.setHours(0, 0, 0, 0);
-    fin.setHours(0, 0, 0, 0);
-    
-    const diffTemps = Math.abs(fin - debut);
-    return Math.ceil(diffTemps / (1000 * 60 * 60 * 24)); 
+
+    document.getElementById('dash-total-a').innerText = attendu + " F";
+    document.getElementById('dash-retard').innerText = retards;
 }
 // Sauvegarder les prix dans Firebase
 async function sauvegarderTarifs() {
