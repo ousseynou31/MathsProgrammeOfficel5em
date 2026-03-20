@@ -207,6 +207,8 @@ function marquerPresence() {
 }
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
+    
+    // Affichage du chargement
     list.innerHTML = `
         <div style="text-align:center; padding:30px;">
             <div class="spinner" style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--p); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: auto;"></div>
@@ -225,41 +227,22 @@ async function loadUsers(filtre = 'TOUT') {
             const data = u.val().infos_client;
             if(!data) return;
 
-            // Système de filtre par catégorie (A, B, C)
+            // 1. Système de filtre par catégorie (A, B, C)
             if (filtre !== 'TOUT' && data.categorie !== filtre) return;
             count++;
-            // Exemple de ce qui doit être généré pour chaque client
-const userCard = `
-<div class="user-card" style="display:flex; align-items:center; justify-content:space-between; background:#1a1a1a; margin-bottom:10px; padding:12px; border-radius:10px; border:1px solid #333;">
-    
-    <div class="user-info">
-        <h4 style="margin:0; color:white; font-size:0.9rem;">${user.nom}</h4>
-        <p style="margin:0; color:gray; font-size:0.75rem;">${user.tel}</p>
-    </div>
 
-    <div class="user-category-select">
-        <select onchange="changerCategorie('${user.id}', this.value)" style="background:#000; color:var(--p); border:1px solid var(--p); padding:5px; border-radius:5px; font-size:0.8rem; font-weight:bold; cursor:pointer;">
-            <option value="A" ${user.categorie === 'A' ? 'selected' : ''}>CAT A</option>
-            <option value="B" ${user.categorie === 'B' ? 'selected' : ''}>CAT B</option>
-            <option value="C" ${user.categorie === 'C' ? 'selected' : ''}>CAT C</option>
-        </select>
-    </div>
-
-</div>
-`;
-
+            // 2. Calculs de dates et d'état (Ban)
             const jours = calculerJours(data.date_inscription);
             const isBanned = blacklisted[u.key] === true;
-            
-            // Formatage de la date d'inscription
             const dateObj = new Date(data.date_inscription);
             const dateAffiche = isNaN(dateObj.getTime()) ? "Date inconnue" : dateObj.toLocaleDateString('fr-FR');
 
-            // --- LOGIQUE DYNAMIQUE DES COULEURS ---
-            let colorClass = "c-green";  // 0-25 jours
-            if (jours >= 26 && jours <= 34) colorClass = "c-orange"; // 26-34 jours
-            if (jours >= 35) colorClass = "c-red"; // 35+ jours (Expiré)
+            // 3. Couleurs selon l'ancienneté
+            let colorClass = "c-green"; 
+            if (jours >= 26 && jours <= 34) colorClass = "c-orange";
+            if (jours >= 35) colorClass = "c-red";
 
+            // 4. Génération du HTML avec le menu déroulant
             list.innerHTML += `
                 <div class="user-card" style="display:flex; align-items:center; background:#181818; margin:10px 5px; padding:15px; border-radius:12px; border-left: 4px solid ${isBanned ? '#ff4444' : '#222'}; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
                     
@@ -272,12 +255,19 @@ const userCard = `
                         <div style="font-weight:700; font-size:0.95rem; color:#fff; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                             ${data.nom}
                         </div>
+                        
+                        <div style="margin-top:5px; display:flex; align-items:center; gap:8px;">
+                            <select onchange="changerCategorie('${u.key}', this.value)" 
+                                    style="background:#000; color:var(--p); border:1px solid #333; padding:2px 5px; border-radius:4px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
+                                <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>CAT A</option>
+                                <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>CAT B</option>
+                                <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>CAT C</option>
+                            </select>
+                            <span style="font-size:0.6rem; color:#555;">ID: ${u.key.slice(-6)}</span>
+                        </div>
+
                         <div style="font-size:0.7rem; color:#777; margin-top:2px;">
                             Inscrit le : <span style="color:#bbb;">${dateAffiche}</span>
-                        </div>
-                        <div style="display:flex; gap:5px; margin-top:4px;">
-                            <span style="font-size:0.6rem; background:#333; color:var(--p); padding:2px 5px; border-radius:4px; font-weight:bold;">CAT ${data.categorie}</span>
-                            <span style="font-size:0.6rem; color:#555;">ID: ${u.key.slice(-6)}</span>
                         </div>
                     </div>
 
@@ -293,14 +283,15 @@ const userCard = `
             `;
         });
 
-        if(count === 0) list.innerHTML = "<p style='text-align:center; color:gray; padding:20px;'>Aucun abonné dans cette catégorie.</p>";
+        if(count === 0) {
+            list.innerHTML = "<p style='text-align:center; color:gray; padding:20px;'>Aucun abonné dans cette catégorie.</p>";
+        }
 
     } catch(e) {
         console.error(e);
-        list.innerHTML = "<p style='color:#ef4444; text-align:center;'>Erreur Cloud.</p>";
+        list.innerHTML = "<p style='color:#ef4444; text-align:center;'>Erreur de connexion au Cloud.</p>";
     }
 }
-
 function changerCategorie(userId, nouvelleCat) {
     // 1. Mise à jour dans Firebase
     firebase.database().ref('users/' + userId).update({
