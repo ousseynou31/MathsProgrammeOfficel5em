@@ -12,71 +12,51 @@
 <div id="page-admin" class="full-page" style="display:none;">
     
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333;">
-        <h2 style="color:var(--p); margin:0; font-size: 1.2rem;">🛡️ CONTRÔLE ADMIN</h2>
-        <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid white; color:white; padding:8px 15px; border-radius:10px; font-weight:bold; cursor:pointer;">FERMER</button>
+        <h2 style="color:var(--p); margin:0; font-size: 1.1rem; font-weight:800;">🛡️ ADMIN PRO</h2>
+        <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid #444; color:white; padding:6px 12px; border-radius:8px; font-size:0.7rem; font-weight:bold; cursor:pointer;">RETOUR</button>
     </div>
 
-    <div id="admin-dashboard" style="display:flex; gap:8px; margin-bottom:20px;">
-        <div style="flex:1; background:#111; padding:12px 5px; border-radius:12px; border-left:4px solid #ffd700; text-align:center; border: 1px solid #222;">
-            <small style="color:gray; font-size:0.55rem; display:block; text-transform:uppercase; margin-bottom:4px;">Attendu (A)</small>
-            <b id="dash-total-a" style="color:white; font-size:0.9rem;">0 F</b>
+    <div id="admin-dashboard" style="display:flex; gap:8px; margin-bottom:15px;">
+        <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border-left:3px solid #ffd700; text-align:center; border: 1px solid #222;">
+            <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase; margin-bottom:2px;">Attendu</small>
+            <b id="dash-total-a" style="color:white; font-size:0.85rem;">0 F</b>
         </div>
-        <div style="flex:1; background:#111; padding:12px 5px; border-radius:12px; border-left:4px solid #2ecc71; text-align:center; border: 1px solid #222;">
-            <small style="color:gray; font-size:0.55rem; display:block; text-transform:uppercase; margin-bottom:4px;">Total Estimé</small>
-            <b id="dash-total-global" style="color:#2ecc71; font-size:0.9rem;">0 F</b>
+        <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border-left:3px solid #2ecc71; text-align:center; border: 1px solid #222;">
+            <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase; margin-bottom:2px;">Estimé</small>
+            <b id="dash-total-global" style="color:#2ecc71; font-size:0.85rem;">0 F</b>
         </div>
-        <div style="flex:1; background:#111; padding:12px 5px; border-radius:12px; border-left:4px solid #e74c3c; text-align:center; border: 1px solid #222;">
-            <small style="color:gray; font-size:0.55rem; display:block; text-transform:uppercase; margin-bottom:4px;">En Retard</small>
-            <b id="dash-retard" style="color:#e74c3c; font-size:0.9rem;">0</b>
+        <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border-left:3px solid #e74c3c; text-align:center; border: 1px solid #222;">
+            <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase; margin-bottom:2px;">Retard</small>
+            <b id="dash-retard" style="color:#e74c3c; font-size:0.85rem;">0</b>
         </div>
     </div>
 
-    <div style="margin-bottom: 20px;">
-        <input type="text" id="admin-search" placeholder="🔍 Rechercher un nom ou téléphone..." oninput="filtrerClients()" 
-               style="width: 100%; background: #1a1a1a; border: 2px solid var(--p); color: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; font-size: 1rem;">
-        
-        <div id="admin-filters" style="display:flex; gap:6px; overflow-x:auto; padding-bottom:10px;">
-            <button onclick="loadUsers('TOUT')" class="filter-btn active" style="flex:1; background:var(--p); color:white; border:none; font-weight:800;">TOUT</button>
-            <button onclick="loadUsers('A')" class="filter-btn" style="flex:1; border-color:#ffd700;">CAT A</button>
-            <button onclick="loadUsers('B')" class="filter-btn" style="flex:1; border-color:#c0c0c0;">CAT B</button>
-            <button onclick="loadUsers('C')" class="filter-btn" style="flex:1; border-color:#cd7f32;">CAT C</button>
-        </div>
+    <input type="text" id="admin-search" placeholder="🔍 Rechercher..." oninput="filtrerClients()" 
+           style="width: 100%; background: #1a1a1a; border: 1px solid var(--p); color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 0.9rem;">
+    
+    <div id="admin-filters" style="display:flex; gap:5px; margin-bottom:15px;">
+        <button onclick="loadUsers('TOUT')" class="filter-btn active" style="flex:1; font-size:0.65rem; font-weight:800; background:var(--p); border:none; padding:8px; border-radius:6px; color:white;">TOUT</button>
+        <button onclick="loadUsers('A')" class="filter-btn" style="flex:1; font-size:0.65rem; border:1px solid #ffd700; background:transparent; color:white; padding:8px; border-radius:6px;">CAT A</button>
+        <button onclick="loadUsers('B')" class="filter-btn" style="flex:1; font-size:0.65rem; border:1px solid #c0c0c0; background:transparent; color:white; padding:8px; border-radius:6px;">CAT B</button>
+        <button onclick="loadUsers('C')" class="filter-btn" style="flex:1; font-size:0.65rem; border:1px solid #cd7f32; background:transparent; color:white; padding:8px; border-radius:6px;">CAT C</button>
     </div>
 
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
-        <button onclick="ouvrirHistoriquePleinEcran()" style="background:#6c5ce7; color:white; border:none; padding:12px; font-size:0.7rem; border-radius:10px; font-weight:bold;">📊 HISTORIQUE</button>
-        <button onclick="ouvrirRapport()" style="background:white; color:black; border:none; padding:12px; font-size:0.7rem; border-radius:10px; font-weight:bold;">📋 GÉNÉRER BILAN</button>
+        <button onclick="ouvrirHistoriquePleinEcran()" style="background:#6c5ce7; color:white; border:none; padding:10px; font-size:0.7rem; border-radius:8px; font-weight:bold;">📊 HISTORIQUE</button>
+        <button onclick="ouvrirRapport()" style="background:white; color:black; border:none; padding:10px; font-size:0.7rem; border-radius:8px; font-weight:bold;">📋 BILAN PDF</button>
     </div>
 
-    <div id="admin-prices-config" style="background:#111; padding:15px; border-radius:15px; border:1px solid #333; margin-bottom:25px;">
-        <h4 style="margin:0 0 12px 0; font-size:0.75rem; color:var(--p); text-transform:uppercase; letter-spacing:1px;">⚙️ Configuration Tarifs</h4>
+    <div id="admin-prices-config" style="background:#111; padding:12px; border-radius:12px; border:1px solid #333; margin-bottom:20px;">
         <div style="display:flex; gap:8px; align-items:flex-end;">
-            <div style="flex:1;">
-                <label style="font-size:0.55rem; color:gray; display:block; margin-bottom:3px;">CAT A</label>
-                <input type="number" id="price-A" value="5000" style="width:100%; background:#000; color:white; border:1px solid #444; padding:8px; border-radius:8px; font-size:0.8rem; margin:0;">
-            </div>
-            <div style="flex:1;">
-                <label style="font-size:0.55rem; color:gray; display:block; margin-bottom:3px;">CAT B</label>
-                <input type="number" id="price-B" value="3000" style="width:100%; background:#000; color:white; border:1px solid #444; padding:8px; border-radius:8px; font-size:0.8rem; margin:0;">
-            </div>
-            <div style="flex:1;">
-                <label style="font-size:0.55rem; color:gray; display:block; margin-bottom:3px;">CAT C</label>
-                <input type="number" id="price-C" value="1500" style="width:100%; background:#000; color:white; border:1px solid #444; padding:8px; border-radius:8px; font-size:0.8rem; margin:0;">
-            </div>
-            <button onclick="sauvegarderTarifs()" style="background:var(--s); border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold; height:37px; color:black;">💾</button>
+            <div style="flex:1;"><label style="font-size:0.5rem; color:gray; display:block;">CAT A</label><input type="number" id="price-A" value="5000" style="width:100%; background:#000; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.75rem;"></div>
+            <div style="flex:1;"><label style="font-size:0.5rem; color:gray; display:block;">CAT B</label><input type="number" id="price-B" value="3000" style="width:100%; background:#000; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.75rem;"></div>
+            <div style="flex:1;"><label style="font-size:0.5rem; color:gray; display:block;">CAT C</label><input type="number" id="price-C" value="1500" style="width:100%; background:#000; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.75rem;"></div>
+            <button onclick="sauvegarderTarifs()" style="background:var(--s); border:none; padding:8px 12px; border-radius:6px; font-weight:bold; color:black; font-size:0.8rem;">OK</button>
         </div>
     </div>
 
-    <div class="card" style="padding: 10px 0;">
-        <h3 style="margin-left:15px; margin-top:0; font-size:0.85rem; color:var(--s); text-transform:uppercase;">Utilisateurs Actifs</h3>
-        <div id="admin-user-list">
-            <p style="text-align:center; color:#444; padding:20px;">Chargement de la base Cloud...</p>
-        </div>
-    </div>
-
-    <div style="margin-top: 30px; padding-bottom: 50px;">
-        <button onclick="forceReparationDates()" style="width:100%; background:rgba(245, 158, 11, 0.1); color:#f59e0b; border:1px solid #f59e0b; padding:12px; border-radius:12px; font-weight:bold; margin-bottom:10px; font-size:0.7rem;">🔄 RÉPARER LE BUG DES 0 JOURS</button>
-        <button onclick="deconnexionManuelle()" style="width:100%; background:#222; color:#666; border:none; padding:12px; border-radius:12px; font-weight:bold; font-size:0.7rem;">🚪 DÉCONNECTER CET APPAREIL</button>
+    <div id="admin-user-list" style="padding-bottom: 50px;">
+        <p style="text-align:center; color:#444; padding:20px; font-size:0.8rem;">Chargement...</p>
     </div>
 </div>
     
