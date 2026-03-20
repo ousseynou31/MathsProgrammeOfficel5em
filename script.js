@@ -409,7 +409,52 @@ function filtrerClients() {
         card.style.display = contenu.includes(query) ? "flex" : "none";
     });
 }
+async function calculerGlobalStats() {
+    try {
+        // 1. Récupérer les tarifs et les clients
+        const tarifsSnap = await database.ref('tarifs').once('value');
+        const clientsSnap = await database.ref('clients').once('value');
+        const tarifs = tarifsSnap.val() || { A: 0, B: 0, C: 0 };
+        const clients = clientsSnap.val() || {};
 
+        let totalAttendu = 0;
+        let totalEncaisse = 0;
+        let nbRetards = 0;
+
+        // 2. Boucler sur chaque client
+        Object.values(clients).forEach(c => {
+            const info = c.infos_client;
+            if (!info) return;
+
+            // Calcul du montant attendu selon la catégorie
+            const tarifClient = tarifs[info.categorie] || 0;
+            totalAttendu += parseInt(tarifClient);
+
+            // Vérification si payé (si vous avez un champ 'paye' dans votre DB)
+            if (info.paye === true) {
+                totalEncaisse += parseInt(tarifClient);
+            } else {
+                // Si pas payé et plus de 30 jours = Retard
+                const jours = calculerJours(info.date_inscription);
+                if (jours > 30) nbRetards++;
+            }
+        });
+
+        // 3. Mise à jour de l'affichage (HTML)
+        // Note : Vérifiez que ces ID correspondent bien à votre HTML (ex: dash-total-a)
+        if(document.getElementById('dash-total-a')) 
+            document.getElementById('dash-total-a').innerText = totalAttendu + " F";
+        
+        if(document.getElementById('dash-total-global')) 
+            document.getElementById('dash-total-global').innerText = totalEncaisse + " F";
+            
+        if(document.getElementById('dash-retard')) 
+            document.getElementById('dash-retard').innerText = nbRetards;
+
+    } catch (error) {
+        console.error("Erreur calcul stats:", error);
+    }
+}
 // ==========================================
 // 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
 // ==========================================
