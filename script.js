@@ -211,13 +211,13 @@ function calculerJours(dateInsc) {
     const debut = new Date(dateInsc);
     const aujourdhui = new Date();
     const diff = aujourdhui - debut;
-    const result = Math.floor(diff / (1000 * 60 * 60 * 24));
-    return result < 0 ? 0 : result;
+    const jours = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return jours < 0 ? 0 : jours;
 }
 // --- 1. CHARGEMENT DE LA LISTE ---
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px;">Chargement...</p>`;
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px;">Analyse de la base...</p>`;
     
     try {
         const usersSnap = await database.ref('clients').once('value');
@@ -225,45 +225,72 @@ async function loadUsers(filtre = 'TOUT') {
         const blacklisted = blackSnap.val() || {};
         
         list.innerHTML = ""; 
-        
+
         usersSnap.forEach(u => {
             const data = u.val().infos_client;
-            if(!data || (filtre !== 'TOUT' && data.categorie !== filtre)) return;
+            if(!data) return;
+
+            // Filtre de catégorie
+            if (filtre !== 'TOUT' && data.categorie !== filtre) return;
 
             const jours = calculerJours(data.date_inscription);
             const isBanned = blacklisted[u.key] === true;
-            let statusClass = jours >= 35 ? "status-danger" : (jours >= 26 ? "status-warning" : "status-ok");
+            
+            // Formatage de la date pour l'affichage (JJ/MM/AAAA)
+            const dateObj = new Date(data.date_inscription);
+            const dateAffichee = dateObj.toLocaleDateString('fr-FR');
 
-            // Génération de la ligne (Design PC avec marge intérieure)
+            // --- LOGIQUE DE COULEUR DU CERCLE ---
+            let couleurCercle = "#10b981"; // Vert par défaut
+            if (jours >= 26 && jours <= 34) couleurCercle = "#f59e0b"; // Orange/Jaune
+            if (jours >= 35) couleurCercle = "#ef4444"; // Rouge
+
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 15px 5px 15px; border-radius:10px;">
-                    <div style="width:45px; flex-shrink:0;">
-                        <div class="stats-circle ${statusClass}" style="width:35px; height:35px; font-size:0.65rem;">${jours}J</div>
+                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 20px 8px 20px; border-radius:12px;">
+                    
+                    <div style="width:50px; flex-shrink:0; display:flex; justify-content:center;">
+                        <div style="width:40px; height:40px; border-radius:50%; border: 3px solid ${couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.75rem; background: rgba(0,0,0,0.3); box-shadow: 0 0 10px ${couleurCercle}44;">
+                            ${jours}J
+                        </div>
                     </div>
-                    <div style="flex:1; min-width:0; padding-right:10px;">
-                        <div style="font-weight:800; font-size:0.85rem; color:white; text-transform:uppercase; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${data.nom}</div>
-                        <div style="font-size:0.55rem; color:#555;">ID: ${u.key.slice(-4)}</div>
+
+                    <div style="flex:1; margin-left:15px; min-width:0; padding-right:10px;">
+                        <div style="font-weight:800; font-size:0.95rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            ${data.nom}
+                        </div>
+                        <div style="font-size:0.65rem; color:#888; margin-top:2px;">
+                            📅 Inscription : <span style="color:#bbb;">${dateAffichee}</span>
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:10px; flex-shrink:0; background:rgba(0,0,0,0.3); padding:5px 10px; border-radius:8px;">
-                        <select onchange="changerCategorie('${u.key}', this.value)" style="width:40px; background:black; color:var(--p); border:1px solid #444; border-radius:4px; font-size:0.7rem; font-weight:bold;">
+
+                    <div style="display:flex; align-items:center; gap:12px; flex-shrink:0; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:10px; border:1px solid #333;">
+                        
+                        <select onchange="changerCategorie('${u.key}', this.value)" 
+                                style="width:45px; background:#000; color:var(--p); border:1px solid #444; border-radius:4px; font-size:0.75rem; font-weight:bold; height:28px;">
                             <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>A</option>
                             <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>B</option>
                             <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
                         </select>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:3px;">
-                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem;">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:#25D366; color:#25D366;">💬</button>
-                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'};">${isBanned ? '🔓' : '🚫'}</button>
-                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:var(--d); color:var(--d);">🗑️</button>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
+                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0;">💰</button>
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:#25D366; color:#25D366;">💬</button>
+                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'};">
+                                ${isBanned ? '🔓' : '🚫'}
+                            </button>
+                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:var(--d); color:var(--d);">🗑️</button>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // MISE À JOUR DES 3 ÉTAPES (DASHBOARD)
+        // Mise à jour du Dashboard (Attendu, Estimé, Retard)
         calculerGlobalStats(filtre);
 
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+        console.error(e); 
+        list.innerHTML = "<p style='text-align:center; color:red;'>Erreur de chargement des clients.</p>";
+    }
 }
 // FONCTION POUR CALCULER LES STATS DU DASHBOARD
 async function calculerGlobalStats(filtre = 'TOUT') {
