@@ -208,7 +208,7 @@ function marquerPresence() {
 // --- 1. CHARGEMENT DE LA LISTE ---
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
-    list.innerHTML = `<div style="text-align:center; padding:30px;"><p style="color:gray;">Chargement...</p></div>`;
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px;">Chargement Cloud...</p>`;
     
     try {
         const usersSnap = await database.ref('clients').once('value');
@@ -222,83 +222,111 @@ async function loadUsers(filtre = 'TOUT') {
             const data = u.val().infos_client;
             if(!data) return;
 
+            // Filtre de catégorie
             if (filtre !== 'TOUT' && data.categorie !== filtre) return;
             count++;
 
             const jours = calculerJours(data.date_inscription);
             const isBanned = blacklisted[u.key] === true;
-            const dateAffiche = new Date(data.date_inscription).toLocaleDateString('fr-FR');
+            
+            // Logique de couleur Diouf Ous (Vert, Orange, Rouge)
+            let statusClass = "status-ok";
+            if (jours >= 26 && jours <= 34) statusClass = "status-warning";
+            if (jours >= 35) statusClass = "status-danger";
 
-            let colorClass = jours >= 35 ? "c-red" : (jours >= 26 ? "c-orange" : "c-green");
-
+            // CONSTRUCTION DE LA LIGNE EXACTE
             list.innerHTML += `
-                <div class="user-card" style="display:flex; align-items:center; background:#181818; margin-bottom:10px; padding:12px; border-radius:12px; border-left: 4px solid ${isBanned ? '#ff4444' : '#222'};">
+                <div class="user-row" style="border-left: 3px solid ${isBanned ? 'var(--d)' : '#222'}; margin-bottom:5px; background: rgba(255,255,255,0.02);">
                     
-                    <div class="stat-circle ${colorClass}" style="width:45px; height:45px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0;">
-                        <span style="font-size:0.9rem; font-weight:bold; color:white;">${jours}</span>
-                        <span style="font-size:0.4rem; color:white; opacity:0.7;">J</span>
+                    <div class="stats-circle ${statusClass}">
+                        ${jours}J
                     </div>
 
-                    <div style="flex:1; margin-left:10px; min-width:0;">
-                        <div style="font-weight:bold; font-size:0.85rem; color:#fff; text-transform:uppercase; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    <div style="flex:1; margin-left:15px; min-width:0;">
+                        <div style="font-weight:800; font-size:0.85rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                             ${data.nom}
                         </div>
-                        <div style="font-size:0.6rem; color:#666;">${dateAffiche}</div>
+                        <div style="font-size:0.6rem; color:#666;">ID: ${u.key.slice(-6)}</div>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
                         
                         <select onchange="changerCategorie('${u.key}', this.value)" 
-                                style="background:#000; color:var(--p); border:1px solid #333; padding:5px; border-radius:6px; font-size:0.7rem; font-weight:bold; height:32px;">
+                                style="width:50px; padding:5px; background:#000; color:var(--p); border:1px solid #333; border-radius:6px; font-size:0.7rem; font-weight:800; height:32px;">
                             <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>A</option>
                             <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>B</option>
                             <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
                         </select>
 
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:3px;">
-                            <button onclick="validerPaiement('${u.key}')" style="background:#10b981; border:none; border-radius:4px; width:28px; height:28px; color:white;">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" style="background:#25D366; border:none; border-radius:4px; width:28px; height:28px; color:white;">💬</button>
-                            <button onclick="toggleBan('${u.key}')" style="background:${isBanned ? '#6366f1' : '#f59e0b'}; border:none; border-radius:4px; width:28px; height:28px; color:white;">${isBanned ? '🔓' : '🚫'}</button>
-                            <button onclick="deleteClient('${u.key}')" style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; border-radius:4px; width:28px; height:28px; color:#ef4444;">🗑️</button>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
+                            <button onclick="validerPaiement('${u.key}')" class="pay-btn" style="padding:6px; width:30px; height:30px;">💰</button>
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="padding:6px; width:30px; height:30px; border-color:#25D366; color:#25D366;">💬</button>
+                            <button onclick="toggleBan('${u.key}')" class="pay-btn" style="padding:6px; width:30px; height:30px; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'};">
+                                ${isBanned ? '🔓' : '🚫'}
+                            </button>
+                            <button onclick="deleteClient('${u.key}')" class="pay-btn" style="padding:6px; width:30px; height:30px; border-color:var(--d); color:var(--d);">🗑️</button>
                         </div>
                     </div>
-                </div>`;
+                </div>
+            `;
         });
+
+        if(count === 0) list.innerHTML = "<p style='text-align:center; color:#444; padding:20px;'>Aucun résultat.</p>";
         
-        // Mettre à jour les stats après chargement
+        // Relancer le calcul des statistiques du Dashboard
         calculerGlobalStats();
 
-    } catch(e) { console.error(e); }
+    } catch(e) {
+        console.error(e);
+        list.innerHTML = "<p style='color:var(--d); text-align:center;'>Erreur de synchronisation.</p>";
+    }
 }
-
-// --- 2. MISE À JOUR CATÉGORIE ---
-async function changerCategorie(id, nouvelleCat) {
+// FONCTION POUR ENREGISTRER LE CHANGEMENT DE CATÉGORIE
+async function changerCategorie(clientId, nouvelleCat) {
     try {
-        await database.ref(`clients/${id}/infos_client`).update({ categorie: nouvelleCat });
-        calculerGlobalStats(); // Recalculer les stats immédiatement
-    } catch (e) { alert("Erreur mise à jour"); }
+        await database.ref('clients/' + clientId + '/infos_client').update({
+            categorie: nouvelleCat
+        });
+        // On rafraîchit les stats en haut sans recharger toute la liste
+        calculerGlobalStats();
+    } catch (e) {
+        alert("Erreur Cloud : " + e.message);
+    }
 }
 
-// --- 3. CALCUL DES STATISTIQUES ---
+// FONCTION POUR CALCULER LES STATS DU DASHBOARD
 async function calculerGlobalStats() {
-    const tarifsSnap = await database.ref('tarifs').once('value');
-    const clientsSnap = await database.ref('clients').once('value');
-    const t = tarifsSnap.val() || { A: 0, B: 0, C: 0 };
-    const clients = clientsSnap.val() || {};
-
-    let attendu = 0, encaisse = 0, retards = 0;
-
-    Object.values(clients).forEach(c => {
-        if (!c.infos_client) return;
-        const cat = c.infos_client.categorie;
-        attendu += parseInt(t[cat] || 0);
+    try {
+        const clientsSnap = await database.ref('clients').once('value');
+        const tarifsSnap = await database.ref('tarifs').once('value');
         
-        const jours = calculerJours(c.infos_client.date_inscription);
-        if (jours > 30) retards++;
-    });
+        const clients = clientsSnap.val() || {};
+        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 }; // Valeurs par défaut
 
-    document.getElementById('dash-total-a').innerText = attendu + " F";
-    document.getElementById('dash-retard').innerText = retards;
+        let totalAttendu = 0;
+        let nbRetards = 0;
+
+        Object.values(clients).forEach(c => {
+            const info = c.infos_client;
+            if (!info) return;
+
+            // Somme du montant attendu
+            const prix = tarifs[info.categorie] || 0;
+            totalAttendu += parseInt(prix);
+
+            // Compte des retards (> 30 jours)
+            const jours = calculerJours(info.date_inscription);
+            if (jours > 30) nbRetards++;
+        });
+
+        // Mise à jour du HTML (Vos IDs d'origine)
+        document.getElementById('dash-total-a').innerText = totalAttendu + " F";
+        document.getElementById('dash-total-global').innerText = totalAttendu + " FCFA"; // Ici on estime le total
+        document.getElementById('dash-retard').innerText = nbRetards;
+
+    } catch (e) {
+        console.error("Erreur stats:", e);
+    }
 }
 // Sauvegarder les prix dans Firebase
 async function sauvegarderTarifs() {
