@@ -31,7 +31,11 @@
         </div>
     </div>
 
-    <input type="text" id="admin-search" placeholder="🔍 Rechercher..." oninput="filtrerClients()" 
+    <input type="text" 
+       id="admin-search" 
+       placeholder="🔍 Rechercher par nom ou téléphone..." 
+       onkeyup="filtrerClients()" 
+       style="width:90%; padding:12px; margin:15px auto; display:block; border-radius:10px; border:1px solid #333; background:#000; color:white; outline:none; font-size:0.9rem; border-left: 3px solid var(--p);">
            style="width: 100%; background: #1a1a1a; border: 1px solid var(--p); color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 0.9rem;">
     
     <div id="admin-filters" style="display:flex; gap:5px; margin-bottom:15px;">
