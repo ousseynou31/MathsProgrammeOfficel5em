@@ -215,140 +215,98 @@ function calculerJours(dateInsc) {
     return result < 0 ? 0 : result;
 }
 // --- 1. CHARGEMENT DE LA LISTE ---
-/**
- * Charge la liste des utilisateurs avec colonnes fixes et calculs synchronisés
- * @param {string} filtre - 'TOUT', 'A', 'B' ou 'C'
- */
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
-    
-    // État de chargement visuel
-    list.innerHTML = `
-        <div style="text-align:center; padding:30px; opacity:0.5;">
-            <div style="color:var(--p); font-size:0.8rem; font-weight:800;">CHARGEMENT DE LA BASE...</div>
-        </div>`;
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px;">Chargement...</p>`;
     
     try {
-        // Récupération des données Firebase (Clients + Liste Noire)
         const usersSnap = await database.ref('clients').once('value');
         const blackSnap = await database.ref('blacklist').once('value');
         const blacklisted = blackSnap.val() || {};
         
         list.innerHTML = ""; 
-        let count = 0;
-
+        
         usersSnap.forEach(u => {
             const data = u.val().infos_client;
-            if(!data) return;
-
-            // --- FILTRAGE LOGIQUE ---
-            if (filtre !== 'TOUT' && data.categorie !== filtre) return;
-            count++;
+            if(!data || (filtre !== 'TOUT' && data.categorie !== filtre)) return;
 
             const jours = calculerJours(data.date_inscription);
             const isBanned = blacklisted[u.key] === true;
-            
-            // Logique de couleur (Vert/Orange/Rouge)
-            let statusClass = "status-ok";
-            if (jours >= 26 && jours <= 34) statusClass = "status-warning";
-            if (jours >= 35) statusClass = "status-danger";
+            let statusClass = jours >= 35 ? "status-danger" : (jours >= 26 ? "status-warning" : "status-ok");
 
-            // --- STRUCTURE HTML AVEC COLONNES ET MARGE DE SÉCURITÉ ---
+            // Génération de la ligne (Design PC avec marge intérieure)
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 10px 6px 10px; border-radius:12px; transition: 0.3s;">
-                    
+                <div class="user-row" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 15px 5px 15px; border-radius:10px;">
                     <div style="width:45px; flex-shrink:0;">
-                        <div class="stats-circle ${statusClass}" style="width:36px; height:36px; font-size:0.65rem; border-width:2px; font-weight:900;">
-                            ${jours}J
-                        </div>
+                        <div class="stats-circle ${statusClass}" style="width:35px; height:35px; font-size:0.65rem;">${jours}J</div>
                     </div>
-
-                    <div style="flex:1; margin-left:12px; min-width:0; padding-right:15px;">
-                        <div style="font-weight:800; font-size:0.85rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                            ${data.nom}
-                        </div>
-                        <div style="font-size:0.6rem; color:#555;">ID: ${u.key.slice(-4)} | Catégorie: ${data.categorie || 'Non définie'}</div>
+                    <div style="flex:1; min-width:0; padding-right:10px;">
+                        <div style="font-weight:800; font-size:0.85rem; color:white; text-transform:uppercase; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${data.nom}</div>
+                        <div style="font-size:0.55rem; color:#555;">ID: ${u.key.slice(-4)}</div>
                     </div>
-
-                    <div style="display:flex; align-items:center; gap:10px; flex-shrink:0; background:rgba(0,0,0,0.4); padding:6px 10px; border-radius:10px; border:1px solid #333;">
-                        
-                        <div style="text-align:center;">
-                            <select onchange="changerCategorie('${u.key}', this.value)" 
-                                    style="width:42px; background:#000; color:var(--p); border:1px solid #444; border-radius:5px; font-size:0.7rem; font-weight:900; height:28px; cursor:pointer;">
-                                <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>A</option>
-                                <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>B</option>
-                                <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
-                            </select>
-                        </div>
-
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
-                            <button onclick="validerPaiement('${u.key}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0;" title="Renouveler">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
-                            <button onclick="toggleBan('${u.key}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'};">
-                                ${isBanned ? '🔓' : '🚫'}
-                            </button>
-                            <button onclick="deleteClient('${u.key}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:var(--d); color:var(--d);">🗑️</button>
+                    <div style="display:flex; align-items:center; gap:10px; flex-shrink:0; background:rgba(0,0,0,0.3); padding:5px 10px; border-radius:8px;">
+                        <select onchange="changerCategorie('${u.key}', this.value)" style="width:40px; background:black; color:var(--p); border:1px solid #444; border-radius:4px; font-size:0.7rem; font-weight:bold;">
+                            <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>A</option>
+                            <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>B</option>
+                            <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
+                        </select>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:3px;">
+                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem;">💰</button>
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:#25D366; color:#25D366;">💬</button>
+                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'};">${isBanned ? '🔓' : '🚫'}</button>
+                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:var(--d); color:var(--d);">🗑️</button>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // Gestion liste vide
-        if(count === 0) {
-            list.innerHTML = `<p style="text-align:center; color:#444; padding:40px; font-size:0.8rem; font-weight:800;">AUCUN RÉSULTAT POUR LA CATÉGORIE ${filtre}</p>`;
-        }
-
-        // --- SYNCHRONISATION DES STATS DU DASHBOARD ---
-        // On passe le filtre pour que les calculs en haut correspondent à ce qu'on voit
+        // MISE À JOUR DES 3 ÉTAPES (DASHBOARD)
         calculerGlobalStats(filtre);
 
-    } catch (error) {
-        console.error("Erreur loadUsers:", error);
-        list.innerHTML = `<p style="color:var(--d); text-align:center; padding:20px;">Erreur de synchronisation.</p>`;
-    }
+    } catch(e) { console.error(e); }
 }
 // FONCTION POUR CALCULER LES STATS DU DASHBOARD
 async function calculerGlobalStats(filtre = 'TOUT') {
     try {
         const clientsSnap = await database.ref('clients').once('value');
         const tarifsSnap = await database.ref('reglages/tarifs').once('value');
-        
-        const clients = clientsSnap.val() || {};
         const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
 
-        let totalAttendu = 0;
+        let nbClientsFiltres = 0;
+        let sommeEstimee = 0;
         let nbRetards = 0;
-        let nbAbonnesAffiches = 0;
 
-        Object.values(clients).forEach(c => {
-            const info = c.infos_client;
-            if (!info) return;
+        clientsSnap.forEach(u => {
+            const data = u.val().infos_client;
+            if (!data) return;
 
-            // CONDITION DE FILTRE : On ne calcule que si ça correspond au filtre choisi
-            if (filtre !== 'TOUT' && info.categorie !== filtre) return;
+            // Logique de filtre
+            if (filtre !== 'TOUT' && data.categorie !== filtre) return;
 
-            // Calcul du montant selon la catégorie du client
-            const prix = parseInt(tarifs[info.categorie]) || 0;
-            totalAttendu += prix;
+            // 1. On compte le client
+            nbClientsFiltres++;
 
-            // Calcul des retards
-            const jours = calculerJours(info.date_inscription);
-            if (jours >= 30) nbRetards++;
-            
-            nbAbonnesAffiches++;
+            // 2. On ajoute son tarif au total estimé
+            const prix = parseInt(tarifs[data.categorie]) || 0;
+            sommeEstimee += prix;
+
+            // 3. On vérifie s'il est en retard (> 30 jours)
+            const jours = calculerJours(data.date_inscription);
+            if (jours > 30) nbRetards++;
         });
 
-        // Mise à jour des IDs du Dashboard
-        const elAttendu = document.getElementById('dash-total-a');
-        const elGlobal = document.getElementById('dash-total-global');
-        const elRetard = document.getElementById('dash-retard');
-
-        if(elAttendu) elAttendu.innerText = totalAttendu.toLocaleString() + " F";
-        if(elGlobal) elGlobal.innerText = (filtre === 'TOUT' ? "TOTAL GLOBAL" : "TOTAL CAT " + filtre);
-        if(elRetard) elRetard.innerText = nbRetards;
+        // MISE À JOUR DU DASHBOARD HTML
+        // Bloc 1 : Nombre de clients
+        document.getElementById('dash-total-a').innerText = nbClientsFiltres + " Clients";
+        
+        // Bloc 2 : Somme d'argent (Total financier)
+        document.getElementById('dash-total-global').innerText = sommeEstimee.toLocaleString() + " F";
+        
+        // Bloc 3 : Nombre de retards
+        document.getElementById('dash-retard').innerText = nbRetards;
 
     } catch (e) {
-        console.error("Erreur stats filtrées:", e);
+        console.error("Erreur calcul stats:", e);
     }
 }
 // Sauvegarder les prix dans Firebase
@@ -402,15 +360,13 @@ async function mettreAJourDashboard() {
 }
 
 // 1. PAYER : Réinitialise la date à aujourd'hui
-async function validerPaiement(telId) {
-    if(confirm("Confirmer le paiement et réinitialiser l'abonnement ?")) {
-        const nouvelleDate = new Date().toISOString();
-        await database.ref(`clients/${telId}/infos_client/date_inscription`).set(nouvelleDate);
-        // Optionnel : Enregistrer dans l'historique des revenus ici
-        loadUsers(); 
+async function validerPaiement(telId, filtreActuel) {
+    if(confirm("Confirmer le paiement ?")) {
+        await database.ref(`clients/${telId}/infos_client/date_inscription`).set(new Date().toISOString());
+        // On recharge la liste ET le dashboard avec le filtre en cours
+        loadUsers(filtreActuel); 
     }
 }
-
 // 2. WHATSAPP : Message automatique
 function envoyerRappel(tel, nom, cat) {
     const msg = `Bonjour ${nom}, votre abonnement (Catégorie ${cat}) arrive à échéance. Merci de régulariser votre situation.`;
