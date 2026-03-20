@@ -300,6 +300,19 @@ const userCard = `
         list.innerHTML = "<p style='color:#ef4444; text-align:center;'>Erreur Cloud.</p>";
     }
 }
+
+function changerCategorie(userId, nouvelleCat) {
+    // 1. Mise à jour dans Firebase
+    firebase.database().ref('users/' + userId).update({
+        categorie: nouvelleCat
+    }).then(() => {
+        console.log("Catégorie mise à jour !");
+        // 2. On rafraîchit les calculs pour que le Dashboard se mette à jour
+        calculerGlobalStats(); 
+    }).catch((error) => {
+        alert("Erreur lors de la mise à jour : " + error.message);
+    });
+}
 function calculerJours(dateInscription) {
     if(!dateInscription) return 0;
     const debut = new Date(dateInscription);
@@ -405,18 +418,7 @@ function filtrerClients() {
         card.style.display = contenu.includes(query) ? "flex" : "none";
     });
 }
-function changerCategorie(userId, nouvelleCat) {
-    // 1. Mise à jour dans Firebase
-    firebase.database().ref('users/' + userId).update({
-        categorie: nouvelleCat
-    }).then(() => {
-        console.log("Catégorie mise à jour !");
-        // 2. On rafraîchit les calculs pour que le Dashboard se mette à jour
-        calculerGlobalStats(); 
-    }).catch((error) => {
-        alert("Erreur lors de la mise à jour : " + error.message);
-    });
-}
+
 // ==========================================
 // 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
 // ==========================================
