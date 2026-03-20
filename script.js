@@ -228,6 +228,25 @@ async function loadUsers(filtre = 'TOUT') {
             // Système de filtre par catégorie (A, B, C)
             if (filtre !== 'TOUT' && data.categorie !== filtre) return;
             count++;
+            // Exemple de ce qui doit être généré pour chaque client
+const userCard = `
+<div class="user-card" style="display:flex; align-items:center; justify-content:space-between; background:#1a1a1a; margin-bottom:10px; padding:12px; border-radius:10px; border:1px solid #333;">
+    
+    <div class="user-info">
+        <h4 style="margin:0; color:white; font-size:0.9rem;">${user.nom}</h4>
+        <p style="margin:0; color:gray; font-size:0.75rem;">${user.tel}</p>
+    </div>
+
+    <div class="user-category-select">
+        <select onchange="changerCategorie('${user.id}', this.value)" style="background:#000; color:var(--p); border:1px solid var(--p); padding:5px; border-radius:5px; font-size:0.8rem; font-weight:bold; cursor:pointer;">
+            <option value="A" ${user.categorie === 'A' ? 'selected' : ''}>CAT A</option>
+            <option value="B" ${user.categorie === 'B' ? 'selected' : ''}>CAT B</option>
+            <option value="C" ${user.categorie === 'C' ? 'selected' : ''}>CAT C</option>
+        </select>
+    </div>
+
+</div>
+`;
 
             const jours = calculerJours(data.date_inscription);
             const isBanned = blacklisted[u.key] === true;
@@ -386,7 +405,18 @@ function filtrerClients() {
         card.style.display = contenu.includes(query) ? "flex" : "none";
     });
 }
-
+function changerCategorie(userId, nouvelleCat) {
+    // 1. Mise à jour dans Firebase
+    firebase.database().ref('users/' + userId).update({
+        categorie: nouvelleCat
+    }).then(() => {
+        console.log("Catégorie mise à jour !");
+        // 2. On rafraîchit les calculs pour que le Dashboard se mette à jour
+        calculerGlobalStats(); 
+    }).catch((error) => {
+        alert("Erreur lors de la mise à jour : " + error.message);
+    });
+}
 // ==========================================
 // 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
 // ==========================================
