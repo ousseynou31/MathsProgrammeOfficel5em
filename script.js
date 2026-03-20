@@ -212,16 +212,9 @@ function marquerPresence() {
  */
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
-    
-    // État de chargement
-    list.innerHTML = `
-        <div style="text-align:center; padding:30px;">
-            <div class="spinner" style="border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--p); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: auto;"></div>
-            <p style="color:#444; margin-top:10px; font-size:0.7rem; font-weight:800;">SYNCHRONISATION CLOUD...</p>
-        </div>`;
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.7rem;">Synchronisation...</p>`;
     
     try {
-        // Récupération des données Firebase
         const usersSnap = await database.ref('clients').once('value');
         const blackSnap = await database.ref('blacklist').once('value');
         const blacklisted = blackSnap.val() || {};
@@ -232,75 +225,52 @@ async function loadUsers(filtre = 'TOUT') {
         usersSnap.forEach(u => {
             const data = u.val().infos_client;
             if(!data) return;
-
-            // 1. Logique de Filtrage
             if (filtre !== 'TOUT' && data.categorie !== filtre) return;
             count++;
 
-            // 2. Calcul des constantes
             const jours = calculerJours(data.date_inscription);
             const isBanned = blacklisted[u.key] === true;
-            const dateObj = new Date(data.date_inscription);
-            const dateAffiche = isNaN(dateObj.getTime()) ? "Date inconnue" : dateObj.toLocaleDateString('fr-FR');
+            let statusClass = jours >= 35 ? "status-danger" : (jours >= 26 ? "status-warning" : "status-ok");
 
-            // 3. Détermination de la couleur (Thème Diouf Ous)
-            let statusClass = "status-ok"; // Vert
-            if (jours >= 26 && jours <= 34) statusClass = "status-warning"; // Orange
-            if (jours >= 35) statusClass = "status-danger"; // Rouge
-
-            // 4. Injection du HTML (Design compact avec Catégorie à droite)
+            // STRUCTURE À COLONNES FIXES (Flexbox avec widths définies)
             list.innerHTML += `
-                <div class="user-row" style="padding: 10px; border-bottom: 1px solid #222; background: rgba(255,255,255,0.02); margin-bottom:5px; border-radius:10px; display:flex; align-items:center; border-left: 3px solid ${isBanned ? 'var(--d)' : 'transparent'};">
+                <div class="user-row" style="display:flex; align-items:center; padding:10px 5px; border-bottom:1px solid #222; background: rgba(255,255,255,0.01); margin-bottom:4px; border-radius:8px;">
                     
-                    <div class="stats-circle ${statusClass}" style="width:38px; height:38px; font-size:0.6rem; flex-shrink:0; border-width:2px;">
-                        ${jours}J
+                    <div style="width:45px; flex-shrink:0; display:flex; justify-content:center;">
+                        <div class="stats-circle ${statusClass}" style="width:35px; height:35px; font-size:0.6rem; border-width:2px;">
+                            ${jours}J
+                        </div>
                     </div>
 
-                    <div style="flex:1; margin-left:12px; min-width:0;">
-                        <div style="font-weight:800; font-size:0.8rem; color:white; text-transform:uppercase; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    <div style="flex:1; margin-left:8px; min-width:0; overflow:hidden;">
+                        <div style="font-weight:800; font-size:0.75rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                             ${data.nom}
                         </div>
-                        <div style="font-size:0.55rem; color:#555;">Inscrit le: ${dateAffiche}</div>
+                        <div style="font-size:0.5rem; color:#444;">ID:${u.key.slice(-4)}</div>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        
+                    <div style="width:45px; flex-shrink:0; display:flex; justify-content:center;">
                         <select onchange="changerCategorie('${u.key}', this.value)" 
-                                style="width:42px; background:#000; color:var(--p); border:1px solid #333; border-radius:5px; font-size:0.65rem; font-weight:800; height:28px; padding:2px; cursor:pointer; outline:none;">
+                                style="width:38px; background:#000; color:var(--p); border:1px solid #333; border-radius:4px; font-size:0.65rem; font-weight:900; height:26px; padding:0 2px; text-align:center;">
                             <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>A</option>
                             <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>B</option>
                             <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
                         </select>
-
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:3px;">
-                            <button onclick="validerPaiement('${u.key}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; display:flex; align-items:center; justify-content:center; padding:0;" title="Payer">💰</button>
-                            
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:#25D366; color:#25D366; display:flex; align-items:center; justify-content:center; padding:0;" title="WhatsApp">💬</button>
-                            
-                            <button onclick="toggleBan('${u.key}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'}; display:flex; align-items:center; justify-content:center; padding:0;" title="Bannir/Débloquer">
-                                ${isBanned ? '🔓' : '🚫'}
-                            </button>
-                            
-                            <button onclick="deleteClient('${u.key}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:var(--d); color:var(--d); display:flex; align-items:center; justify-content:center; padding:0;" title="Supprimer">🗑️</button>
-                        </div>
                     </div>
+
+                    <div style="width:60px; flex-shrink:0; display:grid; grid-template-columns: 1fr 1fr; gap:3px; justify-items: center;">
+                        <button onclick="validerPaiement('${u.key}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; padding:0;">💰</button>
+                        <button onclick="envoyerRappel('${u.key}', '${data.nom}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; padding:0; border-color:#25D366; color:#25D366;">💬</button>
+                        <button onclick="toggleBan('${u.key}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; padding:0; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'};">${isBanned ? '🔓' : '🚫'}</button>
+                        <button onclick="deleteClient('${u.key}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; padding:0; border-color:var(--d); color:var(--d);">🗑️</button>
+                    </div>
+
                 </div>`;
         });
 
-        // 5. Gestion de la liste vide
-        if(count === 0) {
-            list.innerHTML = `<p style="text-align:center; color:#444; padding:30px; font-size:0.8rem; font-weight:800;">AUCUN CLIENT DANS CETTE CATÉGORIE</p>`;
-        }
+        if (typeof calculerGlobalStats === "function") calculerGlobalStats();
 
-        // 6. Mise à jour automatique des compteurs du dashboard
-        if (typeof calculerGlobalStats === "function") {
-            calculerGlobalStats();
-        }
-
-    } catch (error) {
-        console.error("Erreur loadUsers:", error);
-        list.innerHTML = `<p style="color:var(--d); text-align:center; padding:20px; font-size:0.8rem;">ERREUR DE CONNEXION AU CLOUD</p>`;
-    }
+    } catch(e) { console.error(e); }
 }
 // FONCTION POUR ENREGISTRER LE CHANGEMENT DE CATÉGORIE
 async function changerCategorie(clientId, nouvelleCat) {
