@@ -206,11 +206,22 @@ function marquerPresence() {
     presenceRef.onDisconnect().remove();
 }
 // --- 1. CHARGEMENT DE LA LISTE ---
+/**
+ * Charge la liste des utilisateurs avec filtres et actions
+ * @param {string} filtre - 'TOUT', 'A', 'B' ou 'C'
+ */
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px;">Chargement Cloud...</p>`;
+    
+    // État de chargement
+    list.innerHTML = `
+        <div style="text-align:center; padding:30px;">
+            <div class="spinner" style="border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--p); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: auto;"></div>
+            <p style="color:#444; margin-top:10px; font-size:0.7rem; font-weight:800;">SYNCHRONISATION CLOUD...</p>
+        </div>`;
     
     try {
+        // Récupération des données Firebase
         const usersSnap = await database.ref('clients').once('value');
         const blackSnap = await database.ref('blacklist').once('value');
         const blacklisted = blackSnap.val() || {};
@@ -222,63 +233,73 @@ async function loadUsers(filtre = 'TOUT') {
             const data = u.val().infos_client;
             if(!data) return;
 
-            // Filtre de catégorie
+            // 1. Logique de Filtrage
             if (filtre !== 'TOUT' && data.categorie !== filtre) return;
             count++;
 
+            // 2. Calcul des constantes
             const jours = calculerJours(data.date_inscription);
             const isBanned = blacklisted[u.key] === true;
-            
-            // Logique de couleur Diouf Ous (Vert, Orange, Rouge)
-            let statusClass = "status-ok";
-            if (jours >= 26 && jours <= 34) statusClass = "status-warning";
-            if (jours >= 35) statusClass = "status-danger";
+            const dateObj = new Date(data.date_inscription);
+            const dateAffiche = isNaN(dateObj.getTime()) ? "Date inconnue" : dateObj.toLocaleDateString('fr-FR');
 
-            // CONSTRUCTION DE LA LIGNE EXACTE
+            // 3. Détermination de la couleur (Thème Diouf Ous)
+            let statusClass = "status-ok"; // Vert
+            if (jours >= 26 && jours <= 34) statusClass = "status-warning"; // Orange
+            if (jours >= 35) statusClass = "status-danger"; // Rouge
+
+            // 4. Injection du HTML (Design compact avec Catégorie à droite)
             list.innerHTML += `
-                <div class="user-row" style="border-left: 3px solid ${isBanned ? 'var(--d)' : '#222'}; margin-bottom:5px; background: rgba(255,255,255,0.02);">
+                <div class="user-row" style="padding: 10px; border-bottom: 1px solid #222; background: rgba(255,255,255,0.02); margin-bottom:5px; border-radius:10px; display:flex; align-items:center; border-left: 3px solid ${isBanned ? 'var(--d)' : 'transparent'};">
                     
-                    <div class="stats-circle ${statusClass}">
+                    <div class="stats-circle ${statusClass}" style="width:38px; height:38px; font-size:0.6rem; flex-shrink:0; border-width:2px;">
                         ${jours}J
                     </div>
 
-                    <div style="flex:1; margin-left:15px; min-width:0;">
-                        <div style="font-weight:800; font-size:0.85rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    <div style="flex:1; margin-left:12px; min-width:0;">
+                        <div style="font-weight:800; font-size:0.8rem; color:white; text-transform:uppercase; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                             ${data.nom}
                         </div>
-                        <div style="font-size:0.6rem; color:#666;">ID: ${u.key.slice(-6)}</div>
+                        <div style="font-size:0.55rem; color:#555;">Inscrit le: ${dateAffiche}</div>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
                         
                         <select onchange="changerCategorie('${u.key}', this.value)" 
-                                style="width:50px; padding:5px; background:#000; color:var(--p); border:1px solid #333; border-radius:6px; font-size:0.7rem; font-weight:800; height:32px;">
+                                style="width:42px; background:#000; color:var(--p); border:1px solid #333; border-radius:5px; font-size:0.65rem; font-weight:800; height:28px; padding:2px; cursor:pointer; outline:none;">
                             <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>A</option>
                             <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>B</option>
                             <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
                         </select>
 
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
-                            <button onclick="validerPaiement('${u.key}')" class="pay-btn" style="padding:6px; width:30px; height:30px;">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="padding:6px; width:30px; height:30px; border-color:#25D366; color:#25D366;">💬</button>
-                            <button onclick="toggleBan('${u.key}')" class="pay-btn" style="padding:6px; width:30px; height:30px; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'};">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:3px;">
+                            <button onclick="validerPaiement('${u.key}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; display:flex; align-items:center; justify-content:center; padding:0;" title="Payer">💰</button>
+                            
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:#25D366; color:#25D366; display:flex; align-items:center; justify-content:center; padding:0;" title="WhatsApp">💬</button>
+                            
+                            <button onclick="toggleBan('${u.key}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'}; display:flex; align-items:center; justify-content:center; padding:0;" title="Bannir/Débloquer">
                                 ${isBanned ? '🔓' : '🚫'}
                             </button>
-                            <button onclick="deleteClient('${u.key}')" class="pay-btn" style="padding:6px; width:30px; height:30px; border-color:var(--d); color:var(--d);">🗑️</button>
+                            
+                            <button onclick="deleteClient('${u.key}')" class="pay-btn" style="width:26px; height:26px; font-size:0.7rem; border-color:var(--d); color:var(--d); display:flex; align-items:center; justify-content:center; padding:0;" title="Supprimer">🗑️</button>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
 
-        if(count === 0) list.innerHTML = "<p style='text-align:center; color:#444; padding:20px;'>Aucun résultat.</p>";
-        
-        // Relancer le calcul des statistiques du Dashboard
-        calculerGlobalStats();
+        // 5. Gestion de la liste vide
+        if(count === 0) {
+            list.innerHTML = `<p style="text-align:center; color:#444; padding:30px; font-size:0.8rem; font-weight:800;">AUCUN CLIENT DANS CETTE CATÉGORIE</p>`;
+        }
 
-    } catch(e) {
-        console.error(e);
-        list.innerHTML = "<p style='color:var(--d); text-align:center;'>Erreur de synchronisation.</p>";
+        // 6. Mise à jour automatique des compteurs du dashboard
+        if (typeof calculerGlobalStats === "function") {
+            calculerGlobalStats();
+        }
+
+    } catch (error) {
+        console.error("Erreur loadUsers:", error);
+        list.innerHTML = `<p style="color:var(--d); text-align:center; padding:20px; font-size:0.8rem;">ERREUR DE CONNEXION AU CLOUD</p>`;
     }
 }
 // FONCTION POUR ENREGISTRER LE CHANGEMENT DE CATÉGORIE
