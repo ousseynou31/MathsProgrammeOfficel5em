@@ -633,6 +633,24 @@ async function ouvrirRapport() {
         console.error("Erreur Rapport:", error);
     }
 }
+function exporterCSV() {
+    let csv = "Nom;Categorie;Jours;Montant\n";
+    const rows = document.querySelectorAll("#corps-bilan tr");
+    rows.forEach(row => {
+        const cols = row.querySelectorAll("td");
+        csv += `${cols[0].innerText};${cols[1].innerText};${cols[2].innerText};${cols[3].innerText}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Bilan_Maths_5eme.csv';
+    a.click();
+}
+
+function exporterPDF() {
+    window.print(); // La méthode la plus simple pour mobile
+}
 // ==========================================
 // 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
 // ==========================================
