@@ -76,22 +76,23 @@ function getDeviceId() {
 // 3. MENU CACHÉ (APPUI LONG 3S SUR LE TITRE)
 // ==========================================
 let adminTimer;
-const trigger = document.getElementById('admin-trigger');
 
-const startAdminTimer = () => {
-    adminTimer = setTimeout(() => {
-        const p = prompt("🔑 CODE ADMIN :");
-        if(p === ADMIN_PASS) naviguer('page-admin');
-    }, 3000); 
-};
+function startPress() {
+    // On lance le chrono de 3 secondes
+    adminTimer = setTimeout(() => {
+        const p = prompt("🔑 CODE ADMIN :");
+        if (p === "0000") { 
+            // C'est ici qu'on appelle la fonction qui utilise ta ligne "corps-tableau-admin"
+            ouvrirRapport(); 
+        } else if (p !== null) {
+            alert("❌ Code incorrect");
+        }
+    }, 3000); 
+}
 
-const stopAdminTimer = () => clearTimeout(adminTimer);
-
-if(trigger) {
-    trigger.addEventListener('touchstart', startAdminTimer);
-    trigger.addEventListener('touchend', stopAdminTimer);
-    trigger.addEventListener('mousedown', startAdminTimer);
-    trigger.addEventListener('mouseup', stopAdminTimer);
+function endPress() {
+    // Si on lâche le bouton avant 3 secondes, on annule tout
+    clearTimeout(adminTimer);
 }
 
 // ==========================================
@@ -563,6 +564,8 @@ async function changerCategorie(telId, nouvelleCat) {
     }
 }
 async function ouvrirRapport() {
+    const corps = document.getElementById('corps-bilan'); // C'est l'ID de ton <tbody>
+if (corps) corps.innerHTML = "";
     console.log("📊 Chargement de la liste des clients...");
     
     // 1. Récupérer l'élément HTML où on va injecter les lignes
