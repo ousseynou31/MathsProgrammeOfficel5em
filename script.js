@@ -656,6 +656,48 @@ function exporterCSV() {
 function exporterPDF() {
     window.print(); // La méthode la plus simple pour mobile
 }
+
+// ==========================================
+// FONCTION : INITIALISER L'APPUI LONG (ADMIN)
+// ==========================================
+let adminTimer; // Variable pour le chrono
+
+function initAdminTrigger() {
+    const trigger = document.getElementById('admin-trigger');
+    
+    if (trigger) {
+        console.log("🎯 Détecteur Admin activé sur le titre.");
+
+        const demarrerChrono = () => {
+            adminTimer = setTimeout(() => {
+                const p = prompt("🔑 CODE ACCÈS ADMIN :");
+                if (p === ADMIN_PASS) {
+                    ouvrirRapport(); 
+                } else if (p !== null) {
+                    alert("❌ Code incorrect");
+                }
+            }, 3000); // 3 secondes d'appui
+        };
+
+        const stopperChrono = () => {
+            clearTimeout(adminTimer);
+        };
+
+        // Événements pour Mobile (Tactile)
+        trigger.addEventListener('touchstart', (e) => {
+            // e.preventDefault(); // Optionnel : empêche le menu contextuel mobile
+            demarrerChrono();
+        });
+        trigger.addEventListener('touchend', stopperChrono);
+
+        // Événements pour Ordinateur (Souris)
+        trigger.addEventListener('mousedown', demarrerChrono);
+        trigger.addEventListener('mouseup', stopperChrono);
+        trigger.addEventListener('mouseleave', stopperChrono);
+    } else {
+        console.error("⚠️ Erreur : L'élément 'admin-trigger' est introuvable dans le HTML.");
+    }
+}
 // ==========================================
 // 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
 // ==========================================
