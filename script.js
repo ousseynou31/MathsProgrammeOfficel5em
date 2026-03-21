@@ -743,6 +743,37 @@ async function toggleBan(telId, filtreActuel) {
         alert("❌ Erreur de modification du statut.");
     }
 }
+async function calculerGlobalStats(filtreActuel = 'TOUT') {
+    try {
+        const snap = await database.ref('clients').once('value');
+        let total = 0;
+        let catA = 0;
+        let catB = 0;
+        let catC = 0;
+
+        snap.forEach(u => {
+            const data = u.val().infos_client;
+            if (!data) return;
+
+            // On compte SEULEMENT si ça correspond au filtre ou si le filtre est 'TOUT'
+            if (filtreActuel === 'TOUT' || data.categorie === filtreActuel) {
+                total++;
+                if (data.categorie === 'A') catA++;
+                if (data.categorie === 'B') catB++;
+                if (data.categorie === 'C') catC++;
+            }
+        });
+
+        // Mise à jour des éléments HTML (Vérifie que ces ID existent dans ton HTML)
+        if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total;
+        if(document.getElementById('stat-a')) document.getElementById('stat-a').innerText = catA;
+        if(document.getElementById('stat-b')) document.getElementById('stat-b').innerText = catB;
+        if(document.getElementById('stat-c')) document.getElementById('stat-c').innerText = catC;
+
+    } catch (e) {
+        console.error("Erreur stats:", e);
+    }
+}
 function initAdminTrigger() {
     const trigger = document.getElementById('admin-trigger');
     
