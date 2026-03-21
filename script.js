@@ -208,7 +208,7 @@ function launchApp() {
         
         // On force l'affichage du titre au cas où
         const titre = document.getElementById('admin-trigger');
-        if(titre) titre.style.display = "block";
+        
     }
 }
 function togglePreview() {
