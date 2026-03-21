@@ -304,3 +304,45 @@ body, html {
     70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
     100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
+@media print {
+    /* 1. On cache tout le reste de l'application */
+    body > *:not(#page-bilan) {
+        display: none !important;
+    }
+
+    /* 2. On force l'affichage du bilan en plein écran blanc */
+    #page-bilan {
+        display: block !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: white !important;
+        color: black !important;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* 3. On nettoie le tableau pour l'encre */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        color: black !important;
+    }
+    
+    th, td {
+        border: 1px solid #000 !important;
+        padding: 10px !important;
+        color: black !important;
+    }
+
+    /* 4. On cache les boutons (Retour, PDF, CSV) sur le papier/PDF */
+    .admin-actions, .btn-retour, button {
+        display: none !important;
+    }
+
+    #total-bilan-argent {
+        color: black !important;
+        font-size: 1.5rem;
+    }
+}
