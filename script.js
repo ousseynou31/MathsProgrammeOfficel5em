@@ -248,11 +248,10 @@ async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
     if (!list) return;
     
-    // Message d'attente
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem; letter-spacing:1px;">SYNCHRONISATION DES DONNÉES...</p>`;
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Mise à jour des listes...</p>`;
     
     try {
-        // 1. RÉCUPÉRATION SIMULTANÉE DES 3 SOURCES (Clients, Suspendus, En Ligne)
+        // 1. Récupération des données en temps réel
         const [usersSnap, blackSnap, presenceSnap] = await Promise.all([
             database.ref('clients').once('value'),
             database.ref('blacklist').once('value'),
@@ -262,98 +261,91 @@ async function loadUsers(filtre = 'TOUT') {
         const blacklisted = blackSnap.val() || {};
         const connectes = presenceSnap.val() || {}; 
         
+        // --- INITIALISATION DES COMPTEURS POUR LES STATS ---
+        let totalAffiché = 0;
+        let countA = 0;
+        let countB = 0;
+        let countC = 0;
+
         list.innerHTML = ""; 
 
-        // 2. PARCOURS DE LA LISTE DES CLIENTS
         usersSnap.forEach(u => {
             const val = u.val();
             if (!val || !val.infos_client) return;
             const data = val.infos_client;
 
-            // FILTRE DE CATÉGORIE (A, B, C ou TOUT)
+            // 2. LOGIQUE DE FILTRAGE STRICTE
             if (filtre !== 'TOUT' && data.categorie !== filtre) return;
 
-            // CALCULS DE GESTION
+            // Si on arrive ici, l'élève correspond au filtre, on l'ajoute aux stats
+            totalAffiché++;
+            if (data.categorie === 'A') countA++;
+            if (data.categorie === 'B') countB++;
+            if (data.categorie === 'C') countC++;
+
+            // 3. PRÉPARATION DES DONNÉES D'AFFICHAGE
             const jours = (typeof calculerJours === 'function') ? calculerJours(data.date_inscription) : 0;
             const isBanned = blacklisted[u.key] === true;
-            
-            // FORMATAGE DE LA DATE
             const dateObj = new Date(data.date_inscription);
             const dateAffichee = dateObj.toLocaleDateString('fr-FR');
-
-            // --- LOGIQUE COULEUR DU CERCLE (ORIGINALE) ---
-            let couleurCercle = "#10b981"; // VERT (OK)
-            if (jours >= 26 && jours <= 34) couleurCercle = "#f59e0b"; // ORANGE (ALERTE)
-            if (jours >= 35) couleurCercle = "#ef4444"; // ROUGE (RETARD)
-
-            // --- LOGIQUE PRÉSENCE LIVE (NOUVEAU) ---
             const estEnLigne = connectes[u.key] !== undefined;
 
-            // --- STYLE DU BOUTON SUSPENDRE (DYNAMIQUE) ---
+            // Couleurs d'origine selon l'échéance
+            let couleurCercle = "#10b981"; 
+            if (jours >= 26 && jours <= 34) couleurCercle = "#f59e0b"; 
+            if (jours >= 35) couleurCercle = "#ef4444"; 
+
+            // Style du bouton suspendre
             const styleBtnBan = isBanned 
-                ? `background: #ef4444; border-color: #ef4444; color: white; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);` 
+                ? `background: #ef4444; border-color: #ef4444; color: white;` 
                 : `background: transparent; border-color: #f59e0b; color: #f59e0b;`;
 
-            // GÉNÉRATION DU HTML DE LA LIGNE
+            // 4. CONSTRUCTION DU HTML
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 20px 8px 20px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'}; opacity: ${isBanned ? '0.7' : '1'}; transition: 0.3s;">
+                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 20px 8px 20px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'}; opacity: ${isBanned ? '0.7' : '1'};">
                     
                     <div style="width:55px; flex-shrink:0; display:flex; justify-content:center; position:relative;">
-                        ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:2px; border:2px solid #000; box-shadow:0 0 8px #10b981; z-index:5;"></div>' : ''}
-                        
-                        <div style="width:44px; height:44px; border-radius:50%; border: 3px solid ${estEnLigne ? '#10b981' : couleurCercle}; 
-                             display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.85rem; 
-                             background: rgba(0,0,0,0.5); box-shadow: ${estEnLigne ? '0 0 15px #10b98144' : 'none'};">
+                        ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:2px; border:2px solid #000; box-shadow:0 0 8px #10b981;"></div>' : ''}
+                        <div style="width:42px; height:42px; border-radius:50%; border: 3px solid ${estEnLigne ? '#10b981' : couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4);">
                             ${jours}J
                         </div>
                     </div>
 
-                    <div style="flex:1; margin-left:15px; min-width:0; padding-right:10px;">
-                        <div style="font-weight:800; font-size:0.95rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:0.5px;">
-                            ${data.nom} 
-                            ${estEnLigne ? '<span style="color:#10b981; font-size:0.6rem; margin-left:5px; font-weight:bold;">● LIVE</span>' : ''}
+                    <div style="flex:1; margin-left:15px; min-width:0;">
+                        <div style="font-weight:800; font-size:0.95rem; color:white; text-transform:uppercase;">
+                            ${data.nom} ${estEnLigne ? '<span style="color:#10b981; font-size:0.6rem; margin-left:5px;">● LIVE</span>' : ''}
                         </div>
-                        <div style="font-size:0.65rem; color:#777; margin-top:3px; display:flex; gap:10px; align-items:center;">
-                            <span>📅 ${dateAffichee}</span>
-                            <span style="color:#444;">|</span>
-                            <span style="color:var(--p); font-weight:bold;">📞 ${u.key}</span>
+                        <div style="font-size:0.65rem; color:#777; margin-top:3px;">
+                            <span>📅 ${dateAffichee}</span> | <span style="color:var(--p); font-weight:bold;">📞 ${u.key}</span>
                         </div>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:12px; flex-shrink:0; background:rgba(0,0,0,0.3); padding:6px 10px; border-radius:10px; border:1px solid #333;">
-                        
-                        <select onchange="changerCategorie('${u.key}', this.value)" 
-                                style="width:45px; background:#000; color:var(--p); border:1px solid #444; border-radius:4px; font-size:0.75rem; font-weight:900; height:28px; cursor:pointer;">
+                    <div style="display:flex; align-items:center; gap:10px; flex-shrink:0; background:rgba(0,0,0,0.3); padding:6px; border-radius:10px;">
+                        <select onchange="changerCategorie('${u.key}', this.value)" style="width:45px; background:#000; color:var(--p); border:1px solid #444; border-radius:4px; font-size:0.75rem; font-weight:900; height:28px;">
                             <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>A</option>
                             <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>B</option>
                             <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
                         </select>
 
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
-                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; padding:0;" title="Renouveler">💰</button>
-                            
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; padding:0; border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
-                            
-                            <button onclick="toggleBan('${u.key}', '${filtre}')" 
-                                    class="pay-btn" 
-                                    style="width:30px; height:30px; font-size:0.8rem; padding:0; transition:0.3s; ${styleBtnBan}">
-                                ${isBanned ? '🔓' : '🚫'}
-                            </button>
-                            
-                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; padding:0; border-color:var(--d); color:var(--d);" title="Supprimer">🗑️</button>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
+                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn" style="width:28px; height:28px; padding:0;">💰</button>
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:28px; height:28px; padding:0; border-color:#25D366; color:#25D366;">💬</button>
+                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="width:28px; height:28px; padding:0; ${styleBtnBan}">${isBanned ? '🔓' : '🚫'}</button>
+                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="width:28px; height:28px; padding:0; border-color:var(--d); color:var(--d);">🗑️</button>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // 3. MISE À JOUR DES STATISTIQUES GLOBALES
-        if (typeof calculerGlobalStats === 'function') {
-            calculerGlobalStats(filtre);
-        }
+        // 5. MISE À JOUR DES COMPTEURS EN HAUT (STATS)
+        if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = totalAffiché;
+        if(document.getElementById('stat-a')) document.getElementById('stat-a').innerText = countA;
+        if(document.getElementById('stat-b')) document.getElementById('stat-b').innerText = countB;
+        if(document.getElementById('stat-c')) document.getElementById('stat-c').innerText = countC;
 
     } catch(e) { 
-        console.error("Erreur critique loadUsers:", e); 
-        list.innerHTML = `<p style='text-align:center; color:#ef4444; padding:20px;'>⚠️ ERREUR DE CHARGEMENT : Vérifiez votre connexion.</p>`;
+        console.error(e);
+        list.innerHTML = "<p style='text-align:center; color:red;'>Erreur de chargement.</p>";
     }
 }
 // Sauvegarder les prix dans Firebase
