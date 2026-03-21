@@ -81,7 +81,7 @@ function getDeviceId() {
 // ==========================================
 // 3. MENU CACHÉ (APPUI LONG 3S SUR LE TITRE)
 // ==========================================
-let adminTimer;
+
 const trigger = document.getElementById('admin-trigger');
 
 const startAdminTimer = () => {
@@ -660,7 +660,6 @@ function exporterPDF() {
 // ==========================================
 // FONCTION : INITIALISER L'APPUI LONG (ADMIN)
 // ==========================================
-let adminTimer; // Variable pour le chrono
 
 function initAdminTrigger() {
     const trigger = document.getElementById('admin-trigger');
