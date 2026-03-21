@@ -75,24 +75,29 @@ function getDeviceId() {
 // ==========================================
 // 3. MENU CACHÉ (APPUI LONG 3S SUR LE TITRE)
 // ==========================================
+// ==========================================
+// 3. MENU CACHÉ (APPUI LONG 3S SUR LE TITRE)
+// ==========================================
 let adminTimer;
+const trigger = document.getElementById('admin-trigger');
 
-function startPress() {
-    // On lance le chrono de 3 secondes
+const startAdminTimer = () => {
     adminTimer = setTimeout(() => {
         const p = prompt("🔑 CODE ADMIN :");
-        if (p === "0000") { 
-            // C'est ici qu'on appelle la fonction qui utilise ta ligne "corps-tableau-admin"
-            ouvrirRapport(); 
-        } else if (p !== null) {
-            alert("❌ Code incorrect");
+        // On vérifie le mot de passe et on ouvre le rapport
+        if(p === ADMIN_PASS) {
+            ouvrirRapport();
         }
     }, 3000); 
-}
+};
 
-function endPress() {
-    // Si on lâche le bouton avant 3 secondes, on annule tout
-    clearTimeout(adminTimer);
+const stopAdminTimer = () => clearTimeout(adminTimer);
+
+if(trigger) {
+    trigger.addEventListener('touchstart', startAdminTimer);
+    trigger.addEventListener('touchend', stopAdminTimer);
+    trigger.addEventListener('mousedown', startAdminTimer);
+    trigger.addEventListener('mouseup', stopAdminTimer);
 }
 
 // ==========================================
