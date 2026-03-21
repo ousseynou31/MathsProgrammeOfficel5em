@@ -454,61 +454,65 @@ async function changerCategorie(telId, nouvelleCat) {
     }
 }
 function ouvrirRapport() {
-    // 1. Ouvrir la page
-    const pageBilan = document.getElementById('page-bilan');
-    pageBilan.style.display = 'flex';
-    
+    // 1. Affichage de la page
+    document.getElementById('page-bilan').style.display = 'flex';
     const corps = document.getElementById('corps-bilan');
-    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px; color:gray;'>Analyse de la base de données...</td></tr>";
+    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px; color:gray;'>Analyse des dossiers élèves...</td></tr>";
     
     let totalGlobal = 0;
 
-    // 2. Récupérer les prix configurés dans l'admin
+    // 2. Récupération des prix Admin
     const prixA = parseInt(document.getElementById('price-A').value) || 5000;
     const prixB = parseInt(document.getElementById('price-B').value) || 3000;
     const prixC = parseInt(document.getElementById('price-C').value) || 1500;
 
-    // 3. Charger les clients depuis Firebase
+    // 3. Connexion Firebase
     firebase.database().ref('users').once('value').then((snapshot) => {
-        corps.innerHTML = ""; // Vider le message de chargement
+        corps.innerHTML = ""; 
         
         if (!snapshot.exists()) {
-            corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Aucun client enregistré.</td></tr>";
+            corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Aucune donnée trouvée dans Firebase.</td></tr>";
             return;
         }
 
         snapshot.forEach((child) => {
             const u = child.val();
+            
+            // --- RECHERCHE DU NOM (on teste plusieurs variantes) ---
+            const nomAffiche = u.nom || u.nomComplet || u.prenom || "Élève Inconnu";
+            
+            // --- RECHERCHE DES JOURS (on teste plusieurs variantes) ---
+            // Si 'jours' n'existe pas, on peut essayer 'sessions' ou 'presence'
+            const joursAffiche = u.jours || u.nbJours || u.presence || 0;
+            
+            // --- RÉCUPÉRATION CATÉGORIE ---
             const cat = u.categorie || 'C';
-            
-            // On récupère le nombre de jours (ou on met 0 par défaut)
-            const jours = u.jours || 0; 
-            
-            // Calcul du montant selon la catégorie
+
+            // Calcul du montant
             let montant = prixC;
             if(cat === 'A') montant = prixA;
             if(cat === 'B') montant = prixB;
 
             totalGlobal += montant;
 
-            // Ajout de la ligne au tableau
+            // Construction de la ligne
             const tr = document.createElement('tr');
             tr.style.borderBottom = "1px solid #222";
             tr.innerHTML = `
-                <td style="padding:12px; text-transform:uppercase; font-weight:600;">${u.nom || 'Sans Nom'}</td>
-                <td style="padding:12px; text-align:center; color:var(--p);">${cat}</td>
-                <td style="padding:12px; text-align:center;">${jours} j</td>
+                <td style="padding:12px; text-transform:uppercase; font-size:0.75rem; color:#eee;">${nomAffiche}</td>
+                <td style="padding:12px; text-align:center; color:var(--p); font-weight:bold;">${cat}</td>
+                <td style="padding:12px; text-align:center;">${joursAffiche} j</td>
                 <td style="padding:12px; text-align:right; font-weight:bold; color:#2ecc71;">${montant.toLocaleString()} F</td>
             `;
             corps.appendChild(tr);
         });
 
-        // Mise à jour du Total
+        // Mise à jour du Total général
         document.getElementById('total-bilan-argent').innerText = totalGlobal.toLocaleString() + " F CFA";
         
     }).catch((err) => {
-        console.error(err);
-        corps.innerHTML = "<tr><td colspan='4' style='color:red; text-align:center;'>Erreur Firebase</td></tr>";
+        console.error("Erreur détaillée :", err);
+        corps.innerHTML = "<tr><td colspan='4' style='color:red; text-align:center;'>Erreur de lecture Firebase.</td></tr>";
     });
 }
 // Fonction export CSV simple
