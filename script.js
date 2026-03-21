@@ -173,14 +173,16 @@ async function enregistrerProfil() {
 // ==========================================
 // 6. VERROUILLAGE (DÉCONNEXION)
 // ==========================================
+
 function deconnecterApp() {
-    if(confirm("Voulez-vous verrouiller l'accès ?")) {
-        // On retire l'activation PIN mais on garde le profil en mémoire
+    if(confirm("Voulez-vous verrouiller l'accès et retourner à l'activation ?")) {
+        // On retire uniquement le flag d'activation
         localStorage.removeItem('v32_active');
-        location.reload();
+        
+        // On force le rechargement pour que le système voie que v32_active n'existe plus
+        window.location.reload();
     }
 }
-
 // ==========================================
 // 7. NAVIGATION ET ÉTATS
 // ==========================================
