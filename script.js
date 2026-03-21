@@ -453,67 +453,69 @@ async function changerCategorie(telId, nouvelleCat) {
         alert("Erreur de sauvegarde dans la base.");
     }
 }
-function ouvrirRapport() {
+async function ouvrirRapport() {
     // 1. Affichage de la page
     document.getElementById('page-bilan').style.display = 'flex';
     const corps = document.getElementById('corps-bilan');
-    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px; color:gray;'>Analyse des dossiers élèves...</td></tr>";
+    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px;'>Analyse de la base MATHS 5ème...</td></tr>";
     
     let totalGlobal = 0;
 
-    // 2. Récupération des prix Admin
+    // 2. Récupération des tarifs configurés
     const prixA = parseInt(document.getElementById('price-A').value) || 5000;
     const prixB = parseInt(document.getElementById('price-B').value) || 3000;
     const prixC = parseInt(document.getElementById('price-C').value) || 1500;
 
-    // 3. Connexion Firebase
-    firebase.database().ref('users').once('value').then((snapshot) => {
+    try {
+        // 3. ON VA CHERCHER DANS 'clients' (selon votre fonction d'enregistrement)
+        const snapshot = await database.ref('clients').once('value');
         corps.innerHTML = ""; 
-        
+
         if (!snapshot.exists()) {
-            corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Aucune donnée trouvée dans Firebase.</td></tr>";
+            corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Aucun client trouvé.</td></tr>";
             return;
         }
 
-        snapshot.forEach((child) => {
-            const u = child.val();
+        snapshot.forEach((childSnapshot) => {
+            // Dans votre structure, les infos sont dans 'infos_client'
+            const dataClient = childSnapshot.child('infos_client').val();
             
-            // --- RECHERCHE DU NOM (on teste plusieurs variantes) ---
-            const nomAffiche = u.nom || u.nomComplet || u.prenom || "Élève Inconnu";
-            
-            // --- RECHERCHE DES JOURS (on teste plusieurs variantes) ---
-            // Si 'jours' n'existe pas, on peut essayer 'sessions' ou 'presence'
-            const joursAffiche = u.jours || u.nbJours || u.presence || 0;
-            
-            // --- RÉCUPÉRATION CATÉGORIE ---
-            const cat = u.categorie || 'C';
+            if (dataClient) {
+                const nomAffiche = dataClient.nom || "Inconnu";
+                const telAffiche = dataClient.tel || childSnapshot.key; // Utilise la clé si tel est vide
+                
+                // --- GESTION DES JOURS ---
+                // Comme 'jours' n'est pas dans votre fonction d'enregistrement,
+                // on va afficher '1' par défaut pour l'inscription
+                const joursAffiche = dataClient.jours || 1; 
 
-            // Calcul du montant
-            let montant = prixC;
-            if(cat === 'A') montant = prixA;
-            if(cat === 'B') montant = prixB;
+                // --- GÉSTION CATÉGORIE ---
+                const cat = dataClient.categorie || 'C';
 
-            totalGlobal += montant;
+                let montant = prixC;
+                if(cat === 'A') montant = prixA;
+                if(cat === 'B') montant = prixB;
 
-            // Construction de la ligne
-            const tr = document.createElement('tr');
-            tr.style.borderBottom = "1px solid #222";
-            tr.innerHTML = `
-                <td style="padding:12px; text-transform:uppercase; font-size:0.75rem; color:#eee;">${nomAffiche}</td>
-                <td style="padding:12px; text-align:center; color:var(--p); font-weight:bold;">${cat}</td>
-                <td style="padding:12px; text-align:center;">${joursAffiche} j</td>
-                <td style="padding:12px; text-align:right; font-weight:bold; color:#2ecc71;">${montant.toLocaleString()} F</td>
-            `;
-            corps.appendChild(tr);
+                totalGlobal += montant;
+
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = "1px solid #222";
+                tr.innerHTML = `
+                    <td style="padding:12px; text-transform:uppercase; font-size:0.7rem; color:#fff;">${nomAffiche}</td>
+                    <td style="padding:12px; text-align:center; color:var(--p); font-weight:bold;">${cat}</td>
+                    <td style="padding:12px; text-align:center;">${joursAffiche} j</td>
+                    <td style="padding:12px; text-align:right; font-weight:bold; color:#2ecc71;">${montant.toLocaleString()} F</td>
+                `;
+                corps.appendChild(tr);
+            }
         });
 
-        // Mise à jour du Total général
         document.getElementById('total-bilan-argent').innerText = totalGlobal.toLocaleString() + " F CFA";
-        
-    }).catch((err) => {
-        console.error("Erreur détaillée :", err);
-        corps.innerHTML = "<tr><td colspan='4' style='color:red; text-align:center;'>Erreur de lecture Firebase.</td></tr>";
-    });
+
+    } catch (error) {
+        console.error("Erreur Bilan :", error);
+        corps.innerHTML = "<tr><td colspan='4' style='color:red; text-align:center;'>Erreur de lecture base.</td></tr>";
+    }
 }
 // Fonction export CSV simple
 function exporterCSV() {
