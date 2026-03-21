@@ -453,6 +453,74 @@ async function changerCategorie(telId, nouvelleCat) {
         alert("Erreur de sauvegarde dans la base.");
     }
 }
+function ouvrirRapport() {
+    // 1. Afficher la page bilan
+    naviguer('page-bilan');
+    
+    const corpsTableau = document.getElementById('corps-bilan');
+    corpsTableau.innerHTML = "<tr><td colspan='4' style='padding:20px; text-align:center;'>Calcul en cours...</td></tr>";
+    
+    let totalGeneral = 0;
+
+    // 2. On récupère les tarifs actuels réglés dans l'admin
+    const tarifs = {
+        'A': parseInt(document.getElementById('price-A').value) || 0,
+        'B': parseInt(document.getElementById('price-B').value) || 0,
+        'C': parseInt(document.getElementById('price-C').value) || 0
+    };
+
+    // 3. Récupérer les données depuis Firebase (on suppose que 'users' est ta liste globale)
+    db.ref('users').once('value', (snapshot) => {
+        corpsTableau.innerHTML = ""; // Vider le chargement
+        
+        snapshot.forEach((child) => {
+            const client = child.val();
+            const categorie = client.categorie || 'C'; // Par défaut C
+            const nom = client.nom || "Anonyme";
+            const absences = client.absences || 0; // Nombre de jours d'absence
+            
+            // Calcul de la somme (Tarif de base)
+            const somme = tarifs[categorie] || 0;
+            totalGeneral += somme;
+
+            // Ajouter la ligne au tableau
+            corpsTableau.innerHTML += `
+                <tr style="border-bottom:1px solid #222;">
+                    <td style="padding:12px;">${nom.toUpperCase()}</td>
+                    <td style="padding:12px; text-align:center;">${categorie}</td>
+                    <td style="padding:12px; text-align:center;">${absences} j</td>
+                    <td style="padding:12px; font-weight:bold; color:#2ecc71;">${somme.toLocaleString()} F</td>
+                </tr>
+            `;
+        });
+
+        // 4. Mettre à jour la ligne Total en bas
+        document.getElementById('total-bilan-argent').innerText = totalGeneral.toLocaleString() + " F CFA";
+    });
+}
+
+// Fonction pour le téléchargement CSV (Excel)
+function exporterCSV() {
+    let csv = "Nom Complet;Categorie;Absences;Somme a Payer\n";
+    const lignes = document.querySelectorAll("#corps-bilan tr");
+    
+    lignes.forEach(tr => {
+        const cols = tr.querySelectorAll("td");
+        csv += `${cols[0].innerText};${cols[1].innerText};${cols[2].innerText};${cols[3].innerText}\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", "Bilan_Mensuel_Maths.csv");
+    link.click();
+}
+
+// Pour le PDF, on utilise souvent window.print() pour faire simple au début
+function exporterPDF() {
+    window.print();
+}
+
 // ==========================================
 // 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
 // ==========================================
