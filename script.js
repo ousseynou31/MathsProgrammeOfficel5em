@@ -196,21 +196,21 @@ function deconnecterApp() {
 // 7. NAVIGATION ET ÉTATS
 // ==========================================
 function naviguer(id) {
-    document.querySelectorAll('.gate, .full-page, #hub-accueil').forEach(e => e.style.display = 'none');
+    // 1. Cache TOUT (Portes, Pages Admin, et le Hub)
+    const elements = document.querySelectorAll('.gate, .full-page, .main-app, #page-admin, #page-bilan');
+    elements.forEach(e => e.style.display = 'none');
+
+    // 2. Affiche l'élément demandé
     const target = document.getElementById(id);
-    if(target) {
-        target.style.display = (id === 'hub-accueil' || id === 'page-admin') ? 'block' : 'flex';
+    if (target) {
+        if (id === 'hub-accueil') {
+            target.style.display = 'block'; // Affiche le conteneur principal
+        } else {
+            target.style.display = 'flex'; // Pour les écrans de verrouillage
+        }
     }
-    if(id === 'page-admin') {
-    chargerTarifs();
-    mettreAJourDashboard();
 }
-}
-
 function launchApp() {
-    const devIdDisplay = document.getElementById('display-device-id');
-    if(devIdDisplay) devIdDisplay.innerText = getDeviceId();
-
     const isActive = localStorage.getItem('v32_active') === 'true';
     const isReg = localStorage.getItem('v32_registered') === 'true';
 
@@ -219,7 +219,12 @@ function launchApp() {
     } else if (!isReg) {
         naviguer('registration-gate');
     } else {
-        naviguer('hub-accueil');
+        // C'est ici que l'on affiche l'application principale
+        naviguer('hub-accueil'); 
+        
+        // On force l'affichage du titre au cas où
+        const titre = document.getElementById('admin-trigger');
+        if(titre) titre.style.display = "block";
     }
 }
 function togglePreview() {
