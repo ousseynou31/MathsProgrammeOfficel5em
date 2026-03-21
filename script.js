@@ -454,47 +454,61 @@ async function changerCategorie(telId, nouvelleCat) {
     }
 }
 function ouvrirRapport() {
-    // 1. Affichage forcé en Flex pour le plein écran
-    const pageBilan = document.getElementById('page-bilan');
-    pageBilan.style.display = 'flex';
-    
+    // 1. Affichage
+    document.getElementById('page-bilan').style.display = 'flex';
     const corps = document.getElementById('corps-bilan');
-    corps.innerHTML = "";
+    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Chargement des données...</td></tr>";
     
     let totalGlobal = 0;
 
-    // 2. Récupération des prix saisis dans l'admin
-    const tarifs = {
-        'A': parseInt(document.getElementById('price-A').value) || 5000,
-        'B': parseInt(document.getElementById('price-B').value) || 3000,
-        'C': parseInt(document.getElementById('price-C').value) || 1500
-    };
+    // 2. Récupération des tarifs (Vérifie bien que ces IDs existent dans ton admin)
+    const prixA = parseInt(document.getElementById('price-A').value) || 5000;
+    const prixB = parseInt(document.getElementById('price-B').value) || 3000;
+    const prixC = parseInt(document.getElementById('price-C').value) || 1500;
 
-    // 3. Boucle sur les clients (remplace 'usersList' par ta variable qui contient les élèves)
-    // Ici on suppose que tu as une liste 'usersData' récupérée de Firebase
-    db.ref('users').once('value', (snapshot) => {
+    // 3. Appel Firebase (Remplace 'utilisateurs' par le nom exact de ta branche Firebase)
+    // Si tu utilises firebase.database(), utilise : firebase.database().ref('users')
+    firebase.database().ref('users').once('value').then((snapshot) => {
+        corps.innerHTML = ""; // On vide le message de chargement
+        
+        if (!snapshot.exists()) {
+            corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Aucun client trouvé.</td></tr>";
+            return;
+        }
+
         snapshot.forEach((child) => {
             const u = child.val();
-            const cat = u.categorie || 'C';
-            const jours = u.joursEffectues || 0; // À adapter selon tes données
-            const montant = tarifs[cat] || 0;
             
+            // On récupère la catégorie (A, B ou C)
+            const cat = u.categorie || 'C';
+            
+            // Calcul du montant selon la catégorie
+            let montant = prixC;
+            if(cat === 'A') montant = prixA;
+            if(cat === 'B') montant = prixB;
+
             totalGlobal += montant;
+
+            // On récupère le nom et le téléphone (ou jours)
+            const nomClient = u.nom || "Inconnu";
+            const jours = u.tel || "---"; // Si tu n'as pas de champ 'jours', on affiche le tel pour tester
 
             corps.innerHTML += `
                 <tr style="border-bottom: 1px solid #222;">
-                    <td style="padding:12px; text-transform:uppercase; font-size:0.75rem;">${u.nom}</td>
+                    <td style="padding:12px; text-transform:uppercase; font-size:0.7rem;">${nomClient}</td>
                     <td style="padding:12px; text-align:center;">${cat}</td>
-                    <td style="padding:12px; text-align:center;">${jours} j</td>
-                    <td style="padding:12px; text-align:right; font-weight:bold;">${montant.toLocaleString()} F</td>
+                    <td style="padding:12px; text-align:center; font-size:0.7rem;">${jours}</td>
+                    <td style="padding:12px; text-align:right; font-weight:bold; color:#2ecc71;">${montant.toLocaleString()} F</td>
                 </tr>
             `;
         });
         
         document.getElementById('total-bilan-argent').innerText = totalGlobal.toLocaleString() + " F CFA";
+    }).catch((error) => {
+        console.error("Erreur Firebase : ", error);
+        corps.innerHTML = "<tr><td colspan='4' style='color:red;'>Erreur de connexion.</td></tr>";
     });
 }
-
 // Fonction export CSV simple
 function exporterCSV() {
     let csv = "NOM;CATEGORIE;JOURS;MONTANT\n";
