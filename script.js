@@ -568,87 +568,61 @@ async function changerCategorie(telId, nouvelleCat) {
 // 5. FONCTION : OUVRIR LE RAPPORT (BILAN FINANCIER)
 // ==========================================
 async function ouvrirRapport() {
-    // 1. Cibles d'affichage dans le HTML
-    const zoneTableauBilan = document.getElementById('corps-bilan');   // Le <tbody> du tableau
-    const totalBilanElt = document.getElementById('total-bilan-argent'); // Le <span> du total global
+    const zoneTableauBilan = document.getElementById('corps-bilan');
+    const totalBilanElt = document.getElementById('total-bilan-argent');
 
-    // Affichage d'un message de chargement
-    if (zoneTableauBilan) {
-        zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px; color:gray;'>Calcul des recettes en cours...</td></tr>";
-    }
+    if (zoneTableauBilan) zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px; color:gray;'>Analyse des paiements...</td></tr>";
 
     try {
-        // 2. RÉCUPÉRATION DES RÉGLAGES DE PRIX (A, B, C)
-        const tarifsSnap = await database.ref('reglages/tarifs').once('value');
-        const tarifs = tarifsSnap.val() || { A: 0, B: 0, C: 0 };
+        // 1. On récupère les tarifs DEPUIS LES INPUTS de l'interface admin directement
+        const prixA = parseInt(document.getElementById('price-A').value) || 0;
+        const prixB = parseInt(document.getElementById('price-B').value) || 0;
+        const prixC = parseInt(document.getElementById('price-C').value) || 0;
+        
+        const tarifs = { "A": prixA, "B": prixB, "C": prixC };
 
-        // 3. RÉCUPÉRATION DES DONNÉES CLIENTS
+        // 2. Récupération des clients
         const snapshot = await database.ref('clients').once('value');
         
         let htmlBilan = "";
-        let recetteTotaleGlobale = 0;
+        let recetteTotale = 0;
 
         if (!snapshot.exists()) {
-            if (zoneTableauBilan) zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun élève enregistré.</td></tr>";
+            zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun élève.</td></tr>";
             return;
         }
 
-        // 4. BOUCLE SUR CHAQUE ÉLÈVE
         snapshot.forEach((child) => {
             const info = child.child('infos_client').val();
-            const presence = child.child('presence').val() || {}; // On récupère l'historique de présence
-            
-            if (info) {
-                // Calcul du nombre de jours (nombre d'entrées dans le dossier 'presence')
-                const nbJoursPresence = Object.keys(presence).length;
-                
-                // Récupération du prix selon la catégorie de l'élève (A, B ou C)
-                const prixUnitaire = parseInt(tarifs[info.categorie]) || 0;
-                
-                // Calcul du sous-total pour cet élève
-                const sousTotalEleve = nbJoursPresence * prixUnitaire;
-                
-                // Ajout au grand total de l'établissement
-                recetteTotaleGlobale += sousTotalEleve;
+            // On compte les jours de présence (nombre d'entrées dans le dossier 'presence')
+            const presence = child.child('presence').val() || {}; 
+            const nbJours = Object.keys(presence).length || 1; // Par défaut 1 jour si inscrit
 
-                // Construction de la ligne HTML pour le tableau
+            if (info) {
+                // IMPORTANT : On vérifie si c'est 'categorie' ou 'cat' dans ta base
+                const maCat = info.categorie || info.cat || "C"; 
+                const prixUnitaire = tarifs[maCat] || 0;
+                const sousTotal = nbJours * prixUnitaire;
+                
+                recetteTotale += sousTotal;
+
                 htmlBilan += `
                     <tr style="border-bottom: 1px solid #222;">
-                        <td style="padding:12px; text-align:left; color:white; font-size:0.85rem;">
-                            ${info.nom.toUpperCase()}
-                        </td>
-                        <td style="padding:12px; text-align:center;">
-                            <span style="background:#333; padding:2px 8px; border-radius:4px; font-weight:bold; color:var(--p);">
-                                ${info.categorie}
-                            </span>
-                        </td>
-                        <td style="padding:12px; text-align:center; color:white;">
-                            ${nbJoursPresence} j
-                        </td>
-                        <td style="padding:12px; text-align:right; color:#2ecc71; font-weight:bold;">
-                            ${sousTotalEleve.toLocaleString()} F
-                        </td>
+                        <td style="padding:12px; text-align:left; color:white;">${info.nom.toUpperCase()}</td>
+                        <td style="padding:12px; text-align:center;"><span style="background:#333; padding:2px 8px; border-radius:4px;">${maCat}</span></td>
+                        <td style="padding:12px; text-align:center;">${nbJours}</td>
+                        <td style="padding:12px; text-align:right; color:#2ecc71; font-weight:bold;">${sousTotal.toLocaleString()} F</td>
                     </tr>
                 `;
             }
         });
 
-        // 5. INJECTION FINALE DANS LE HTML
-        if (zoneTableauBilan) {
-            zoneTableauBilan.innerHTML = htmlBilan;
-        }
-
-        if (totalBilanElt) {
-            totalBilanElt.innerText = recetteTotaleGlobale.toLocaleString() + " F CFA";
-        }
-
-        console.log("📊 Bilan mis à jour avec succès.");
+        zoneTableauBilan.innerHTML = htmlBilan;
+        totalBilanElt.innerText = recetteTotale.toLocaleString() + " F CFA";
 
     } catch (error) {
-        console.error("❌ Erreur lors de la génération du rapport :", error);
-        if (zoneTableauBilan) {
-            zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; color:red;'>Erreur de connexion Firebase.</td></tr>";
-        }
+        console.error("Erreur calcul:", error);
+        zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; color:red;'>Erreur de calcul.</td></tr>";
     }
 }
 function exporterCSV() {
