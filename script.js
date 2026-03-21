@@ -665,36 +665,29 @@ function initAdminTrigger() {
     const trigger = document.getElementById('admin-trigger');
     
     if (trigger) {
-        console.log("🎯 Détecteur Admin activé sur le titre.");
-
         const demarrerChrono = () => {
-            adminTimer = setTimeout(() => {
+            // On utilise le nouveau nom ici
+            minuteurAdmin = setTimeout(() => {
                 const p = prompt("🔑 CODE ACCÈS ADMIN :");
                 if (p === ADMIN_PASS) {
                     ouvrirRapport(); 
                 } else if (p !== null) {
                     alert("❌ Code incorrect");
                 }
-            }, 3000); // 3 secondes d'appui
+            }, 3000); 
         };
 
         const stopperChrono = () => {
-            clearTimeout(adminTimer);
+            clearTimeout(minuteurAdmin); // On utilise le nouveau nom ici aussi
         };
 
-        // Événements pour Mobile (Tactile)
-        trigger.addEventListener('touchstart', (e) => {
-            // e.preventDefault(); // Optionnel : empêche le menu contextuel mobile
-            demarrerChrono();
-        });
+        // Tactile
+        trigger.addEventListener('touchstart', demarrerChrono);
         trigger.addEventListener('touchend', stopperChrono);
-
-        // Événements pour Ordinateur (Souris)
+        // Souris
         trigger.addEventListener('mousedown', demarrerChrono);
         trigger.addEventListener('mouseup', stopperChrono);
         trigger.addEventListener('mouseleave', stopperChrono);
-    } else {
-        console.error("⚠️ Erreur : L'élément 'admin-trigger' est introuvable dans le HTML.");
     }
 }
 // ==========================================
