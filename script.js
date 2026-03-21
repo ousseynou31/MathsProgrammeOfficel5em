@@ -470,7 +470,39 @@ function verifierExistenceCompte() {
         });
     }
 }
+function surveillerStatutCompte() {
+    const tel = localStorage.getItem('user_tel_id');
+    
+    if(tel) {
+        // On écoute les changements sur 'infos_client' en temps réel
+        database.ref('clients/' + tel + '/infos_client').on('value', (snapshot) => {
+            const data = snapshot.val();
 
+            // CAS 1 : Le compte n'existe plus (Suppression)
+            if(!snapshot.exists()) {
+                localStorage.clear();
+                window.location.reload();
+                return;
+            }
+
+            // CAS 2 : Le compte est marqué comme "suspendu"
+            if(data.statut === "suspendu") {
+                // On bloque l'écran immédiatement
+                document.body.innerHTML = `
+                    <div style="height:100vh; background:#000; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family:sans-serif; padding:20px;">
+                        <h1 style="font-size:4rem;">🚫</h1>
+                        <h2 style="color:#e67e22;">ACCÈS SUSPENDU</h2>
+                        <p>Votre compte a été temporairement désactivé par l'établissement.</p>
+                        <p style="color:gray; font-size:0.8rem;">Veuillez contacter l'administrateur pour régulariser votre situation.</p>
+                        <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; border-radius:50px; border:none; background:#333; color:white;">Actualiser</button>
+                    </div>
+                `;
+                // On empêche toute autre action
+                throw new Error("Compte suspendu."); 
+            }
+        });
+    }
+}
 
 function filtrerClients() {
     // 1. Récupère la saisie de l'utilisateur (en minuscules)
