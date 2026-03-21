@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -9,34 +10,23 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>  
-   <div id="page-admin" class="full-page" style="display:none; padding: 15px;">
-        
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333; gap: 10px;">
-            <h2 style="color:var(--p); margin:0; font-size: 1.0rem; font-weight:800; white-space: nowrap;">🛡️ ADMIN PRO</h2>
-            
-            <button onclick="ouvrirHistoriquePleinEcran()" 
-                    style="background:#6c5ce7; color:white; border:none; padding:8px 12px; font-size:0.65rem; border-radius:8px; font-weight:bold; cursor:pointer; flex-shrink: 0; box-shadow: 0 0 10px rgba(108, 92, 231, 0.3);">
-                📊 HISTORIQUE
-            </button>
-
-        <button onclick="naviguer('hub-accueil')" 
-                style="background:none; border:1px solid #444; color:white; padding:8px 12px; border-radius:8px; font-size:0.65rem; font-weight:bold; cursor:pointer; white-space: nowrap;">
-            RETOUR
-        </button>
+<div id="page-admin" class="full-page" style="display:none;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333;">
+        <h2 style="color:var(--p); margin:0; font-size: 1.1rem; font-weight:800;">🛡️ ADMIN PRO</h2>
+        <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid #444; color:white; padding:6px 12px; border-radius:8px; font-size:0.7rem; font-weight:bold; cursor:pointer;">RETOUR</button>
     </div>
-
     <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 25px;">
         <input type="text" 
                id="admin-search" 
                placeholder="🔍 Rechercher un nom ou un numéro..." 
                onkeyup="filtrerClients()" 
-               style="width:95%; max-width:500px; padding:12px; border-radius:12px; border:1px solid #333; background:#111; color:white; outline:none; font-size:0.9rem; border-left: 4px solid var(--p); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+               style="width:90%; max-width:500px; padding:12px; border-radius:12px; border:1px solid #333; background:#111; color:white; outline:none; font-size:0.9rem; border-left: 4px solid var(--p); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
     </div>
-
     <div id="admin-dashboard" style="display:flex; gap:8px; margin-bottom:15px;">
         <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border-left:3px solid #ffd700; text-align:center; border: 1px solid #222;">
             <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase; margin-bottom:2px;">Attendu</small>
-            <b id="dash-total-a" style="color:white; font-size:0.85rem;">0 Clients</b>
+            <b id="dash-total-a" style="color:white; font-size:0.85rem;">0 F</b>
         </div>
         <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border-left:3px solid #2ecc71; text-align:center; border: 1px solid #222;">
             <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase; margin-bottom:2px;">Estimé</small>
@@ -46,13 +36,18 @@
             <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase; margin-bottom:2px;">Retard</small>
             <b id="dash-retard" style="color:#e74c3c; font-size:0.85rem;">0</b>
         </div>
-    </div>
-
+    </div>    
+    
     <div id="admin-filters" style="display:flex; gap:5px; margin-bottom:15px;">
         <button onclick="loadUsers('TOUT')" class="filter-btn active" style="flex:1; font-size:0.65rem; font-weight:800; background:var(--p); border:none; padding:8px; border-radius:6px; color:white;">TOUT</button>
         <button onclick="loadUsers('A')" class="filter-btn" style="flex:1; font-size:0.65rem; border:1px solid #ffd700; background:transparent; color:white; padding:8px; border-radius:6px;">CAT A</button>
         <button onclick="loadUsers('B')" class="filter-btn" style="flex:1; font-size:0.65rem; border:1px solid #c0c0c0; background:transparent; color:white; padding:8px; border-radius:6px;">CAT B</button>
         <button onclick="loadUsers('C')" class="filter-btn" style="flex:1; font-size:0.65rem; border:1px solid #cd7f32; background:transparent; color:white; padding:8px; border-radius:6px;">CAT C</button>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
+        <button onclick="ouvrirHistoriquePleinEcran()" style="background:#6c5ce7; color:white; border:none; padding:10px; font-size:0.7rem; border-radius:8px; font-weight:bold;">📊 HISTORIQUE</button>
+        <button onclick="ouvrirRapport()" style="background:white; color:black; border:none; padding:10px; font-size:0.7rem; border-radius:8px; font-weight:bold;">📋 BILAN PDF</button>
     </div>
 
     <div id="admin-prices-config" style="background:#111; padding:12px; border-radius:12px; border:1px solid #333; margin-bottom:20px;">
@@ -62,11 +57,10 @@
             <div style="flex:1;"><label style="font-size:0.5rem; color:gray; display:block;">CAT C</label><input type="number" id="price-C" value="1500" style="width:100%; background:#000; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.75rem;"></div>
             <button onclick="sauvegarderTarifs()" style="background:var(--s); border:none; padding:8px 12px; border-radius:6px; font-weight:bold; color:black; font-size:0.8rem;">OK</button>
         </div>
-        <button onclick="ouvrirRapport()" style="width:100%; margin-top:10px; background:white; color:black; border:none; padding:8px; font-size:0.7rem; border-radius:8px; font-weight:bold; cursor:pointer;">📋 GÉNÉRER BILAN PDF</button>
     </div>
 
     <div id="admin-user-list" style="padding-bottom: 50px;">
-        <p style="text-align:center; color:#444; padding:20px; font-size:0.8rem;">Chargement des données...</p>
+        <p style="text-align:center; color:#444; padding:20px; font-size:0.8rem;">Chargement...</p>
     </div>
 </div>
     
@@ -149,15 +143,9 @@
 
     <div id="hub-accueil" class="main-app" style="display:none;">
         <header class="top-bar">
-            <div id="admin-trigger" 
-     class="titre-pilule-premium" 
-     style="cursor: pointer; user-select: none; -webkit-user-select: none;"
-     onmousedown="lancerTimerAdmin()" 
-     onmouseup="stopperTimerAdmin()" 
-     ontouchstart="lancerTimerAdmin()" 
-     ontouchend="stopperTimerAdmin()">
-    BIENVENU DANS MATHS 5em PROGRAMME OFFICIEL V1
-</div>
+            <div id="admin-trigger" class="titre-pilule-premium">
+                BIENVENU DANS MATHS 5em PROGRAMME OFFICIEL V1
+            </div>
         </header>
         <main class="empty-content"></main>
     </div>
