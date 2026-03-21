@@ -516,6 +516,19 @@ async function suspendreCompte(telClient) {
         }
     }
 }
+async function reactiverCompte(telClient) {
+    if(confirm("Voulez-vous rétablir l'accès pour cet élève ?")) {
+        try {
+            await database.ref('clients/' + telClient + '/infos_client').update({
+                statut: "actif"
+            });
+            alert("✅ Compte réactivé ! L'élève peut de nouveau utiliser l'app.");
+            ouvrirRapport(); // Rafraîchit le tableau
+        } catch(e) {
+            alert("Erreur lors de la réactivation.");
+        }
+    }
+}
 function filtrerClients() {
     // 1. Récupère la saisie de l'utilisateur (en minuscules)
     const query = document.getElementById('admin-search').value.toLowerCase().trim();
