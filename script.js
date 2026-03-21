@@ -169,18 +169,28 @@ function deconnecterApp() {
 // 7. NAVIGATION ET ÉTATS
 // ==========================================
 function naviguer(id) {
-    // 1. Cache TOUT (Portes, Pages Admin, et le Hub)
-    const elements = document.querySelectorAll('.gate, .full-page, .main-app, #page-admin, #page-bilan');
-    elements.forEach(e => e.style.display = 'none');
+    // 1. On récupère TOUS les écrans possibles (vérifie bien les classes dans ton HTML)
+    // On ajoute toutes les classes et IDs qui représentent des pages entières
+    const tousLesEcrans = document.querySelectorAll('.gate, .full-page, .main-app, #page-admin, #page-bilan');
+    
+    // 2. On les cache TOUS par défaut
+    tousLesEcrans.forEach(ecran => {
+        ecran.style.display = 'none';
+    });
 
-    // 2. Affiche l'élément demandé
-    const target = document.getElementById(id);
-    if (target) {
-        if (id === 'hub-accueil') {
-            target.style.display = 'block'; // Affiche le conteneur principal
+    // 3. On affiche uniquement celui qu'on veut
+    const cible = document.getElementById(id);
+    if (cible) {
+        // Pour le Hub et l'Admin, on utilise 'block' pour respecter le flux
+        if (id === 'hub-accueil' || id === 'page-admin') {
+            cible.style.display = 'block';
         } else {
-            target.style.display = 'flex'; // Pour les écrans de verrouillage
+            // Pour les écrans de verrouillage (licence/reg), on utilise 'flex' pour centrer
+            cible.style.display = 'flex';
         }
+        console.log("📍 Navigation vers : " + id);
+    } else {
+        console.error("❌ Erreur : L'écran '" + id + "' n'existe pas dans le HTML.");
     }
 }
 function launchApp() {
