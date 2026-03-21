@@ -628,18 +628,49 @@ async function ouvrirRapport() {
     }
 }
 function exporterCSV() {
-    let csv = "Nom;Categorie;Jours;Montant\n";
-    const rows = document.querySelectorAll("#corps-bilan tr");
-    rows.forEach(row => {
-        const cols = row.querySelectorAll("td");
-        csv += `${cols[0].innerText};${cols[1].innerText};${cols[2].innerText};${cols[3].innerText}\n`;
+    console.log("📊 Préparation de l'export Excel/CSV...");
+    
+    const tableau = document.getElementById('corps-bilan');
+    if (!tableau || tableau.rows.length === 0) {
+        alert("⚠️ Le tableau est vide, impossible d'exporter.");
+        return;
+    }
+
+    // 1. Entêtes du fichier CSV
+    let csvContent = "NOM DE L'ELEVE;CATEGORIE;MONTANT DU\n";
+
+    // 2. Parcourir les lignes du tableau
+    const lignes = tableau.querySelectorAll('tr');
+    lignes.forEach(ligne => {
+        const colonnes = ligne.querySelectorAll('td');
+        if (colonnes.length >= 3) {
+            const nom = colonnes[0].innerText.trim();
+            const cat = colonnes[1].innerText.trim();
+            const montant = colonnes[2].innerText.replace(' F', '').replace(/\s/g, ''); // On garde juste le chiffre
+            
+            csvContent += `${nom};${cat};${montant}\n`;
+        }
     });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Bilan_Maths_5eme.csv';
-    a.click();
+
+    // 3. Ajouter la ligne du Total à la fin
+    const total = document.getElementById('total-bilan-argent').innerText.replace(' F CFA', '').replace(/\s/g, '');
+    csvContent += `\n;TOTAL GENERAL;${total}`;
+
+    // 4. Création du fichier et téléchargement
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    
+    // Nom du fichier avec la date du jour
+    const date = new Date().toLocaleDateString().replace(/\//g, '-');
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Bilan_Maths5eme_${date}.csv`);
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log("✅ Fichier CSV téléchargé.");
 }
 
 function exporterPDF() {
