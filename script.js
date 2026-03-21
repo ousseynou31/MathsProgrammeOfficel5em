@@ -454,33 +454,35 @@ async function changerCategorie(telId, nouvelleCat) {
     }
 }
 function ouvrirRapport() {
-    // 1. Affichage
-    document.getElementById('page-bilan').style.display = 'flex';
+    // 1. Ouvrir la page
+    const pageBilan = document.getElementById('page-bilan');
+    pageBilan.style.display = 'flex';
+    
     const corps = document.getElementById('corps-bilan');
-    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Chargement des données...</td></tr>";
+    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px; color:gray;'>Analyse de la base de données...</td></tr>";
     
     let totalGlobal = 0;
 
-    // 2. Récupération des tarifs (Vérifie bien que ces IDs existent dans ton admin)
+    // 2. Récupérer les prix configurés dans l'admin
     const prixA = parseInt(document.getElementById('price-A').value) || 5000;
     const prixB = parseInt(document.getElementById('price-B').value) || 3000;
     const prixC = parseInt(document.getElementById('price-C').value) || 1500;
 
-    // 3. Appel Firebase (Remplace 'utilisateurs' par le nom exact de ta branche Firebase)
-    // Si tu utilises firebase.database(), utilise : firebase.database().ref('users')
+    // 3. Charger les clients depuis Firebase
     firebase.database().ref('users').once('value').then((snapshot) => {
-        corps.innerHTML = ""; // On vide le message de chargement
+        corps.innerHTML = ""; // Vider le message de chargement
         
         if (!snapshot.exists()) {
-            corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Aucun client trouvé.</td></tr>";
+            corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Aucun client enregistré.</td></tr>";
             return;
         }
 
         snapshot.forEach((child) => {
             const u = child.val();
-            
-            // On récupère la catégorie (A, B ou C)
             const cat = u.categorie || 'C';
+            
+            // On récupère le nombre de jours (ou on met 0 par défaut)
+            const jours = u.jours || 0; 
             
             // Calcul du montant selon la catégorie
             let montant = prixC;
@@ -489,24 +491,24 @@ function ouvrirRapport() {
 
             totalGlobal += montant;
 
-            // On récupère le nom et le téléphone (ou jours)
-            const nomClient = u.nom || "Inconnu";
-            const jours = u.tel || "---"; // Si tu n'as pas de champ 'jours', on affiche le tel pour tester
-
-            corps.innerHTML += `
-                <tr style="border-bottom: 1px solid #222;">
-                    <td style="padding:12px; text-transform:uppercase; font-size:0.7rem;">${nomClient}</td>
-                    <td style="padding:12px; text-align:center;">${cat}</td>
-                    <td style="padding:12px; text-align:center; font-size:0.7rem;">${jours}</td>
-                    <td style="padding:12px; text-align:right; font-weight:bold; color:#2ecc71;">${montant.toLocaleString()} F</td>
-                </tr>
+            // Ajout de la ligne au tableau
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = "1px solid #222";
+            tr.innerHTML = `
+                <td style="padding:12px; text-transform:uppercase; font-weight:600;">${u.nom || 'Sans Nom'}</td>
+                <td style="padding:12px; text-align:center; color:var(--p);">${cat}</td>
+                <td style="padding:12px; text-align:center;">${jours} j</td>
+                <td style="padding:12px; text-align:right; font-weight:bold; color:#2ecc71;">${montant.toLocaleString()} F</td>
             `;
+            corps.appendChild(tr);
         });
-        
+
+        // Mise à jour du Total
         document.getElementById('total-bilan-argent').innerText = totalGlobal.toLocaleString() + " F CFA";
-    }).catch((error) => {
-        console.error("Erreur Firebase : ", error);
-        corps.innerHTML = "<tr><td colspan='4' style='color:red;'>Erreur de connexion.</td></tr>";
+        
+    }).catch((err) => {
+        console.error(err);
+        corps.innerHTML = "<tr><td colspan='4' style='color:red; text-align:center;'>Erreur Firebase</td></tr>";
     });
 }
 // Fonction export CSV simple
