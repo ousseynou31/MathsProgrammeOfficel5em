@@ -723,31 +723,50 @@ async function toggleBan(telId, filtreActuel) {
     }
 }
 async function calculerGlobalStats(filtreActuel = 'TOUT') {
+    const PRIX_ABONNEMENT = 5000; // Change ici ton tarif (ex: 5000 FG)
+
     try {
         const snap = await database.ref('clients').once('value');
-        let total = 0;
-        let catA = 0;
-        let catB = 0;
-        let catC = 0;
+        
+        let nbAttendu = 0; // Nombre d'élèves
+        let nbRetards = 0;  // Nombre de rouges (>35J)
 
         snap.forEach(u => {
             const data = u.val().infos_client;
             if (!data) return;
 
-            // On compte SEULEMENT si ça correspond au filtre ou si le filtre est 'TOUT'
+            // 1. On vérifie si l'élève correspond au filtre (A, B, C ou TOUT)
             if (filtreActuel === 'TOUT' || data.categorie === filtreActuel) {
-                total++;
-                if (data.categorie === 'A') catA++;
-                if (data.categorie === 'B') catB++;
-                if (data.categorie === 'C') catC++;
+                
+                // On incrémente le nombre d'élèves attendus
+                nbAttendu++;
+
+                // 2. On vérifie s'il est en retard (Logique des 35 jours)
+                const jours = (typeof calculerJours === 'function') ? calculerJours(data.date_inscription) : 0;
+                if (jours >= 35) {
+                    nbRetards++;
+                }
             }
         });
 
-        // Mise à jour des éléments HTML (Vérifie que ces ID existent dans ton HTML)
-        if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total;
-        if(document.getElementById('stat-a')) document.getElementById('stat-a').innerText = catA;
-        if(document.getElementById('stat-b')) document.getElementById('stat-b').innerText = catB;
-        if(document.getElementById('stat-c')) document.getElementById('stat-c').innerText = catC;
+        // 3. Calcul de la somme d'argent estimée
+        const sommeEstimee = nbAttendu * PRIX_ABONNEMENT;
+
+        // --- MISE À JOUR DU HTML ---
+        // Case ATTENDU (Nombre d'élèves)
+        if(document.getElementById('stat-attendu')) {
+            document.getElementById('stat-attendu').innerText = nbAttendu;
+        }
+        
+        // Case ESTIMÉ (Somme d'argent)
+        if(document.getElementById('stat-estime')) {
+            document.getElementById('stat-estime').innerText = sommeEstimee.toLocaleString() + " FG";
+        }
+
+        // Case RETARD (Nombre d'élèves en rouge)
+        if(document.getElementById('stat-retard')) {
+            document.getElementById('stat-retard').innerText = nbRetards;
+        }
 
     } catch (e) {
         console.error("Erreur stats:", e);
