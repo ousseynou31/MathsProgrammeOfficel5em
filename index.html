@@ -149,9 +149,15 @@
 
     <div id="hub-accueil" class="main-app" style="display:none;">
         <header class="top-bar">
-            <div id="admin-trigger" class="titre-pilule-premium">
-                BIENVENU DANS MATHS 5em PROGRAMME OFFICIEL V1
-            </div>
+            <div id="admin-trigger" 
+     class="titre-pilule-premium" 
+     style="cursor: pointer; user-select: none; -webkit-user-select: none;"
+     onmousedown="lancerTimerAdmin()" 
+     onmouseup="stopperTimerAdmin()" 
+     ontouchstart="lancerTimerAdmin()" 
+     ontouchend="stopperTimerAdmin()">
+    BIENVENU DANS MATHS 5em PROGRAMME OFFICIEL V1
+</div>
         </header>
         <main class="empty-content"></main>
     </div>
