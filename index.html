@@ -15,6 +15,7 @@
         <h2 style="color:var(--p); margin:0; font-size: 1.1rem; font-weight:800;">🛡️ ADMIN PRO</h2>
         <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid #444; color:white; padding:6px 12px; border-radius:8px; font-size:0.7rem; font-weight:bold; cursor:pointer;">RETOUR</button>
     </div>
+
     <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 25px;">
         <input type="text" 
                id="admin-search" 
@@ -22,10 +23,11 @@
                onkeyup="filtrerClients()" 
                style="width:90%; max-width:500px; padding:12px; border-radius:12px; border:1px solid #333; background:#111; color:white; outline:none; font-size:0.9rem; border-left: 4px solid var(--p); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
     </div>
+
     <div id="admin-dashboard" style="display:flex; gap:8px; margin-bottom:15px;">
         <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border-left:3px solid #ffd700; text-align:center; border: 1px solid #222;">
             <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase; margin-bottom:2px;">Attendu</small>
-            <b id="dash-total-a" style="color:white; font-size:0.85rem;">0 F</b>
+            <b id="dash-total-a" style="color:white; font-size:0.85rem;">0 Clients</b>
         </div>
         <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border-left:3px solid #2ecc71; text-align:center; border: 1px solid #222;">
             <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase; margin-bottom:2px;">Estimé</small>
@@ -37,9 +39,6 @@
         </div>
     </div>
 
-    
-           style="width: 100%; background: #1a1a1a; border: 1px solid var(--p); color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 0.9rem;">
-    
     <div id="admin-filters" style="display:flex; gap:5px; margin-bottom:15px;">
         <button onclick="loadUsers('TOUT')" class="filter-btn active" style="flex:1; font-size:0.65rem; font-weight:800; background:var(--p); border:none; padding:8px; border-radius:6px; color:white;">TOUT</button>
         <button onclick="loadUsers('A')" class="filter-btn" style="flex:1; font-size:0.65rem; border:1px solid #ffd700; background:transparent; color:white; padding:8px; border-radius:6px;">CAT A</button>
@@ -60,7 +59,6 @@
             <button onclick="sauvegarderTarifs()" style="background:var(--s); border:none; padding:8px 12px; border-radius:6px; font-weight:bold; color:black; font-size:0.8rem;">OK</button>
         </div>
     </div>
-
     <div id="admin-user-list" style="padding-bottom: 50px;">
         <p style="text-align:center; color:#444; padding:20px; font-size:0.8rem;">Chargement...</p>
     </div>
