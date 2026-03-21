@@ -745,6 +745,11 @@ window.addEventListener('load', () => {
     launchApp(); 
     
     console.log("✅ Initialisation terminée et sous surveillance.");
+    // LIAISON DU BOUTON PDF
+    const btnPdf = document.getElementById('mon-bouton-pdf-id'); // Remplace par l'ID de ton bouton
+    if (btnPdf) {
+        btnPdf.addEventListener('click', exporterPDF);
+    }
 });
 
 
