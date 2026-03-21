@@ -76,12 +76,13 @@ function getDeviceId() {
 // 3. MENU CACHÉ (APPUI LONG 2S SUR LE TITRE)
 // ==========================================
 let adminTimer;
-const ADMIN_PASS = "1234"; // Assure-toi que ton mot de passe est bien défini ici
+const ADMIN_PASS = "0000"; // Ton nouveau code secret
 
 function lancerTimerAdmin() {
-    // On lance le compte à rebours de 2 secondes
+    // On lance le compte à rebours de 2 secondes (2000ms)
     adminTimer = setTimeout(() => {
-        const p = prompt("🔑 CODE ADMIN :");
+        const p = prompt("🔑 ADMINISTRATION - CODE PIN :");
+        
         if (p === ADMIN_PASS) {
             naviguer('page-admin');
         } else if (p !== null) {
@@ -91,7 +92,7 @@ function lancerTimerAdmin() {
 }
 
 function stopperTimerAdmin() {
-    // Si on relâche avant les 2 secondes, on annule tout
+    // Annule le chrono si on relâche le doigt avant 2s
     clearTimeout(adminTimer);
 }
 
