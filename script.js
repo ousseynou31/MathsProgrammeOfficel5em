@@ -697,21 +697,42 @@ function exporterPDF() {
 // FONCTION : INITIALISER L'APPUI LONG (ADMIN)
 // ==========================================
 // --- SUPPRESSION TOTALE ET UNIVERSELLE ---
+// --- SUPPRESSION TOTALE AVEC DOUBLE VÉRIFICATION ---
 async function deleteClient(telId, filtreActuel) {
-    if(confirm("❗ SUPPRESSION RADICALE : Ce compte sera déconnecté de TOUS ses appareils (PC, Tablette, Mobile) et ses données effacées. Confirmer ?")) {
+    // 1. Première alerte de sensibilisation
+    const confirmationInitiale = confirm(
+        "⚠️ ALERTE SÉCURITÉ : Vous allez supprimer ce compte de TOUS les appareils (PC/Mobile).\n\n" +
+        "Cette action effacera définitivement l'accès pour l'élève au numéro : " + telId + ".\n\n" +
+        "Voulez-vous continuer ?"
+    );
+
+    if (!confirmationInitiale) return;
+
+    // 2. DEUXIÈME BARRIÈRE : Saisie de sécurité
+    // L'administrateur doit taper "SUPPRIMER" pour valider
+    const verrou = prompt("🔒 ACTION SENSIBLE : Tapez 'SUPPRIMER' en majuscules pour confirmer l'effacement définitif :");
+
+    if (verrou === "SUPPRIMER") {
         try {
-            // 1. On supprime la racine du client. 
-            // L'écouteur 'on(value)' chez l'élève va détecter instantanément que snapshot.exists() est FAUX.
+            // Suppression dans Firebase (effet universel immédiat)
             await database.ref('clients/' + telId).remove();
             
-            alert("✅ Compte " + telId + " supprimé de l'univers Firebase.");
-            loadUsers(filtreActuel); 
-        } catch(e) {
-            alert("❌ Erreur de connexion : Impossible de supprimer.");
+            // Nettoyage de la présence si nécessaire
+            await database.ref('presence/' + telId).remove();
+
+            alert("✅ RÉUSSI : Le compte " + telId + " a été éjecté du système avec succès.");
+            
+            // Rafraîchissement de l'interface
+            loadUsers(filtreActuel);
+        } catch (e) {
+            console.error(e);
+            alert("❌ ERREUR RÉSEAU : Impossible de joindre la base de données.");
         }
+    } else {
+        // Si l'utilisateur tape mal ou annule
+        alert("🛡️ ANNULATION : Le mot de passe de confirmation est incorrect. Aucune suppression n'a été effectuée.");
     }
 }
-
 // --- SUSPENSION UNIVERSELLE ---
 async function toggleBan(telId, filtreActuel) {
     try {
