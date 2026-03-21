@@ -771,6 +771,26 @@ function initAdminTrigger() {
     }
 }
 
+// Cette fonction doit être appelée dès que l'application démarre
+function activerSignalPresence() {
+    const tel = localStorage.getItem('user_tel_id');
+    if (!tel) return;
+
+    // Référence vers l'état de présence de cet élève précis
+    const maPresenceRef = database.ref('presence/' + tel);
+
+    // 1. On se déclare "EN LIGNE"
+    maPresenceRef.set({
+        status: "online",
+        last_seen: firebase.database.ServerValue.TIMESTAMP
+    });
+
+    // 2. On demande à Firebase de nous effacer AUTOMATIQUEMENT à la déconnexion
+    maPresenceRef.onDisconnect().remove();
+}
+
+// Lancement automatique au chargement de la page
+window.addEventListener('load', activerSignalPresence);
 
 // ==========================================
 // 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
