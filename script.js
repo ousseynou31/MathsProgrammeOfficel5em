@@ -564,62 +564,91 @@ async function changerCategorie(telId, nouvelleCat) {
 // ==========================================
 // 5. FONCTION : OUVRIR LE RAPPORT (BILAN)
 // ==========================================
+// ==========================================
+// 5. FONCTION : OUVRIR LE RAPPORT (BILAN FINANCIER)
+// ==========================================
 async function ouvrirRapport() {
-    // 1. On cible les deux zones d'affichage possibles
-    const zoneListeAdmin = document.getElementById('admin-user-list'); // Zone de gestion (boutons suspendre)
-    const zoneTableauBilan = document.getElementById('corps-bilan');   // Zone du tableau financier (PDF)
-    const totalBilan = document.getElementById('total-bilan-argent');
+    // 1. Cibles d'affichage dans le HTML
+    const zoneTableauBilan = document.getElementById('corps-bilan');   // Le <tbody> du tableau
+    const totalBilanElt = document.getElementById('total-bilan-argent'); // Le <span> du total global
 
-    // 2. Affichage de la page de Bilan (le tableau noir que tu as créé)
-    const pageBilan = document.getElementById('page-bilan');
-    if (pageBilan) {
-        pageBilan.style.display = 'flex';
-        if (zoneTableauBilan) zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Calcul des recettes...</td></tr>";
+    // Affichage d'un message de chargement
+    if (zoneTableauBilan) {
+        zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px; color:gray;'>Calcul des recettes en cours...</td></tr>";
     }
 
     try {
-        database.ref('clients').once('value', (snapshot) => {
-            let htmlBilan = "";
-            let recetteTotale = 0;
+        // 2. RÉCUPÉRATION DES RÉGLAGES DE PRIX (A, B, C)
+        const tarifsSnap = await database.ref('reglages/tarifs').once('value');
+        const tarifs = tarifsSnap.val() || { A: 0, B: 0, C: 0 };
 
-            if (!snapshot.exists()) {
-                if (zoneTableauBilan) zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun élève trouvé.</td></tr>";
-                return;
-            }
+        // 3. RÉCUPÉRATION DES DONNÉES CLIENTS
+        const snapshot = await database.ref('clients').once('value');
+        
+        let htmlBilan = "";
+        let recetteTotaleGlobale = 0;
 
-            snapshot.forEach((child) => {
-                const tel = child.key;
-                const info = child.child('infos_client').val();
-                const presence = child.child('presence').val() || {}; 
+        if (!snapshot.exists()) {
+            if (zoneTableauBilan) zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun élève enregistré.</td></tr>";
+            return;
+        }
+
+        // 4. BOUCLE SUR CHAQUE ÉLÈVE
+        snapshot.forEach((child) => {
+            const info = child.child('infos_client').val();
+            const presence = child.child('presence').val() || {}; // On récupère l'historique de présence
+            
+            if (info) {
+                // Calcul du nombre de jours (nombre d'entrées dans le dossier 'presence')
+                const nbJoursPresence = Object.keys(presence).length;
                 
-                if (info) {
-                    // Calcul du nombre de jours de présence
-                    const nbJours = Object.keys(presence).length;
-                    
-                    // Récupération du prix (depuis tes inputs CAT A, B, C)
-                    const prixUnitaire = document.getElementById('price-' + info.cat)?.value || 0;
-                    const sousTotal = nbJours * prixUnitaire;
-                    
-                    recetteTotale += sousTotal;
+                // Récupération du prix selon la catégorie de l'élève (A, B ou C)
+                const prixUnitaire = parseInt(tarifs[info.categorie]) || 0;
+                
+                // Calcul du sous-total pour cet élève
+                const sousTotalEleve = nbJoursPresence * prixUnitaire;
+                
+                // Ajout au grand total de l'établissement
+                recetteTotaleGlobale += sousTotalEleve;
 
-                    // Construction de la ligne du tableau financier
-                    htmlBilan += `
-                        <tr style="border-bottom: 1px solid #222;">
-                            <td style="padding:12px; text-align:left;">${info.nom.toUpperCase()}</td>
-                            <td style="padding:12px; text-align:center;"><span style="background:#333; padding:2px 6px; border-radius:4px;">${info.cat}</span></td>
-                            <td style="padding:12px; text-align:center;">${nbJours}</td>
-                            <td style="padding:12px; text-align:right; color:#2ecc71; font-weight:bold;">${sousTotal.toLocaleString()} F</td>
-                        </tr>
-                    `;
-                }
-            });
-
-            // Injection des données dans le HTML
-            if (zoneTableauBilan) zoneTableauBilan.innerHTML = htmlBilan;
-            if (totalBilan) totalBilan.innerText = recetteTotale.toLocaleString() + " F CFA";
+                // Construction de la ligne HTML pour le tableau
+                htmlBilan += `
+                    <tr style="border-bottom: 1px solid #222;">
+                        <td style="padding:12px; text-align:left; color:white; font-size:0.85rem;">
+                            ${info.nom.toUpperCase()}
+                        </td>
+                        <td style="padding:12px; text-align:center;">
+                            <span style="background:#333; padding:2px 8px; border-radius:4px; font-weight:bold; color:var(--p);">
+                                ${info.categorie}
+                            </span>
+                        </td>
+                        <td style="padding:12px; text-align:center; color:white;">
+                            ${nbJoursPresence} j
+                        </td>
+                        <td style="padding:12px; text-align:right; color:#2ecc71; font-weight:bold;">
+                            ${sousTotalEleve.toLocaleString()} F
+                        </td>
+                    </tr>
+                `;
+            }
         });
+
+        // 5. INJECTION FINALE DANS LE HTML
+        if (zoneTableauBilan) {
+            zoneTableauBilan.innerHTML = htmlBilan;
+        }
+
+        if (totalBilanElt) {
+            totalBilanElt.innerText = recetteTotaleGlobale.toLocaleString() + " F CFA";
+        }
+
+        console.log("📊 Bilan mis à jour avec succès.");
+
     } catch (error) {
-        console.error("Erreur Rapport:", error);
+        console.error("❌ Erreur lors de la génération du rapport :", error);
+        if (zoneTableauBilan) {
+            zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; color:red;'>Erreur de connexion Firebase.</td></tr>";
+        }
     }
 }
 function exporterCSV() {
@@ -650,25 +679,23 @@ function initAdminTrigger() {
     
     if (trigger) {
         const demarrerChrono = () => {
-            // On utilise le nouveau nom ici
             minuteurAdmin = setTimeout(() => {
                 const p = prompt("🔑 CODE ACCÈS ADMIN :");
                 if (p === ADMIN_PASS) {
-                    ouvrirRapport(); 
+                    // CHANGEMENT ICI : On va vers le menu de gestion, pas le bilan direct
+                    naviguer('page-admin'); 
+                    // On charge les données en arrière-plan pour que ce soit prêt
+                    loadUsers('TOUT');
                 } else if (p !== null) {
                     alert("❌ Code incorrect");
                 }
             }, 3000); 
         };
 
-        const stopperChrono = () => {
-            clearTimeout(minuteurAdmin); // On utilise le nouveau nom ici aussi
-        };
+        const stopperChrono = () => clearTimeout(minuteurAdmin);
 
-        // Tactile
         trigger.addEventListener('touchstart', demarrerChrono);
         trigger.addEventListener('touchend', stopperChrono);
-        // Souris
         trigger.addEventListener('mousedown', demarrerChrono);
         trigger.addEventListener('mouseup', stopperChrono);
         trigger.addEventListener('mouseleave', stopperChrono);
