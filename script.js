@@ -1,4 +1,5 @@
 // CONFIGURATION AVEC LA BONNE RÉGION (EUROPE)
+let minuteurAdmin; // Déclaration indispensable pour l'appui long
 const firebaseConfig = {
     databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
 };
