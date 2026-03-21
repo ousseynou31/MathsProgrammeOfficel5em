@@ -503,7 +503,19 @@ function surveillerStatutCompte() {
         });
     }
 }
-
+async function suspendreCompte(telClient) {
+    if(confirm("Voulez-vous suspendre l'accès de cet élève ?")) {
+        try {
+            await database.ref('clients/' + telClient + '/infos_client').update({
+                statut: "suspendu"
+            });
+            alert("🟠 Accès suspendu. L'élève sera bloqué au prochain démarrage.");
+            ouvrirRapport(); // Actualise le tableau
+        } catch(e) {
+            alert("Erreur lors de la suspension.");
+        }
+    }
+}
 function filtrerClients() {
     // 1. Récupère la saisie de l'utilisateur (en minuscules)
     const query = document.getElementById('admin-search').value.toLowerCase().trim();
