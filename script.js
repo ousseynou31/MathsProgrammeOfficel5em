@@ -667,9 +667,25 @@ function exporterCSV() {
 }
 
 function exporterPDF() {
-    window.print(); // La méthode la plus simple pour mobile
-}
+    const zoneBilan = document.getElementById('page-bilan');
+    const corpsTableau = document.getElementById('corps-bilan');
 
+    // Vérification de sécurité
+    if (!zoneBilan || zoneBilan.style.display === 'none') {
+        alert("⚠️ Le bilan doit être affiché à l'écran pour être exporté.");
+        return;
+    }
+
+    if (!corpsTableau || corpsTableau.rows.length <= 1 && corpsTableau.innerText.includes("Calcul")) {
+        alert("⏳ Attendez que les calculs soient terminés avant d'exporter.");
+        return;
+    }
+
+    console.log("📸 Génération du PDF...");
+    
+    // Lance l'interface d'impression du système (Génère un PDF sur mobile)
+    window.print();
+}
 // ==========================================
 // FONCTION : INITIALISER L'APPUI LONG (ADMIN)
 // ==========================================
