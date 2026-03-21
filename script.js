@@ -696,7 +696,43 @@ function exporterPDF() {
 // ==========================================
 // FONCTION : INITIALISER L'APPUI LONG (ADMIN)
 // ==========================================
+// --- SUPPRESSION TOTALE ET UNIVERSELLE ---
+async function deleteClient(telId, filtreActuel) {
+    if(confirm("❗ SUPPRESSION RADICALE : Ce compte sera déconnecté de TOUS ses appareils (PC, Tablette, Mobile) et ses données effacées. Confirmer ?")) {
+        try {
+            // 1. On supprime la racine du client. 
+            // L'écouteur 'on(value)' chez l'élève va détecter instantanément que snapshot.exists() est FAUX.
+            await database.ref('clients/' + telId).remove();
+            
+            alert("✅ Compte " + telId + " supprimé de l'univers Firebase.");
+            loadUsers(filtreActuel); 
+        } catch(e) {
+            alert("❌ Erreur de connexion : Impossible de supprimer.");
+        }
+    }
+}
 
+// --- SUSPENSION UNIVERSELLE ---
+async function toggleBan(telId, filtreActuel) {
+    try {
+        const snap = await database.ref(`clients/${telId}/infos_client/statut`).once('value');
+        const statutActuel = snap.val();
+
+        if (statutActuel === "suspendu") {
+            if(confirm("Rétablir l'accès universel pour cet élève ?")) {
+                await database.ref(`clients/${telId}/infos_client`).update({ statut: "actif" });
+            }
+        } else {
+            if(confirm("⚠️ SUSPENDRE PARTOUT : L'élève sera bloqué sur tous ses supports. Continuer ?")) {
+                // On injecte le statut "suspendu" que l'appareil de l'élève surveille en temps réel
+                await database.ref(`clients/${telId}/infos_client`).update({ statut: "suspendu" });
+            }
+        }
+        loadUsers(filtreActuel);
+    } catch(e) {
+        alert("❌ Erreur de modification du statut.");
+    }
+}
 function initAdminTrigger() {
     const trigger = document.getElementById('admin-trigger');
     
