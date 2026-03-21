@@ -246,46 +246,72 @@ function calculerJours(dateInsc) {
 // --- 1. CHARGEMENT DE LA LISTE ---
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Analyse des abonnés...</p>`;
+    if (!list) return;
+    
+    // Message d'attente
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem; letter-spacing:1px;">SYNCHRONISATION DES DONNÉES...</p>`;
     
     try {
-        const usersSnap = await database.ref('clients').once('value');
-        const blackSnap = await database.ref('blacklist').once('value');
+        // 1. RÉCUPÉRATION SIMULTANÉE DES 3 SOURCES (Clients, Suspendus, En Ligne)
+        const [usersSnap, blackSnap, presenceSnap] = await Promise.all([
+            database.ref('clients').once('value'),
+            database.ref('blacklist').once('value'),
+            database.ref('presence').once('value')
+        ]);
+
         const blacklisted = blackSnap.val() || {};
+        const connectes = presenceSnap.val() || {}; 
         
         list.innerHTML = ""; 
 
+        // 2. PARCOURS DE LA LISTE DES CLIENTS
         usersSnap.forEach(u => {
-            const data = u.val().infos_client;
-            if(!data) return;
+            const val = u.val();
+            if (!val || !val.infos_client) return;
+            const data = val.infos_client;
 
-            // Filtre de catégorie (A, B, C ou TOUT)
+            // FILTRE DE CATÉGORIE (A, B, C ou TOUT)
             if (filtre !== 'TOUT' && data.categorie !== filtre) return;
 
-            const jours = calculerJours(data.date_inscription);
+            // CALCULS DE GESTION
+            const jours = (typeof calculerJours === 'function') ? calculerJours(data.date_inscription) : 0;
             const isBanned = blacklisted[u.key] === true;
             
-            // Formatage de la date (ex: 20/03/2026)
+            // FORMATAGE DE LA DATE
             const dateObj = new Date(data.date_inscription);
             const dateAffichee = dateObj.toLocaleDateString('fr-FR');
 
-            // --- LOGIQUE DE COULEUR DU CERCLE ---
+            // --- LOGIQUE COULEUR DU CERCLE (ORIGINALE) ---
             let couleurCercle = "#10b981"; // VERT (OK)
             if (jours >= 26 && jours <= 34) couleurCercle = "#f59e0b"; // ORANGE (ALERTE)
             if (jours >= 35) couleurCercle = "#ef4444"; // ROUGE (RETARD)
 
+            // --- LOGIQUE PRÉSENCE LIVE (NOUVEAU) ---
+            const estEnLigne = connectes[u.key] !== undefined;
+
+            // --- STYLE DU BOUTON SUSPENDRE (DYNAMIQUE) ---
+            const styleBtnBan = isBanned 
+                ? `background: #ef4444; border-color: #ef4444; color: white; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);` 
+                : `background: transparent; border-color: #f59e0b; color: #f59e0b;`;
+
+            // GÉNÉRATION DU HTML DE LA LIGNE
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 20px 8px 20px; border-radius:12px; border-left: 4px solid ${isBanned ? 'var(--d)' : 'transparent'};">
+                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 20px 8px 20px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'}; opacity: ${isBanned ? '0.7' : '1'}; transition: 0.3s;">
                     
-                    <div style="width:55px; flex-shrink:0; display:flex; justify-content:center;">
-                        <div style="width:42px; height:42px; border-radius:50%; border: 3px solid ${couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4); box-shadow: 0 0 8px ${couleurCercle}33;">
+                    <div style="width:55px; flex-shrink:0; display:flex; justify-content:center; position:relative;">
+                        ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:2px; border:2px solid #000; box-shadow:0 0 8px #10b981; z-index:5;"></div>' : ''}
+                        
+                        <div style="width:44px; height:44px; border-radius:50%; border: 3px solid ${estEnLigne ? '#10b981' : couleurCercle}; 
+                             display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.85rem; 
+                             background: rgba(0,0,0,0.5); box-shadow: ${estEnLigne ? '0 0 15px #10b98144' : 'none'};">
                             ${jours}J
                         </div>
                     </div>
 
                     <div style="flex:1; margin-left:15px; min-width:0; padding-right:10px;">
                         <div style="font-weight:800; font-size:0.95rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:0.5px;">
-                            ${data.nom}
+                            ${data.nom} 
+                            ${estEnLigne ? '<span style="color:#10b981; font-size:0.6rem; margin-left:5px; font-weight:bold;">● LIVE</span>' : ''}
                         </div>
                         <div style="font-size:0.65rem; color:#777; margin-top:3px; display:flex; gap:10px; align-items:center;">
                             <span>📅 ${dateAffichee}</span>
@@ -294,7 +320,7 @@ async function loadUsers(filtre = 'TOUT') {
                         </div>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:12px; flex-shrink:0; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:10px; border:1px solid #333;">
+                    <div style="display:flex; align-items:center; gap:12px; flex-shrink:0; background:rgba(0,0,0,0.3); padding:6px 10px; border-radius:10px; border:1px solid #333;">
                         
                         <select onchange="changerCategorie('${u.key}', this.value)" 
                                 style="width:45px; background:#000; color:var(--p); border:1px solid #444; border-radius:4px; font-size:0.75rem; font-weight:900; height:28px; cursor:pointer;">
@@ -303,24 +329,31 @@ async function loadUsers(filtre = 'TOUT') {
                             <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
                         </select>
 
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
-                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0;" title="Renouveler">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
-                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:${isBanned ? 'var(--p)' : '#f59e0b'}; color:${isBanned ? 'var(--p)' : '#f59e0b'};">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; padding:0;" title="Renouveler">💰</button>
+                            
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; padding:0; border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
+                            
+                            <button onclick="toggleBan('${u.key}', '${filtre}')" 
+                                    class="pay-btn" 
+                                    style="width:30px; height:30px; font-size:0.8rem; padding:0; transition:0.3s; ${styleBtnBan}">
                                 ${isBanned ? '🔓' : '🚫'}
                             </button>
-                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="width:28px; height:28px; font-size:0.75rem; padding:0; border-color:var(--d); color:var(--d);">🗑️</button>
+                            
+                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; padding:0; border-color:var(--d); color:var(--d);" title="Supprimer">🗑️</button>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // Mise à jour automatique des statistiques en haut
-        calculerGlobalStats(filtre);
+        // 3. MISE À JOUR DES STATISTIQUES GLOBALES
+        if (typeof calculerGlobalStats === 'function') {
+            calculerGlobalStats(filtre);
+        }
 
     } catch(e) { 
-        console.error(e); 
-        list.innerHTML = "<p style='text-align:center; color:red;'>Erreur de chargement.</p>";
+        console.error("Erreur critique loadUsers:", e); 
+        list.innerHTML = `<p style='text-align:center; color:#ef4444; padding:20px;'>⚠️ ERREUR DE CHARGEMENT : Vérifiez votre connexion.</p>`;
     }
 }
 // Sauvegarder les prix dans Firebase
