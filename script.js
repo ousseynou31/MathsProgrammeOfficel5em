@@ -571,58 +571,60 @@ async function ouvrirRapport() {
     const zoneTableauBilan = document.getElementById('corps-bilan');
     const totalBilanElt = document.getElementById('total-bilan-argent');
 
-    if (zoneTableauBilan) zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px; color:gray;'>Analyse des paiements...</td></tr>";
-
     try {
-        // 1. On récupère les tarifs DEPUIS LES INPUTS de l'interface admin directement
+        // 1. Récupération des prix fixés dans l'interface Admin
         const prixA = parseInt(document.getElementById('price-A').value) || 0;
         const prixB = parseInt(document.getElementById('price-B').value) || 0;
         const prixC = parseInt(document.getElementById('price-C').value) || 0;
-        
         const tarifs = { "A": prixA, "B": prixB, "C": prixC };
 
-        // 2. Récupération des clients
+        // 2. Récupération de la liste des clients
         const snapshot = await database.ref('clients').once('value');
         
         let htmlBilan = "";
-        let recetteTotale = 0;
+        let sommePrevueTotale = 0;
 
         if (!snapshot.exists()) {
-            zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun élève.</td></tr>";
+            zoneTableauBilan.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Aucun élève enregistré.</td></tr>";
             return;
         }
 
         snapshot.forEach((child) => {
             const info = child.child('infos_client').val();
-            // On compte les jours de présence (nombre d'entrées dans le dossier 'presence')
-            const presence = child.child('presence').val() || {}; 
-            const nbJours = Object.keys(presence).length || 1; // Par défaut 1 jour si inscrit
-
+            
             if (info) {
-                // IMPORTANT : On vérifie si c'est 'categorie' ou 'cat' dans ta base
-                const maCat = info.categorie || info.cat || "C"; 
-                const prixUnitaire = tarifs[maCat] || 0;
-                const sousTotal = nbJours * prixUnitaire;
+                const maCat = info.categorie || info.cat || "C"; // Sécurité sur le nom de la clé
+                const prixCategorie = tarifs[maCat] || 0;
                 
-                recetteTotale += sousTotal;
+                // On cumule pour le total général
+                sommePrevueTotale += prixCategorie;
 
+                // On construit la ligne (On a supprimé la colonne "Jours")
                 htmlBilan += `
                     <tr style="border-bottom: 1px solid #222;">
-                        <td style="padding:12px; text-align:left; color:white;">${info.nom.toUpperCase()}</td>
-                        <td style="padding:12px; text-align:center;"><span style="background:#333; padding:2px 8px; border-radius:4px;">${maCat}</span></td>
-                        <td style="padding:12px; text-align:center;">${nbJours}</td>
-                        <td style="padding:12px; text-align:right; color:#2ecc71; font-weight:bold;">${sousTotal.toLocaleString()} F</td>
+                        <td style="padding:15px; text-align:left; color:white; font-weight:500;">
+                            ${info.nom.toUpperCase()}
+                        </td>
+                        <td style="padding:15px; text-align:center;">
+                            <span style="background:#333; color:var(--p); padding:4px 10px; border-radius:6px; font-weight:bold; font-size:0.8rem;">
+                                CAT ${maCat}
+                            </span>
+                        </td>
+                        <td style="padding:15px; text-align:right; color:#2ecc71; font-weight:900; font-size:0.9rem;">
+                            ${prixCategorie.toLocaleString()} F
+                        </td>
                     </tr>
                 `;
             }
         });
 
+        // 3. Mise à jour du tableau et du montant total
         zoneTableauBilan.innerHTML = htmlBilan;
-        totalBilanElt.innerText = recetteTotale.toLocaleString() + " F CFA";
+        totalBilanElt.innerText = sommePrevueTotale.toLocaleString() + " F CFA";
 
     } catch (error) {
-        console.error("Erreur calcul:", error);
-        zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; color:red;'>Erreur de calcul.</td></tr>";
+        console.error("Erreur Bilan :", error);
+        zoneTableauBilan.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>Erreur de chargement des données.</td></tr>";
     }
 }
 function exporterCSV() {
