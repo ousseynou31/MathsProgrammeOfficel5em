@@ -75,33 +75,6 @@ function getDeviceId() {
     return id;
 }
 
-// ==========================================
-// 3. MENU CACHÉ (APPUI LONG 3S SUR LE TITRE)
-// ==========================================
-// ==========================================
-// 3. MENU CACHÉ (APPUI LONG 3S SUR LE TITRE)
-// ==========================================
-
-const trigger = document.getElementById('admin-trigger');
-
-const startAdminTimer = () => {
-    adminTimer = setTimeout(() => {
-        const p = prompt("🔑 CODE ADMIN :");
-        // On vérifie le mot de passe et on ouvre le rapport
-        if(p === ADMIN_PASS) {
-            ouvrirRapport();
-        }
-    }, 3000); 
-};
-
-const stopAdminTimer = () => clearTimeout(adminTimer);
-
-if(trigger) {
-    trigger.addEventListener('touchstart', startAdminTimer);
-    trigger.addEventListener('touchend', stopAdminTimer);
-    trigger.addEventListener('mousedown', startAdminTimer);
-    trigger.addEventListener('mouseup', stopAdminTimer);
-}
 
 // ==========================================
 // 4. LOGIQUE D'ACTIVATION (PIN)
