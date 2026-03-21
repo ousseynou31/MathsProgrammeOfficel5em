@@ -618,7 +618,33 @@ function exporterCSV() {
     let csv = "NOM;CATEGORIE;JOURS;MONTANT\n";
     const rows = document.querySelectorAll("#corps-bilan tr");
     rows.forEach(row => {
-        const cols = row.querySelectorAll("td");
+        const cols = row.querySelectorAll("td");// ==========================================
+// 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
+// ==========================================
+window.addEventListener('load', () => {
+    console.log("🚀 Lancement du système...");
+
+    // 1. LE GARDIEN (Vérifie si le compte est Supprimé ou Suspendu)
+    // On le met en premier pour bloquer l'accès immédiatement si besoin
+    surveillerStatutCompte(); 
+
+    // 2. Allume la LED (Vérification de la connexion)
+    surveillerConnexion(); 
+    
+    // 3. Enregistre l'appareil dans l'onglet "Data" de Firebase
+    marquerPresence();    
+    
+    // 4. Affiche l'ID de l'appareil dans le HTML
+    const devIdDisplay = document.getElementById('display-device-id');
+    if(devIdDisplay) {
+        devIdDisplay.innerText = getDeviceId();
+    }
+
+    // 5. Décide quelle page afficher (Activation ou Accueil)
+    launchApp();          
+    
+    console.log("✅ Initialisation terminée et sous surveillance.");
+});
         csv += `${cols[0].innerText};${cols[1].innerText};${cols[2].innerText};${cols[3].innerText}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -633,25 +659,4 @@ function exporterCSV() {
 function exporterPDF() {
     window.print();
 }
-// ==========================================
-// 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
-// ==========================================
-window.addEventListener('load', () => {
-    console.log("🚀 Lancement du système...");
-
-    // 1. Allume la LED (Vérification de la connexion)
-    surveillerConnexion(); 
-    
-    // 2. Enregistre l'appareil dans l'onglet "Data" de Firebase
-    marquerPresence();    
-    
-    // 3. Affiche l'ID de l'appareil dans le HTML
-    const devIdDisplay = document.getElementById('display-device-id');
-    if(devIdDisplay) devIdDisplay.innerText = getDeviceId();
-
-    // 4. Décide quelle page afficher (Activation ou Accueil)
-    launchApp();          
-    
-    console.log("✅ Initialisation terminée.");
-});
 
