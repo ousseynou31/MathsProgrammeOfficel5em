@@ -454,73 +454,67 @@ async function changerCategorie(telId, nouvelleCat) {
     }
 }
 function ouvrirRapport() {
-    // 1. Afficher la page bilan
-    naviguer('page-bilan');
+    // 1. Affichage forcé en Flex pour le plein écran
+    const pageBilan = document.getElementById('page-bilan');
+    pageBilan.style.display = 'flex';
     
-    const corpsTableau = document.getElementById('corps-bilan');
-    corpsTableau.innerHTML = "<tr><td colspan='4' style='padding:20px; text-align:center;'>Calcul en cours...</td></tr>";
+    const corps = document.getElementById('corps-bilan');
+    corps.innerHTML = "";
     
-    let totalGeneral = 0;
+    let totalGlobal = 0;
 
-    // 2. On récupère les tarifs actuels réglés dans l'admin
+    // 2. Récupération des prix saisis dans l'admin
     const tarifs = {
-        'A': parseInt(document.getElementById('price-A').value) || 0,
-        'B': parseInt(document.getElementById('price-B').value) || 0,
-        'C': parseInt(document.getElementById('price-C').value) || 0
+        'A': parseInt(document.getElementById('price-A').value) || 5000,
+        'B': parseInt(document.getElementById('price-B').value) || 3000,
+        'C': parseInt(document.getElementById('price-C').value) || 1500
     };
 
-    // 3. Récupérer les données depuis Firebase (on suppose que 'users' est ta liste globale)
+    // 3. Boucle sur les clients (remplace 'usersList' par ta variable qui contient les élèves)
+    // Ici on suppose que tu as une liste 'usersData' récupérée de Firebase
     db.ref('users').once('value', (snapshot) => {
-        corpsTableau.innerHTML = ""; // Vider le chargement
-        
         snapshot.forEach((child) => {
-            const client = child.val();
-            const categorie = client.categorie || 'C'; // Par défaut C
-            const nom = client.nom || "Anonyme";
-            const absences = client.absences || 0; // Nombre de jours d'absence
+            const u = child.val();
+            const cat = u.categorie || 'C';
+            const jours = u.joursEffectues || 0; // À adapter selon tes données
+            const montant = tarifs[cat] || 0;
             
-            // Calcul de la somme (Tarif de base)
-            const somme = tarifs[categorie] || 0;
-            totalGeneral += somme;
+            totalGlobal += montant;
 
-            // Ajouter la ligne au tableau
-            corpsTableau.innerHTML += `
-                <tr style="border-bottom:1px solid #222;">
-                    <td style="padding:12px;">${nom.toUpperCase()}</td>
-                    <td style="padding:12px; text-align:center;">${categorie}</td>
-                    <td style="padding:12px; text-align:center;">${absences} j</td>
-                    <td style="padding:12px; font-weight:bold; color:#2ecc71;">${somme.toLocaleString()} F</td>
+            corps.innerHTML += `
+                <tr style="border-bottom: 1px solid #222;">
+                    <td style="padding:12px; text-transform:uppercase; font-size:0.75rem;">${u.nom}</td>
+                    <td style="padding:12px; text-align:center;">${cat}</td>
+                    <td style="padding:12px; text-align:center;">${jours} j</td>
+                    <td style="padding:12px; text-align:right; font-weight:bold;">${montant.toLocaleString()} F</td>
                 </tr>
             `;
         });
-
-        // 4. Mettre à jour la ligne Total en bas
-        document.getElementById('total-bilan-argent').innerText = totalGeneral.toLocaleString() + " F CFA";
+        
+        document.getElementById('total-bilan-argent').innerText = totalGlobal.toLocaleString() + " F CFA";
     });
 }
 
-// Fonction pour le téléchargement CSV (Excel)
+// Fonction export CSV simple
 function exporterCSV() {
-    let csv = "Nom Complet;Categorie;Absences;Somme a Payer\n";
-    const lignes = document.querySelectorAll("#corps-bilan tr");
-    
-    lignes.forEach(tr => {
-        const cols = tr.querySelectorAll("td");
+    let csv = "NOM;CATEGORIE;JOURS;MONTANT\n";
+    const rows = document.querySelectorAll("#corps-bilan tr");
+    rows.forEach(row => {
+        const cols = row.querySelectorAll("td");
         csv += `${cols[0].innerText};${cols[1].innerText};${cols[2].innerText};${cols[3].innerText}\n`;
     });
-    
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", "Bilan_Mensuel_Maths.csv");
-    link.click();
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Bilan_Financier.csv';
+    a.click();
 }
 
-// Pour le PDF, on utilise souvent window.print() pour faire simple au début
+// Fonction PDF (Lance l'impression optimisée)
 function exporterPDF() {
     window.print();
 }
-
 // ==========================================
 // 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
 // ==========================================
