@@ -195,7 +195,22 @@ function naviguer(id) {
     mettreAJourDashboard();
 }
 }
-
+function deconnexionAdmin() {
+    // 1. Demander confirmation pour éviter les erreurs
+    if (confirm("Voulez-vous fermer la session administrateur ?")) {
+        
+        // 2. Masquer toutes les pages sensibles
+        document.getElementById('page-admin').style.display = 'none';
+        document.getElementById('page-bilan').style.display = 'none';
+        
+        // 3. Retourner à la page d'accueil (le Hub)
+        naviguer('page-accueil');
+        
+        // 4. Petit message de succès
+        console.log("Session Admin terminée.");
+        alert("🔒 Session fermée. L'accès est de nouveau verrouillé.");
+    }
+}
 function launchApp() {
     const devIdDisplay = document.getElementById('display-device-id');
     if(devIdDisplay) devIdDisplay.innerText = getDeviceId();
