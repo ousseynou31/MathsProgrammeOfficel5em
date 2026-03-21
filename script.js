@@ -563,67 +563,66 @@ async function changerCategorie(telId, nouvelleCat) {
     }
 }
 async function ouvrirRapport() {
-    // 1. Affichage de la page
-    document.getElementById('page-bilan').style.display = 'flex';
-    const corps = document.getElementById('corps-bilan');
-    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px;'>Analyse de la base MATHS 5ème...</td></tr>";
+    console.log("📊 Chargement de la liste des clients...");
     
-    let totalGlobal = 0;
+    // 1. Récupérer l'élément HTML où on va injecter les lignes
+    const corps = document.getElementById('corps-tableau-admin');
+    if (!corps) return; // Sécurité si l'élément n'existe pas
 
-    // 2. Récupération des tarifs configurés
-    const prixA = parseInt(document.getElementById('price-A').value) || 5000;
-    const prixB = parseInt(document.getElementById('price-B').value) || 3000;
-    const prixC = parseInt(document.getElementById('price-C').value) || 1500;
+    // 2. Vider le tableau avant de le remplir (pour éviter les répétitions)
+    corps.innerHTML = "";
 
     try {
-        // 3. ON VA CHERCHER DANS 'clients' (selon votre fonction d'enregistrement)
-        const snapshot = await database.ref('clients').once('value');
-        corps.innerHTML = ""; 
-
-        if (!snapshot.exists()) {
-            corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Aucun client trouvé.</td></tr>";
-            return;
-        }
-
-        snapshot.forEach((childSnapshot) => {
-            // Dans votre structure, les infos sont dans 'infos_client'
-            const dataClient = childSnapshot.child('infos_client').val();
-            
-            if (dataClient) {
-                const nomAffiche = dataClient.nom || "Inconnu";
-                const telAffiche = dataClient.tel || childSnapshot.key; // Utilise la clé si tel est vide
-                
-                // --- GESTION DES JOURS ---
-                // Comme 'jours' n'est pas dans votre fonction d'enregistrement,
-                // on va afficher '1' par défaut pour l'inscription
-                const joursAffiche = dataClient.jours || 1; 
-
-                // --- GÉSTION CATÉGORIE ---
-                const cat = dataClient.categorie || 'C';
-
-                let montant = prixC;
-                if(cat === 'A') montant = prixA;
-                if(cat === 'B') montant = prixB;
-
-                totalGlobal += montant;
-
-                const tr = document.createElement('tr');
-                tr.style.borderBottom = "1px solid #222";
-                tr.innerHTML = `
-                    <td style="padding:12px; text-transform:uppercase; font-size:0.7rem; color:#fff;">${nomAffiche}</td>
-                    <td style="padding:12px; text-align:center; color:var(--p); font-weight:bold;">${cat}</td>
-                    <td style="padding:12px; text-align:center;">${joursAffiche} j</td>
-                    <td style="padding:12px; text-align:right; font-weight:bold; color:#2ecc71;">${montant.toLocaleString()} F</td>
-                `;
-                corps.appendChild(tr);
+        // 3. Lire les données dans Firebase (Branche 'clients')
+        database.ref('clients').once('value', (snapshot) => {
+            if (!snapshot.exists()) {
+                corps.innerHTML = "<tr><td colspan='2' style='text-align:center; padding:20px; color:gray;'>Aucun client enregistré.</td></tr>";
+                return;
             }
+
+            snapshot.forEach((childSnapshot) => {
+                // Récupération des données du client
+                const u = childSnapshot.child('infos_client').val();
+                const tel = childSnapshot.key; // Le numéro de téléphone sert d'ID unique
+                
+                // Si les infos n'existent pas pour ce noeud, on passe au suivant
+                if (!u) return;
+
+                // Vérification du statut (par défaut "actif" si vide)
+                const statut = u.statut || "actif";
+
+                // --- LOGIQUE DES BOUTONS ---
+                let boutonAction = "";
+                if (statut === "suspendu") {
+                    // Si suspendu -> Bouton VERT pour réactiver
+                    boutonAction = `<button onclick="reactiverCompte('${tel}')" style="background:#2ecc71; border:none; color:white; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">✅ RÉACTIVER</button>`;
+                } else {
+                    // Si actif -> Bouton ORANGE pour suspendre
+                    boutonAction = `<button onclick="suspendreCompte('${tel}')" style="background:#e67e22; border:none; color:white; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">🟠 SUSPENDRE</button>`;
+                }
+
+                // --- INJECTION DANS LE TABLEAU ---
+                // On change la couleur de fond si le compte est suspendu pour mieux le voir
+                corps.innerHTML += `
+                    <tr style="border-bottom: 1px solid #222; background: ${statut === 'suspendu' ? 'rgba(230, 126, 34, 0.1)' : 'transparent'}">
+                        <td style="padding:12px; color:white;">
+                            <div style="font-size:0.9rem; font-weight:bold;">${u.nom.toUpperCase()}</div>
+                            <div style="font-size:0.75rem; color:gray;">${tel}</div>
+                        </td>
+                        <td style="padding:12px; text-align:right; white-space:nowrap;">
+                            ${boutonAction}
+                            <button onclick="supprimerCompteDefinitif('${tel}')" style="background:#e74c3c; border:none; color:white; padding:8px; border-radius:5px; margin-left:8px; cursor:pointer;">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Une fois le tableau chargé, on bascule sur la page admin
+            naviguer('page-admin');
         });
-
-        document.getElementById('total-bilan-argent').innerText = totalGlobal.toLocaleString() + " F CFA";
-
     } catch (error) {
-        console.error("Erreur Bilan :", error);
-        corps.innerHTML = "<tr><td colspan='4' style='color:red; text-align:center;'>Erreur de lecture base.</td></tr>";
+        console.error("Erreur lors du chargement du rapport :", error);
+        alert("Impossible de charger la liste des clients.");
     }
 }
 // Fonction export CSV simple
