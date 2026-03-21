@@ -123,24 +123,53 @@ async function enregistrerProfil() {
     const nom = document.getElementById('reg-nom').value.trim();
     const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
     
-    if(!nom || tel.length < 8) return alert("Veuillez remplir tous les champs.");
+    if(!nom || tel.length < 8) {
+        return alert("Veuillez remplir tous les champs correctement.");
+    }
 
     try {
-        // Enregistrement sur votre nouvelle base maths5eme-v1
-        await database.ref('clients/' + tel + '/infos_client').set({
+        // Chemin exact : clients / NUMERO / infos_client
+        const clientRef = database.ref('clients/' + tel + '/infos_client');
+        
+        // On vérifie si le client existe déjà pour ne pas écraser ses jours
+        const snapshot = await clientRef.once('value');
+        let joursActuels = 1;
+        let catActuelle = 'C';
+
+        if (snapshot.exists()) {
+            const existingData = snapshot.val();
+            joursActuels = existingData.jours || 1;
+            catActuelle = existingData.categorie || 'C';
+        }
+
+        // Enregistrement / Mise à jour
+        await clientRef.set({
             nom: nom,
             tel: tel,
+            jours: joursActuels,         // Initialisé à 1 ou garde l'ancien score
+            categorie: catActuelle,     // Initialisé à C ou garde l'ancienne catégorie
             date_inscription: new Date().toISOString(),
-            device_source: getDeviceId()
+            device_source: typeof getDeviceId === 'function' ? getDeviceId() : 'unknown'
         });
+
+        // Sauvegarde locale pour la session
         localStorage.setItem('user_tel_id', tel);
         localStorage.setItem('v32_registered', 'true');
-        launchApp();
+        
+        alert("✅ Profil créé avec succès !");
+        
+        // Lancement de l'application
+        if (typeof launchApp === 'function') {
+            launchApp();
+        } else {
+            location.reload(); // Sécurité si launchApp n'est pas définie
+        }
+
     } catch(e) { 
+        console.error("Erreur Firebase:", e);
         alert("Erreur de connexion à la base de données."); 
     }
 }
-
 // ==========================================
 // 6. VERROUILLAGE (DÉCONNEXION)
 // ==========================================
