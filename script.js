@@ -249,15 +249,9 @@ async function loadUsers(filtre = 'TOUT') {
     list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Analyse des abonnés...</p>`;
     
     try {
-        // RÉCUPÉRATION DES DONNÉES (Clients + Blacklist + Présence)
-        const [usersSnap, blackSnap, presenceSnap] = await Promise.all([
-            database.ref('clients').once('value'),
-            database.ref('blacklist').once('value'),
-            database.ref('presence').once('value') // Ajout du signal de présence
-        ]);
-
+        const usersSnap = await database.ref('clients').once('value');
+        const blackSnap = await database.ref('blacklist').once('value');
         const blacklisted = blackSnap.val() || {};
-        const connectes = presenceSnap.val() || {}; // Liste des élèves en ligne
         
         list.innerHTML = ""; 
 
@@ -280,17 +274,11 @@ async function loadUsers(filtre = 'TOUT') {
             if (jours >= 26 && jours <= 34) couleurCercle = "#f59e0b"; // ORANGE (ALERTE)
             if (jours >= 35) couleurCercle = "#ef4444"; // ROUGE (RETARD)
 
-            // --- LOGIQUE DU VOYANT DE PRÉSENCE ---
-            const estEnLigne = connectes[u.key] !== undefined;
-            const bordureVoyant = estEnLigne ? `box-shadow: 0 0 12px #10b981, inset 0 0 10px #10b981; border-color: #10b981;` : `border: 3px solid ${couleurCercle};`;
-            const labelEnLigne = estEnLigne ? `<span style="position:absolute; top:-8px; background:#10b981; color:black; font-size:0.5rem; padding:1px 4px; border-radius:4px; font-weight:900; animation: pulse 2s infinite;">LIVE</span>` : '';
-
             list.innerHTML += `
                 <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 20px 8px 20px; border-radius:12px; border-left: 4px solid ${isBanned ? 'var(--d)' : 'transparent'};">
                     
-                    <div style="width:55px; flex-shrink:0; display:flex; justify-content:center; position:relative;">
-                        ${labelEnLigne}
-                        <div style="width:42px; height:42px; border-radius:50%; ${bordureVoyant} display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4); transition: 0.3s;">
+                    <div style="width:55px; flex-shrink:0; display:flex; justify-content:center;">
+                        <div style="width:42px; height:42px; border-radius:50%; border: 3px solid ${couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4); box-shadow: 0 0 8px ${couleurCercle}33;">
                             ${jours}J
                         </div>
                     </div>
