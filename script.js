@@ -434,23 +434,41 @@ function envoyerRappel(tel, nom, cat) {
     window.open(url, '_blank');
 }
 
-// 3. SUSPENDRE : Utilise la liste noire (Blacklist)
-async function toggleBan(telId) {
-    const snap = await database.ref(`blacklist/${telId}`).once('value');
-    const isCurrentlyBanned = snap.val() === true;
-    
-    await database.ref(`blacklist/${telId}`).set(!isCurrentlyBanned);
-    loadUsers();
-}
+async function supprimerCompteDefinitif(telClient) {
+    if(confirm("❗ ATTENTION : Voulez-vous supprimer ce compte ? L'élève devra se réinscrire.")) {
+        try {
+            // 1. Suppression dans Firebase
+            await database.ref('clients/' + telClient).remove();
 
-// 4. SUPPRIMER : Effacement définitif
-async function deleteClient(telId) {
-    if(confirm("❗ Action irréversible. Supprimer ce client de la base ?")) {
-        await database.ref(`clients/${telId}`).remove();
-        await database.ref(`blacklist/${telId}`).remove();
-        loadUsers();
+            // 2. Si c'est le téléphone actuel, on vide la mémoire locale
+            if(localStorage.getItem('user_tel_id') === telClient) {
+                localStorage.removeItem('v32_registered');
+                localStorage.removeItem('user_tel_id');
+                localStorage.removeItem('v32_active');
+                alert("Compte supprimé. Retour à l'inscription.");
+                window.location.reload(); // Relance l'app à zéro
+            } else {
+                alert("Le compte " + telClient + " a été supprimé de la base.");
+                ouvrirRapport(); // Actualise le tableau
+            }
+        } catch(e) {
+            alert("Erreur lors de la suppression.");
+        }
     }
 }
+
+async function suspendreCompte(telClient) {
+    const raison = prompt("Raison de la suspension (ex: Non payé) :");
+    if(raison) {
+        await database.ref('clients/' + telClient + '/infos_client').update({
+            statut: "suspendu",
+            motif_suspension: raison
+        });
+        alert("Accès suspendu pour ce client.");
+        ouvrirRapport();
+    }
+}
+
 function filtrerClients() {
     // 1. Récupère la saisie de l'utilisateur (en minuscules)
     const query = document.getElementById('admin-search').value.toLowerCase().trim();
