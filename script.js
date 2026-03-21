@@ -11,37 +11,40 @@ const database = firebase.database();
 
 // --- LA FONCTION DE SURVEILLANCE (MISE À JOUR) ---
 function surveillerConnexion() {
-    // On récupère les éléments par ID et Classe
     const ledContainer = document.getElementById('cloud-status');
-    
-    // On vérifie la connexion réelle
+    if (!ledContainer) return;
+
     database.ref(".info/connected").on("value", (snap) => {
+        const cercle = ledContainer.querySelector('.led-circle');
+        const texte = ledContainer.querySelector('.led-text');
+
         if (snap.val() === true) {
-            console.log("!!! CONNECTÉ !!!");
-            // ON FORCE LE STYLE EN JAVASCRIPT DIRECT (PASSE PAR-DESSUS LE CSS)
+            // État Connecté
+            ledContainer.style.background = "rgba(16, 185, 129, 0.1)";
             ledContainer.style.border = "1px solid #10b981";
-            ledContainer.style.background = "rgba(16, 185, 129, 0.2)";
-            
-            const cercle = ledContainer.querySelector('.led-circle');
-            const texte = ledContainer.querySelector('.led-text');
-            
             if(cercle) {
-                cercle.style.backgroundColor = "#10b981";
-                cercle.style.boxShadow = "0 0 15px #10b981";
+                cercle.style.background = "#10b981";
+                cercle.style.boxShadow = "0 0 10px #10b981";
             }
             if(texte) {
+                texte.innerText = "LIVE";
                 texte.style.color = "#10b981";
-                texte.innerText = "ONLINE";
             }
         } else {
-            console.log("... RECHERCHE ...");
-            // REVIENT AU GRIS SI COUPÉ
-            ledContainer.style.border = "1px solid rgba(255,255,255,0.1)";
+            // État Recherche/Déconnecté
             ledContainer.style.background = "rgba(0,0,0,0.6)";
+            ledContainer.style.border = "1px solid #444";
+            if(cercle) {
+                cercle.style.background = "#666";
+                cercle.style.boxShadow = "none";
+            }
+            if(texte) {
+                texte.innerText = "OFFLINE";
+                texte.style.color = "#666";
+            }
         }
     });
 }
-
 // FORCE L'APPARITION DANS LA BASE DE DONNÉES
 function signalerPresence() {
     const device = getDeviceId();
@@ -568,115 +571,95 @@ async function changerCategorie(telId, nouvelleCat) {
         alert("Erreur de sauvegarde dans la base.");
     }
 }
-async function ouvrirRapport() {
-    const corps = document.getElementById('corps-bilan'); // C'est l'ID de ton <tbody>
-if (corps) corps.innerHTML = "";
-    console.log("📊 Chargement de la liste des clients...");
-    
-    // 1. Récupérer l'élément HTML où on va injecter les lignes
-    const corps = document.getElementById('corps-tableau-admin');
-    if (!corps) return; // Sécurité si l'élément n'existe pas
 
-    // 2. Vider le tableau avant de le remplir (pour éviter les répétitions)
-    corps.innerHTML = "";
+// ==========================================
+// 5. FONCTION : OUVRIR LE RAPPORT (BILAN)
+// ==========================================
+async function ouvrirRapport() {
+    const corpsBilan = document.getElementById('corps-bilan');
+    const totalArgent = document.getElementById('total-bilan-argent');
+    const listeAdmin = document.getElementById('admin-user-list');
+
+    if (!corpsBilan || !listeAdmin) return;
+
+    // 1. On affiche la page du bilan
+    document.getElementById('page-bilan').style.display = 'flex';
+    corpsBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Analyse financière en cours...</td></tr>";
 
     try {
-        // 3. Lire les données dans Firebase (Branche 'clients')
         database.ref('clients').once('value', (snapshot) => {
+            let htmlBilan = "";
+            let recetteGlobale = 0;
+
             if (!snapshot.exists()) {
-                corps.innerHTML = "<tr><td colspan='2' style='text-align:center; padding:20px; color:gray;'>Aucun client enregistré.</td></tr>";
+                corpsBilan.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucune donnée.</td></tr>";
                 return;
             }
 
-            snapshot.forEach((childSnapshot) => {
-                // Récupération des données du client
-                const u = childSnapshot.child('infos_client').val();
-                const tel = childSnapshot.key; // Le numéro de téléphone sert d'ID unique
+            snapshot.forEach((child) => {
+                const tel = child.key;
+                const info = child.child('infos_client').val();
+                const presence = child.child('presence').val() || {}; // On récupère les jours cochés
                 
-                // Si les infos n'existent pas pour ce noeud, on passe au suivant
-                if (!u) return;
+                if (info) {
+                    // Calcul des jours cochés (nombre de clés dans l'objet présence)
+                    const nbJours = Object.keys(presence).length;
+                    
+                    // Récupération du prix selon la catégorie (A, B ou C)
+                    const tarif = document.getElementById('price-' + info.cat)?.value || 0;
+                    const montant = nbJours * tarif;
+                    
+                    recetteGlobale += montant;
 
-                // Vérification du statut (par défaut "actif" si vide)
-                const statut = u.statut || "actif";
-
-                // --- LOGIQUE DES BOUTONS ---
-                let boutonAction = "";
-                if (statut === "suspendu") {
-                    // Si suspendu -> Bouton VERT pour réactiver
-                    boutonAction = `<button onclick="reactiverCompte('${tel}')" style="background:#2ecc71; border:none; color:white; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">✅ RÉACTIVER</button>`;
-                } else {
-                    // Si actif -> Bouton ORANGE pour suspendre
-                    boutonAction = `<button onclick="suspendreCompte('${tel}')" style="background:#e67e22; border:none; color:white; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">🟠 SUSPENDRE</button>`;
+                    // Création de la ligne du tableau
+                    htmlBilan += `
+                        <tr style="border-bottom: 1px solid #222;">
+                            <td style="padding:12px; font-weight:bold;">${info.nom.toUpperCase()}</td>
+                            <td style="padding:12px; text-align:center;"><span class="badge-cat">${info.cat}</span></td>
+                            <td style="padding:12px; text-align:center;">${nbJours} j</td>
+                            <td style="padding:12px; text-align:right; color:#2ecc71; font-weight:bold;">${montant.toLocaleString()} F</td>
+                        </tr>
+                    `;
                 }
-
-                // --- INJECTION DANS LE TABLEAU ---
-                // On change la couleur de fond si le compte est suspendu pour mieux le voir
-                corps.innerHTML += `
-                    <tr style="border-bottom: 1px solid #222; background: ${statut === 'suspendu' ? 'rgba(230, 126, 34, 0.1)' : 'transparent'}">
-                        <td style="padding:12px; color:white;">
-                            <div style="font-size:0.9rem; font-weight:bold;">${u.nom.toUpperCase()}</div>
-                            <div style="font-size:0.75rem; color:gray;">${tel}</div>
-                        </td>
-                        <td style="padding:12px; text-align:right; white-space:nowrap;">
-                            ${boutonAction}
-                            <button onclick="supprimerCompteDefinitif('${tel}')" style="background:#e74c3c; border:none; color:white; padding:8px; border-radius:5px; margin-left:8px; cursor:pointer;">🗑️</button>
-                        </td>
-                    </tr>
-                `;
             });
 
-            // Une fois le tableau chargé, on bascule sur la page admin
-            naviguer('page-admin');
+            // Mise à jour de l'affichage
+            corpsBilan.innerHTML = htmlBilan;
+            if(totalArgent) totalArgent.innerText = recetteGlobale.toLocaleString() + " F CFA";
         });
     } catch (error) {
-        console.error("Erreur lors du chargement du rapport :", error);
-        alert("Impossible de charger la liste des clients.");
+        console.error("Erreur Bilan:", error);
+        corpsBilan.innerHTML = "<tr><td colspan='4' style='color:red;'>Erreur de connexion Firebase.</td></tr>";
     }
 }
-// Fonction export CSV simple
-function exporterCSV() {
-    let csv = "NOM;CATEGORIE;JOURS;MONTANT\n";
-    const rows = document.querySelectorAll("#corps-bilan tr");
-    rows.forEach(row => {
-        const cols = row.querySelectorAll("td");// ==========================================
+// ==========================================
 // 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
 // ==========================================
 window.addEventListener('load', () => {
-    console.log("🚀 Lancement du système...");
+    console.log("🚀 Lancement...");
 
     // 1. LE GARDIEN (Vérifie si le compte est Supprimé ou Suspendu)
-    // On le met en premier pour bloquer l'accès immédiatement si besoin
     surveillerStatutCompte(); 
 
-    // 2. Allume la LED (Vérification de la connexion)
+    // 2. Allume la LED (Vérification de la connexion Firebase)
     surveillerConnexion(); 
     
-    // 3. Enregistre l'appareil dans l'onglet "Data" de Firebase
-    marquerPresence();    
+    // 3. Enregistre l'appareil dans l'onglet "Data" (Présence en temps réel)
+    marquerPresence(); 
     
-    // 4. Affiche l'ID de l'appareil dans le HTML
+    // 4. Initialise l'appui long de 3s sur le titre pour l'admin
+    initAdminTrigger(); 
+
+    // 5. Affiche l'ID de l'appareil dans la zone d'activation
     const devIdDisplay = document.getElementById('display-device-id');
     if(devIdDisplay) {
         devIdDisplay.innerText = getDeviceId();
     }
 
-    // 5. Décide quelle page afficher (Activation ou Accueil)
-    launchApp();          
+    // 6. Décide quelle page afficher (Licence, Inscription ou Accueil)
+    launchApp(); 
     
     console.log("✅ Initialisation terminée et sous surveillance.");
 });
-        csv += `${cols[0].innerText};${cols[1].innerText};${cols[2].innerText};${cols[3].innerText}\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Bilan_Financier.csv';
-    a.click();
-}
 
-// Fonction PDF (Lance l'impression optimisée)
-function exporterPDF() {
-    window.print();
-}
 
