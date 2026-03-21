@@ -576,60 +576,61 @@ async function changerCategorie(telId, nouvelleCat) {
 // 5. FONCTION : OUVRIR LE RAPPORT (BILAN)
 // ==========================================
 async function ouvrirRapport() {
-    const corpsBilan = document.getElementById('corps-bilan');
-    const totalArgent = document.getElementById('total-bilan-argent');
-    const listeAdmin = document.getElementById('admin-user-list');
+    // 1. On cible les deux zones d'affichage possibles
+    const zoneListeAdmin = document.getElementById('admin-user-list'); // Zone de gestion (boutons suspendre)
+    const zoneTableauBilan = document.getElementById('corps-bilan');   // Zone du tableau financier (PDF)
+    const totalBilan = document.getElementById('total-bilan-argent');
 
-    if (!corpsBilan || !listeAdmin) return;
-
-    // 1. On affiche la page du bilan
-    document.getElementById('page-bilan').style.display = 'flex';
-    corpsBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Analyse financière en cours...</td></tr>";
+    // 2. Affichage de la page de Bilan (le tableau noir que tu as créé)
+    const pageBilan = document.getElementById('page-bilan');
+    if (pageBilan) {
+        pageBilan.style.display = 'flex';
+        if (zoneTableauBilan) zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Calcul des recettes...</td></tr>";
+    }
 
     try {
         database.ref('clients').once('value', (snapshot) => {
             let htmlBilan = "";
-            let recetteGlobale = 0;
+            let recetteTotale = 0;
 
             if (!snapshot.exists()) {
-                corpsBilan.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucune donnée.</td></tr>";
+                if (zoneTableauBilan) zoneTableauBilan.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun élève trouvé.</td></tr>";
                 return;
             }
 
             snapshot.forEach((child) => {
                 const tel = child.key;
                 const info = child.child('infos_client').val();
-                const presence = child.child('presence').val() || {}; // On récupère les jours cochés
+                const presence = child.child('presence').val() || {}; 
                 
                 if (info) {
-                    // Calcul des jours cochés (nombre de clés dans l'objet présence)
+                    // Calcul du nombre de jours de présence
                     const nbJours = Object.keys(presence).length;
                     
-                    // Récupération du prix selon la catégorie (A, B ou C)
-                    const tarif = document.getElementById('price-' + info.cat)?.value || 0;
-                    const montant = nbJours * tarif;
+                    // Récupération du prix (depuis tes inputs CAT A, B, C)
+                    const prixUnitaire = document.getElementById('price-' + info.cat)?.value || 0;
+                    const sousTotal = nbJours * prixUnitaire;
                     
-                    recetteGlobale += montant;
+                    recetteTotale += sousTotal;
 
-                    // Création de la ligne du tableau
+                    // Construction de la ligne du tableau financier
                     htmlBilan += `
                         <tr style="border-bottom: 1px solid #222;">
-                            <td style="padding:12px; font-weight:bold;">${info.nom.toUpperCase()}</td>
-                            <td style="padding:12px; text-align:center;"><span class="badge-cat">${info.cat}</span></td>
-                            <td style="padding:12px; text-align:center;">${nbJours} j</td>
-                            <td style="padding:12px; text-align:right; color:#2ecc71; font-weight:bold;">${montant.toLocaleString()} F</td>
+                            <td style="padding:12px; text-align:left;">${info.nom.toUpperCase()}</td>
+                            <td style="padding:12px; text-align:center;"><span style="background:#333; padding:2px 6px; border-radius:4px;">${info.cat}</span></td>
+                            <td style="padding:12px; text-align:center;">${nbJours}</td>
+                            <td style="padding:12px; text-align:right; color:#2ecc71; font-weight:bold;">${sousTotal.toLocaleString()} F</td>
                         </tr>
                     `;
                 }
             });
 
-            // Mise à jour de l'affichage
-            corpsBilan.innerHTML = htmlBilan;
-            if(totalArgent) totalArgent.innerText = recetteGlobale.toLocaleString() + " F CFA";
+            // Injection des données dans le HTML
+            if (zoneTableauBilan) zoneTableauBilan.innerHTML = htmlBilan;
+            if (totalBilan) totalBilan.innerText = recetteTotale.toLocaleString() + " F CFA";
         });
     } catch (error) {
-        console.error("Erreur Bilan:", error);
-        corpsBilan.innerHTML = "<tr><td colspan='4' style='color:red;'>Erreur de connexion Firebase.</td></tr>";
+        console.error("Erreur Rapport:", error);
     }
 }
 // ==========================================
