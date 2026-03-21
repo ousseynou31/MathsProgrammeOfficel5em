@@ -435,39 +435,42 @@ function envoyerRappel(tel, nom, cat) {
 }
 
 async function supprimerCompteDefinitif(telClient) {
-    if(confirm("❗ ATTENTION : Voulez-vous supprimer ce compte ? L'élève devra se réinscrire.")) {
+    if(confirm("❗ Action IRRÉVERSIBLE : Supprimer ce compte sur TOUS les appareils ?")) {
         try {
-            // 1. Suppression dans Firebase
+            // 1. SUPPRESSION GÉNÉRALE (Efface le client de la base de données)
+            // Cela coupe l'accès instantanément partout dans le monde.
             await database.ref('clients/' + telClient).remove();
 
-            // 2. Si c'est le téléphone actuel, on vide la mémoire locale
-            if(localStorage.getItem('user_tel_id') === telClient) {
-                localStorage.removeItem('v32_registered');
-                localStorage.removeItem('user_tel_id');
-                localStorage.removeItem('v32_active');
-                alert("Compte supprimé. Retour à l'inscription.");
-                window.location.reload(); // Relance l'app à zéro
+            // 2. NETTOYAGE LOCAL (Uniquement si c'est l'appareil actuel)
+            const monTelLocal = localStorage.getItem('user_tel_id');
+            if(telClient === monTelLocal) {
+                localStorage.clear(); 
+                window.location.reload();
             } else {
-                alert("Le compte " + telClient + " a été supprimé de la base.");
-                ouvrirRapport(); // Actualise le tableau
+                alert("✅ Compte " + telClient + " supprimé de partout.");
+                ouvrirRapport(); 
             }
         } catch(e) {
-            alert("Erreur lors de la suppression.");
+            alert("Erreur réseau.");
         }
     }
 }
-
-async function suspendreCompte(telClient) {
-    const raison = prompt("Raison de la suspension (ex: Non payé) :");
-    if(raison) {
-        await database.ref('clients/' + telClient + '/infos_client').update({
-            statut: "suspendu",
-            motif_suspension: raison
+function verifierExistenceCompte() {
+    const tel = localStorage.getItem('user_tel_id');
+    
+    if(tel) {
+        // On demande à Firebase : "Est-ce que ce numéro existe encore ?"
+        database.ref('clients/' + tel).on('value', (snapshot) => {
+            if(!snapshot.exists()) {
+                // SI LE COMPTE N'EXISTE PLUS DANS FIREBASE
+                alert("🚫 Votre compte a été supprimé ou désactivé.");
+                localStorage.clear(); // On vide la mémoire de la machine
+                window.location.reload(); // On renvoie à l'inscription
+            }
         });
-        alert("Accès suspendu pour ce client.");
-        ouvrirRapport();
     }
 }
+
 
 function filtrerClients() {
     // 1. Récupère la saisie de l'utilisateur (en minuscules)
