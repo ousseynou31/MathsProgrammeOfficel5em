@@ -73,25 +73,26 @@ function getDeviceId() {
 }
 
 // ==========================================
-// 3. MENU CACHÉ (APPUI LONG 3S SUR LE TITRE)
+// 3. MENU CACHÉ (APPUI LONG 2S SUR LE TITRE)
 // ==========================================
 let adminTimer;
-const trigger = document.getElementById('admin-trigger');
+const ADMIN_PASS = "1234"; // Assure-toi que ton mot de passe est bien défini ici
 
-const startAdminTimer = () => {
+function lancerTimerAdmin() {
+    // On lance le compte à rebours de 2 secondes
     adminTimer = setTimeout(() => {
         const p = prompt("🔑 CODE ADMIN :");
-        if(p === ADMIN_PASS) naviguer('page-admin');
-    }, 3000); 
-};
+        if (p === ADMIN_PASS) {
+            naviguer('page-admin');
+        } else if (p !== null) {
+            alert("❌ Code incorrect");
+        }
+    }, 2000); 
+}
 
-const stopAdminTimer = () => clearTimeout(adminTimer);
-
-if(trigger) {
-    trigger.addEventListener('touchstart', startAdminTimer);
-    trigger.addEventListener('touchend', stopAdminTimer);
-    trigger.addEventListener('mousedown', startAdminTimer);
-    trigger.addEventListener('mouseup', stopAdminTimer);
+function stopperTimerAdmin() {
+    // Si on relâche avant les 2 secondes, on annule tout
+    clearTimeout(adminTimer);
 }
 
 // ==========================================
