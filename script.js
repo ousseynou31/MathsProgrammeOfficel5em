@@ -244,15 +244,18 @@ function calculerJours(dateInsc) {
     return jours < 0 ? 0 : jours;
 }
 // --- 1. CHARGEMENT DE LA LISTE ---
+
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
     if (!list) return;
     
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Mise à jour des flux...</p>`;
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Calcul des filtres...</p>`;
     
-    const PRIX_ABONNEMENT = 5000; // Ajuste ton tarif ici
-
     try {
+        // 1. On récupère les tarifs personnalisés depuis la base (ou 5000 par défaut)
+        const tarifsSnap = await database.ref('reglages/tarifs').once('value');
+        const tarifs = tarifsSnap.val() || { A: 5000, B: 5000, C: 5000 };
+
         const [usersSnap, blackSnap, presenceSnap] = await Promise.all([
             database.ref('clients').once('value'),
             database.ref('blacklist').once('value'),
@@ -262,9 +265,10 @@ async function loadUsers(filtre = 'TOUT') {
         const blacklisted = blackSnap.val() || {};
         const connectes = presenceSnap.val() || {}; 
         
-        // --- INITIALISATION DES COMPTEURS DE FILTRE ---
-        let nbAttendu = 0; 
-        let nbRetards = 0;
+        // --- INITIALISATION DES COMPTEURS ---
+        let nbAttendu = 0;   // Case "ATTENDU"
+        let totalArgent = 0; // Case "ESTIMÉ"
+        let nbRetards = 0;    // Case "RETARD"
         
         list.innerHTML = ""; 
 
@@ -273,70 +277,70 @@ async function loadUsers(filtre = 'TOUT') {
             if (!val || !val.infos_client) return;
             const data = val.infos_client;
 
-            // 1. LOGIQUE DE FILTRAGE
-            if (filtre !== 'TOUT' && data.categorie !== filtre) return;
+            // NETTOYAGE DES DONNÉES (Gestion majuscules/espaces)
+            const catClient = (data.categorie || "C").trim().toUpperCase();
+            const monFiltre = filtre.trim().toUpperCase();
 
-            // 2. CALCULS DE GESTION (Pour les cases du haut)
-            const jours = (typeof calculerJours === 'function') ? calculerJours(data.date_inscription) : 0;
+            // LOGIQUE DE FILTRAGE
+            if (monFiltre !== 'TOUT' && catClient !== monFiltre) return;
+
+            // CALCULS
+            const jours = calculerJours(data.date_inscription);
+            const prixConfiguré = parseInt(tarifs[catClient]) || 5000;
             const isBanned = blacklisted[u.key] === true;
             
-            nbAttendu++; // Compte pour "Attendu"
-            if (jours >= 35) nbRetards++; // Compte pour "Retard"
+            // Mise à jour des compteurs uniquement pour ceux qui passent le filtre
+            nbAttendu++; 
+            totalArgent += prixConfiguré;
+            if (jours >= 35) nbRetards++; 
 
-            // 3. DESIGN ET COULEURS
+            // AFFICHAGE DE LA LIGNE (Design conservé)
             const estEnLigne = connectes[u.key] !== undefined;
             let couleurCercle = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
             const styleBtnBan = isBanned ? `background:#ef4444; border-color:#ef4444; color:white;` : `background:transparent; border-color:#f59e0b; color:#f59e0b;`;
 
-            // 4. AFFICHAGE DE LA LIGNE
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 20px 8px 20px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'}; opacity: ${isBanned ? '0.7' : '1'};">
-                    
+                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 20px 8px 20px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
                     <div style="width:55px; flex-shrink:0; display:flex; justify-content:center; position:relative;">
                         ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:2px; border:2px solid #000; box-shadow:0 0 8px #10b981;"></div>' : ''}
                         <div style="width:42px; height:42px; border-radius:50%; border: 3px solid ${estEnLigne ? '#10b981' : couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4);">
                             ${jours}J
                         </div>
                     </div>
-
                     <div style="flex:1; margin-left:15px; min-width:0;">
-                        <div style="font-weight:800; font-size:0.95rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                            ${data.nom} ${estEnLigne ? '<span style="color:#10b981; font-size:0.6rem; margin-left:5px;">● LIVE</span>' : ''}
-                        </div>
+                        <div style="font-weight:800; font-size:0.95rem; color:white; text-transform:uppercase;">${data.nom}</div>
                         <div style="font-size:0.65rem; color:#777; margin-top:3px;">
-                            <span>📞 ${u.key}</span> | <span style="color:var(--p); font-weight:bold;">Cat. ${data.categorie}</span>
+                            <span>📞 ${u.key}</span> | <span style="color:var(--p); font-weight:bold;">Cat. ${catClient}</span>
                         </div>
                     </div>
-
-                    <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
-                        
-                        <select onchange="changerCategorie('${u.key}', this.value)" 
-                                style="width:45px; background:#000; color:var(--p); border:1px solid #444; border-radius:4px; font-size:0.75rem; font-weight:900; height:32px; cursor:pointer;">
-                            <option value="A" ${data.categorie === 'A' ? 'selected' : ''}>A</option>
-                            <option value="B" ${data.categorie === 'B' ? 'selected' : ''}>B</option>
-                            <option value="C" ${data.categorie === 'C' ? 'selected' : ''}>C</option>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <select onchange="changerCategorie('${u.key}', this.value)" style="width:45px; background:#000; color:var(--p); border:1px solid #444; border-radius:4px; font-size:0.75rem; font-weight:900; height:32px;">
+                            <option value="A" ${catClient === 'A' ? 'selected' : ''}>A</option>
+                            <option value="B" ${catClient === 'B' ? 'selected' : ''}>B</option>
+                            <option value="C" ${catClient === 'C' ? 'selected' : ''}>C</option>
                         </select>
-
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
-                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; padding:0;">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${data.categorie}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; padding:0; border-color:#25D366; color:#25D366;">💬</button>
-                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; padding:0; ${styleBtnBan}">${isBanned ? '🔓' : '🚫'}</button>
-                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="width:30px; height:30px; font-size:0.8rem; padding:0; border-color:var(--d); color:var(--d);">🗑️</button>
+                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn">💰</button>
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${catClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;">💬</button>
+                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="${styleBtnBan}">${isBanned ? '🔓' : '🚫'}</button>
+                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="border-color:var(--d); color:var(--d);">🗑️</button>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // 5. MISE À JOUR DES STATS (Logique de gestionnaire)
-        const sommeEstimee = nbAttendu * PRIX_ABONNEMENT;
+        // 2. MISE À JOUR DES STATS EN HAUT (IDs harmonisés)
+        const elAttendu = document.getElementById('stat-attendu');
+        const elEstime = document.getElementById('stat-estime');
+        const elRetard = document.getElementById('stat-retard');
 
-        if(document.getElementById('stat-attendu')) document.getElementById('stat-attendu').innerText = nbAttendu;
-        if(document.getElementById('stat-estime')) document.getElementById('stat-estime').innerText = sommeEstimee.toLocaleString() + " FG";
-        if(document.getElementById('stat-retard')) document.getElementById('stat-retard').innerText = nbRetards;
+        if(elAttendu) elAttendu.innerText = nbAttendu;
+        if(elEstime) elEstime.innerText = totalArgent.toLocaleString() + " FG";
+        if(elRetard) elRetard.innerText = nbRetards;
 
     } catch(e) { 
         console.error(e);
-        list.innerHTML = "<p style='text-align:center; color:red;'>Erreur de filtrage.</p>";
+        list.innerHTML = "<p style='text-align:center; color:red;'>Erreur de calcul.</p>";
     }
 }
 // Sauvegarder les prix dans Firebase
@@ -726,56 +730,7 @@ async function toggleBan(telId, filtreActuel) {
         alert("❌ Erreur de modification du statut.");
     }
 }
-async function calculerGlobalStats(filtreActuel = 'TOUT') {
-    const PRIX_ABONNEMENT = 5000; // Change ici ton tarif (ex: 5000 FG)
 
-    try {
-        const snap = await database.ref('clients').once('value');
-        
-        let nbAttendu = 0; // Nombre d'élèves
-        let nbRetards = 0;  // Nombre de rouges (>35J)
-
-        snap.forEach(u => {
-            const data = u.val().infos_client;
-            if (!data) return;
-
-            // 1. On vérifie si l'élève correspond au filtre (A, B, C ou TOUT)
-            if (filtreActuel === 'TOUT' || data.categorie === filtreActuel) {
-                
-                // On incrémente le nombre d'élèves attendus
-                nbAttendu++;
-
-                // 2. On vérifie s'il est en retard (Logique des 35 jours)
-                const jours = (typeof calculerJours === 'function') ? calculerJours(data.date_inscription) : 0;
-                if (jours >= 35) {
-                    nbRetards++;
-                }
-            }
-        });
-
-        // 3. Calcul de la somme d'argent estimée
-        const sommeEstimee = nbAttendu * PRIX_ABONNEMENT;
-
-        // --- MISE À JOUR DU HTML ---
-        // Case ATTENDU (Nombre d'élèves)
-        if(document.getElementById('stat-attendu')) {
-            document.getElementById('stat-attendu').innerText = nbAttendu;
-        }
-        
-        // Case ESTIMÉ (Somme d'argent)
-        if(document.getElementById('stat-estime')) {
-            document.getElementById('stat-estime').innerText = sommeEstimee.toLocaleString() + " FG";
-        }
-
-        // Case RETARD (Nombre d'élèves en rouge)
-        if(document.getElementById('stat-retard')) {
-            document.getElementById('stat-retard').innerText = nbRetards;
-        }
-
-    } catch (e) {
-        console.error("Erreur stats:", e);
-    }
-}
 function initAdminTrigger() {
     const trigger = document.getElementById('admin-trigger');
     
