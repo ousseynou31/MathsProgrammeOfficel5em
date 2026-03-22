@@ -298,34 +298,37 @@ async function mettreAJourDashboard() {
 }
 
 // 1. PAYER : Réinitialise la date à aujourd'hui
-async function validerPaiement(idClient, filtreActuel) {
-    // 1. Demande de confirmation simple
-    if (!confirm("Confirmer le paiement de 5000 F ?")) return;
+async function validerPaiement(idClient, filtreActuel, btnElement) {
+    // 1. Demande de confirmation
+    if (!confirm("Valider le paiement de 5000 F ?")) return;
 
     try {
-        // 2. Enregistrement dans Firebase
+        // 2. Enregistrement Firebase
         await database.ref('clients/' + idClient + '/infos_client').update({
             statut: "actif",
             montant: 5000,
             datePaiement: new Date().toLocaleDateString('fr-FR'),
-            categorie: filtreActuel // On garde le nom du filtre (ex: catA, catB...)
+            categorie: filtreActuel 
         });
 
-        alert("✅ Paiement validé !");
+        // 3. MISE À JOUR VISUELLE SÉCURISÉE
+        if (btnElement) {
+            btnElement.innerHTML = "✅";
+            btnElement.style.background = "#27ae60";
+            btnElement.disabled = true;
+        }
 
-        // 3. MISE À JOUR DISCRÈTE (La clé pour ne pas casser l'affichage)
-        // Au lieu de recharger la page, on relance votre fonction qui affiche la liste
-        // en lui redonnant le filtre qu'on utilisait déjà.
+        alert("✅ Paiement validé avec succès !");
+
+        // 4. RELANCER LE FILTRE (Pour garder l'affichage propre)
+        // Remplacez 'afficherListeClients' par le nom EXACT de votre fonction qui affiche les A, B, C
         if (typeof afficherListeClients === 'function') {
             afficherListeClients(filtreActuel); 
-        } else {
-            // Si la fonction a un autre nom chez vous, utilisez-le ici
-            location.reload(); 
         }
 
     } catch (e) {
         console.error("Erreur de validation:", e);
-        alert("Erreur technique : " + e.message);
+        alert("❌ Erreur : " + e.message);
     }
 }
 // 2. WHATSAPP : Message automatique
