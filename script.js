@@ -245,104 +245,7 @@ function calculerJours(dateInsc) {
 }
 // --- 1. CHARGEMENT DE LA LISTE ---
 
-async function loadUsers(filtre = 'TOUT') {
-    const list = document.getElementById('admin-user-list');
-    if (!list) return;
-    
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Calcul des filtres...</p>`;
-    
-    try {
-        // 1. On récupère les tarifs personnalisés depuis la base (ou 5000 par défaut)
-        const tarifsSnap = await database.ref('reglages/tarifs').once('value');
-        const tarifs = tarifsSnap.val() || { A: 5000, B: 5000, C: 5000 };
 
-        const [usersSnap, blackSnap, presenceSnap] = await Promise.all([
-            database.ref('clients').once('value'),
-            database.ref('blacklist').once('value'),
-            database.ref('presence').once('value')
-        ]);
-
-        const blacklisted = blackSnap.val() || {};
-        const connectes = presenceSnap.val() || {}; 
-        
-        // --- INITIALISATION DES COMPTEURS ---
-        let nbAttendu = 0;   // Case "ATTENDU"
-        let totalArgent = 0; // Case "ESTIMÉ"
-        let nbRetards = 0;    // Case "RETARD"
-        
-        list.innerHTML = ""; 
-
-        usersSnap.forEach(u => {
-            const val = u.val();
-            if (!val || !val.infos_client) return;
-            const data = val.infos_client;
-
-            // NETTOYAGE DES DONNÉES (Gestion majuscules/espaces)
-            const catClient = (data.categorie || "C").trim().toUpperCase();
-            const monFiltre = filtre.trim().toUpperCase();
-
-            // LOGIQUE DE FILTRAGE
-            if (monFiltre !== 'TOUT' && catClient !== monFiltre) return;
-
-            // CALCULS
-            const jours = calculerJours(data.date_inscription);
-            const prixConfiguré = parseInt(tarifs[catClient]) || 5000;
-            const isBanned = blacklisted[u.key] === true;
-            
-            // Mise à jour des compteurs uniquement pour ceux qui passent le filtre
-            nbAttendu++; 
-            totalArgent += prixConfiguré;
-            if (jours >= 35) nbRetards++; 
-
-            // AFFICHAGE DE LA LIGNE (Design conservé)
-            const estEnLigne = connectes[u.key] !== undefined;
-            let couleurCercle = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
-            const styleBtnBan = isBanned ? `background:#ef4444; border-color:#ef4444; color:white;` : `background:transparent; border-color:#f59e0b; color:#f59e0b;`;
-
-            list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 20px 8px 20px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
-                    <div style="width:55px; flex-shrink:0; display:flex; justify-content:center; position:relative;">
-                        ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:2px; border:2px solid #000; box-shadow:0 0 8px #10b981;"></div>' : ''}
-                        <div style="width:42px; height:42px; border-radius:50%; border: 3px solid ${estEnLigne ? '#10b981' : couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4);">
-                            ${jours}J
-                        </div>
-                    </div>
-                    <div style="flex:1; margin-left:15px; min-width:0;">
-                        <div style="font-weight:800; font-size:0.95rem; color:white; text-transform:uppercase;">${data.nom}</div>
-                        <div style="font-size:0.65rem; color:#777; margin-top:3px;">
-                            <span>📞 ${u.key}</span> | <span style="color:var(--p); font-weight:bold;">Cat. ${catClient}</span>
-                        </div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <select onchange="changerCategorie('${u.key}', this.value)" style="width:45px; background:#000; color:var(--p); border:1px solid #444; border-radius:4px; font-size:0.75rem; font-weight:900; height:32px;">
-                            <option value="A" ${catClient === 'A' ? 'selected' : ''}>A</option>
-                            <option value="B" ${catClient === 'B' ? 'selected' : ''}>B</option>
-                            <option value="C" ${catClient === 'C' ? 'selected' : ''}>C</option>
-                        </select>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
-                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${catClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;">💬</button>
-                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="${styleBtnBan}">${isBanned ? '🔓' : '🚫'}</button>
-                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="border-color:var(--d); color:var(--d);">🗑️</button>
-                        </div>
-                    </div>
-                </div>`;
-        });
-
-        // 2. MISE À JOUR DES STATS EN HAUT (IDs harmonisés)
-        const elAttendu = document.getElementById('stat-attendu');
-        const elEstime = document.getElementById('stat-estime');
-        const elRetard = document.getElementById('stat-retard');
-
-        if(elAttendu) elAttendu.innerText = nbAttendu;
-        if(elEstime) elEstime.innerText = totalArgent.toLocaleString() + " FG";
-        if(elRetard) elRetard.innerText = nbRetards;
-
-    } catch(e) { 
-        console.error(e);
-        list.innerHTML = "<p style='text-align:center; color:red;'>Erreur de calcul.</p>";
-    }
-}
 // Sauvegarder les prix dans Firebase
 async function sauvegarderTarifs() {
     const tarifs = {
@@ -536,7 +439,124 @@ async function changerCategorie(telId, nouvelleCat) {
         alert("Erreur de sauvegarde dans la base.");
     }
 }
+async function loadUsers(filtre = 'TOUT') {
+    // --- AJOUT LOGIQUE VISUELLE : GESTION DE L'ÉTAT DES BOUTONS ---
+    const boutons = document.querySelectorAll('.filter-btn');
+    boutons.forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.background = "transparent";
+        // On remet la bordure spécifique selon le bouton
+        if (btn.innerText.includes('A')) btn.style.border = "1px solid #ffd700";
+        else if (btn.innerText.includes('B')) btn.style.border = "1px solid #c0c0c0";
+        else if (btn.innerText.includes('C')) btn.style.border = "1px solid #cd7f32";
+        else btn.style.border = "1px solid #444";
 
+        // Mise en avant du filtre sélectionné
+        if (btn.getAttribute('onclick').includes(`'${filtre}'`)) {
+            btn.classList.add('active');
+            btn.style.background = "var(--p)";
+            btn.style.border = "none";
+        }
+    });
+
+    // --- VOTRE FONCTION DE RÉFÉRENCE CONSERVÉE À 100% ---
+    const list = document.getElementById('admin-user-list');
+    if (!list) return;
+    
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Calcul des filtres...</p>`;
+    
+    try {
+        // 1. On récupère les tarifs personnalisés depuis la base (ou 5000 par défaut)
+        const tarifsSnap = await database.ref('reglages/tarifs').once('value');
+        const tarifs = tarifsSnap.val() || { A: 5000, B: 5000, C: 5000 };
+
+        const [usersSnap, blackSnap, presenceSnap] = await Promise.all([
+            database.ref('clients').once('value'),
+            database.ref('blacklist').once('value'),
+            database.ref('presence').once('value')
+        ]);
+
+        const blacklisted = blackSnap.val() || {};
+        const connectes = presenceSnap.val() || {}; 
+        
+        // --- INITIALISATION DES COMPTEURS ---
+        let nbAttendu = 0;   // Case "ATTENDU"
+        let totalArgent = 0; // Case "ESTIMÉ"
+        let nbRetards = 0;    // Case "RETARD"
+        
+        list.innerHTML = ""; 
+
+        usersSnap.forEach(u => {
+            const val = u.val();
+            if (!val || !val.infos_client) return;
+            const data = val.infos_client;
+
+            // NETTOYAGE DES DONNÉES (Gestion majuscules/espaces)
+            const catClient = (data.categorie || "C").trim().toUpperCase();
+            const monFiltre = filtre.trim().toUpperCase();
+
+            // LOGIQUE DE FILTRAGE
+            if (monFiltre !== 'TOUT' && catClient !== monFiltre) return;
+
+            // CALCULS
+            const jours = calculerJours(data.date_inscription);
+            const prixConfiguré = parseInt(tarifs[catClient]) || 5000;
+            const isBanned = blacklisted[u.key] === true;
+            
+            // Mise à jour des compteurs uniquement pour ceux qui passent le filtre
+            nbAttendu++; 
+            totalArgent += prixConfiguré;
+            if (jours >= 35) nbRetards++; 
+
+            // AFFICHAGE DE LA LIGNE (Design conservé)
+            const estEnLigne = connectes[u.key] !== undefined;
+            let couleurCercle = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
+            const styleBtnBan = isBanned ? `background:#ef4444; border-color:#ef4444; color:white;` : `background:transparent; border-color:#f59e0b; color:#f59e0b;`;
+
+            list.innerHTML += `
+                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 20px 8px 20px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
+                    <div style="width:55px; flex-shrink:0; display:flex; justify-content:center; position:relative;">
+                        ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:2px; border:2px solid #000; box-shadow:0 0 8px #10b981;"></div>' : ''}
+                        <div style="width:42px; height:42px; border-radius:50%; border: 3px solid ${estEnLigne ? '#10b981' : couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4);">
+                            ${jours}J
+                        </div>
+                    </div>
+                    <div style="flex:1; margin-left:15px; min-width:0;">
+                        <div style="font-weight:800; font-size:0.95rem; color:white; text-transform:uppercase;">${data.nom}</div>
+                        <div style="font-size:0.65rem; color:#777; margin-top:3px;">
+                            <span>📞 ${u.key}</span> | <span style="color:var(--p); font-weight:bold;">Cat. ${catClient}</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <select onchange="changerCategorie('${u.key}', this.value)" style="width:45px; background:#000; color:var(--p); border:1px solid #444; border-radius:4px; font-size:0.75rem; font-weight:900; height:32px;">
+                            <option value="A" ${catClient === 'A' ? 'selected' : ''}>A</option>
+                            <option value="B" ${catClient === 'B' ? 'selected' : ''}>B</option>
+                            <option value="C" ${catClient === 'C' ? 'selected' : ''}>C</option>
+                        </select>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
+                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn">💰</button>
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${catClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;">💬</button>
+                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="${styleBtnBan}">${isBanned ? '🔓' : '🚫'}</button>
+                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="border-color:var(--d); color:var(--d);">🗑️</button>
+                        </div>
+                    </div>
+                </div>`;
+        });
+
+        // 2. MISE À JOUR DES STATS EN HAUT (IDs harmonisés)
+        const elAttendu = document.getElementById('stat-attendu');
+        const elEstime = document.getElementById('stat-estime');
+        const elRetard = document.getElementById('stat-retard');
+
+        if(elAttendu) elAttendu.innerText = nbAttendu;
+        if(elEstime) elEstime.innerText = totalArgent.toLocaleString() + " FG";
+        if(elRetard) elRetard.innerText = nbRetards;
+
+    } catch(e) { 
+        console.error(e);
+        list.innerHTML = "<p style='text-align:center; color:red;'>Erreur de calcul.</p>";
+    }
+}
 // ==========================================
 // 5. FONCTION : OUVRIR LE RAPPORT (BILAN)
 // ==========================================
