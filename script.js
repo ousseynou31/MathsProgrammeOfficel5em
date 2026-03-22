@@ -666,88 +666,93 @@ async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
     if (!list) return;
     
-    // 1. RÉINITIALISATION VISUELLE
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Filtrage en cours...</p>`;
+    // État de chargement
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:30px; font-size:0.85rem;">Mise à jour de la base de données...</p>`;
     
-    // Initialisation des compteurs pour le calcul en temps réel
-    let nbAttendu = 0;   
+    let nbAttendu = 0; 
     let totalArgent = 0; 
     let nbRetards = 0;
 
     try {
-        // 2. RÉCUPÉRATION DES DONNÉES (Firebase)
-        const tarifsSnap = await database.ref('reglages/tarifs').once('value');
-        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
-
-        const [usersSnap, blackSnap, presenceSnap] = await Promise.all([
+        // Récupération simultanée des données Firebase
+        const [tarifsSnap, usersSnap, blackSnap, presenceSnap] = await Promise.all([
+            database.ref('reglages/tarifs').once('value'),
             database.ref('clients').once('value'),
             database.ref('blacklist').once('value'),
             database.ref('presence').once('value')
         ]);
 
+        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
         const blacklisted = blackSnap.val() || {};
         const connectes = presenceSnap.val() || {}; 
         
-        list.innerHTML = ""; // On vide pour afficher les nouveaux résultats
+        list.innerHTML = ""; // Vider la liste avant affichage
 
-        // 3. BOUCLE DE TRAITEMENT
         usersSnap.forEach(u => {
             const val = u.val();
             if (!val || !val.infos_client) return;
             const data = val.infos_client;
 
+            // Logique de filtrage par catégorie
             const catClient = (data.categorie || "C").trim().toUpperCase();
-            const monFiltre = filtre.trim().toUpperCase();
+            if (filtre !== 'TOUT' && catClient !== filtre) return;
 
-            // --- LOGIQUE DU FILTRE ---
-            if (monFiltre !== 'TOUT' && catClient !== monFiltre) return;
-
-            // --- CALCULS ---
+            // Calculs de statut
             const jours = calculerJours(data.date_inscription);
-            const prixConfiguré = parseInt(tarifs[catClient]) || 0;
+            const prixBase = parseInt(tarifs[catClient]) || 0;
             const isBanned = blacklisted[u.key] === true;
+            const estEnLigne = connectes[u.key] !== undefined;
             
+            // Mise à jour des compteurs globaux
             nbAttendu++; 
-            totalArgent += prixConfiguré;
+            totalArgent += prixBase;
             if (jours >= 35) nbRetards++; 
 
-            // --- GÉNÉRATION DU HTML DE LA LIGNE ---
-            const estEnLigne = connectes[u.key] !== undefined;
+            // --- CONFIGURATION VISUELLE DYNAMIQUE ---
+            // Couleur du cercle selon l'urgence
             let couleurCercle = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
-            const styleBtnBan = isBanned ? `background:#ef4444; border-color:#ef4444; color:white;` : `background:transparent; border-color:#f59e0b; color:#f59e0b;`;
+            
+            // Style si SUSPENDU
+            const borderLeft = isBanned ? "8px solid #ef4444" : "4px solid transparent";
+            const bgRow = isBanned ? "rgba(239, 68, 68, 0.05)" : "rgba(255, 255, 255, 0.02)";
+            const btnBanStyle = isBanned 
+                ? "background:#ef4444; border:1px solid #ef4444; color:white;" 
+                : "background:transparent; border:1px solid #f59e0b; color:#f59e0b;";
 
+            // --- GÉNÉRATION DU HTML DE LA LIGNE ---
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 10px 8px 10px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
-                    <div style="width:55px; flex-shrink:0; display:flex; justify-content:center; position:relative;">
-                        ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:2px; border:2px solid #000; box-shadow:0 0 8px #10b981;"></div>' : ''}
-                        <div style="width:42px; height:42px; border-radius:50%; border: 3px solid ${estEnLigne ? '#10b981' : couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4);">
+                <div class="user-row" style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222; background:${bgRow}; margin: 0 5px 10px 5px; border-radius:15px; border-left:${borderLeft}; transition: 0.3s;">
+                    
+                    <div style="width:50px; flex-shrink:0; position:relative; display:flex; justify-content:center;">
+                        ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:5px; border:2px solid #000; z-index:2;"></div>' : ''}
+                        <div style="width:44px; height:44px; border-radius:50%; border: 3px solid ${isBanned ? '#666' : couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background:#000;">
                             ${jours}J
                         </div>
                     </div>
+
                     <div style="flex:1; margin-left:15px; min-width:0;">
-                        <div style="font-weight:800; font-size:0.9rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${data.nom}</div>
-                        <div style="font-size:0.65rem; color:#777; margin-top:3px;">
-                            <span>📞 ${u.key}</span> | <span style="color:#ffd700; font-weight:bold;">Cat. ${catClient}</span>
+                        <div style="font-weight:800; font-size:0.9rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            ${data.nom} ${isBanned ? '<span style="color:#ef4444; font-size:0.6rem; margin-left:5px;">⚠️ SUSPENDU</span>' : ''}
+                        </div>
+                        <div style="font-size:0.65rem; color:#777; margin-top:2px;">
+                            📞 ${u.key} | <span style="color:#ffd700; font-weight:bold;">Cat. ${catClient}</span>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <select onchange="changerCategorie('${u.key}', this.value)" style="width:42px; background:#000; color:#ffd700; border:1px solid #444; border-radius:4px; font-size:0.7rem; font-weight:900; height:30px;">
-                            <option value="A" ${catClient === 'A' ? 'selected' : ''}>A</option>
-                            <option value="B" ${catClient === 'B' ? 'selected' : ''}>B</option>
-                            <option value="C" ${catClient === 'C' ? 'selected' : ''}>C</option>
-                        </select>
+
+                    <div style="display:flex; gap:5px;">
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
                             <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn" title="Payer">💰</button>
                             <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${catClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
-                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="${styleBtnBan}">${isBanned ? '🔓' : '🚫'}</button>
+                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="${btnBanStyle}" title="${isBanned ? 'Réactiver' : 'Suspendre'}">
+                                ${isBanned ? '🔓' : '🚫'}
+                            </button>
                             <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="border-color:#e74c3c; color:#e74c3c;" title="Supprimer">🗑️</button>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // 4. MISE À JOUR DU DASHBOARD (CORRECTIF IDs)
-        // On utilise les IDs présents dans le nouveau HTML
+        // 4. MISE À JOUR DU DASHBOARD (IDs Stabilisés)
         const elAttendu = document.getElementById('stat-attendu');
         const elArgent = document.getElementById('stat-estime');
         const elRetard = document.getElementById('stat-retard');
@@ -756,9 +761,9 @@ async function loadUsers(filtre = 'TOUT') {
         if(elArgent) elArgent.innerText = totalArgent.toLocaleString() + " FG";
         if(elRetard) elRetard.innerText = nbRetards;
 
-    } catch(e) { 
-        console.error("Erreur critique loadUsers:", e);
-        list.innerHTML = "<p style='text-align:center; color:red;'>Erreur de chargement.</p>";
+    } catch(err) {
+        console.error("Erreur loadUsers:", err);
+        list.innerHTML = `<p style="text-align:center; color:red; padding:20px;">Erreur de connexion Firebase.</p>`;
     }
 }
 async function calculerGlobalStats(filtreActuel = 'TOUT') {
