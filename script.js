@@ -826,6 +826,34 @@ function activerSignalPresence() {
     // 2. On demande à Firebase de nous effacer AUTOMATIQUEMENT à la déconnexion
     maPresenceRef.onDisconnect().remove();
 }
+async function tenterRecuperationCompte(numTel) {
+    // 1. On cherche l'utilisateur dans la base
+    const snapshot = await database.ref(`clients/${numTel}`).once('value');
+    
+    if (!snapshot.exists()) {
+        // CAS 1 : L'utilisateur n'existe pas (ou a été SUPPRIMÉ de Firebase)
+        alert("❌ Ce numéro n'existe pas. Veuillez vous inscrire.");
+        naviguer('page-inscription');
+        return;
+    }
+
+    const data = snapshot.val().infos_client;
+
+    // 2. VÉRIFICATION DU STATUT (Le verrou principal)
+    if (data.statut === "suspendu") {
+        // CAS 2 : L'utilisateur est SUSPENDU
+        alert("🚫 ACCÈS REFUSÉ : Votre compte est actuellement suspendu. Contactez l'administrateur.");
+        // On le bloque sur la page d'accueil ou de verrouillage
+        naviguer('page-verrouillage'); 
+        return;
+    }
+
+    // 3. SI TOUT EST OK (Actif et Existe)
+    localStorage.setItem('mon_numero_cle', numTel);
+    localStorage.setItem('v32_active', 'true');
+    alert("✅ Heureux de vous revoir " + data.nom + " ! Accessibilité rétablie.");
+    naviguer('hub-accueil');
+}
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
     if(confirm("⚠️ TEST DE SÉCURITÉ :\nVoulez-vous verrouiller l'accès et revenir à la page d'activation ?")) {
