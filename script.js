@@ -691,18 +691,31 @@ function initAdminTrigger() {
     }
 }
 
+
+async function calculerGlobalStats(filtreActuel = 'TOUT') {
+    try {
+        const snap = await database.ref('clients').once('value');
+        let total = 0;
+        let catA = 0;
+        let catB = 0;
+        let catC = 0;
+
+        snap.forEach(u => {
+            const data = u.val().infos_client;
+            if (!data) return;
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
     if (!list) return;
     
-    // 1. RÉINITIALISATION VISUELLE
+    // 1. RÉINITIALISATION VISUELLE ET DÉCLARATION DES COMPTEURS
     list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Filtrage en cours...</p>`;
     
-    let totalArgent = 0; 
-    let nbRetards = 0;
+    let nbAttendu = 0;    // Nombre d'élèves dans ce filtre
+    let totalArgent = 0;  // Somme totale pour ce filtre
+    let nbRetards = 0;    // Nombre d'élèves à +35 jours
 
     try {
-        // 2. RÉCUPÉRATION DES PARAMÈTRES (Tarifs et Clients)
+        // 2. RÉCUPÉRATION DES DONNÉES DEPUIS FIREBASE
         const tarifsSnap = await database.ref('reglages/tarifs').once('value');
         const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
 
@@ -712,41 +725,39 @@ async function loadUsers(filtre = 'TOUT') {
         ]);
 
         const connectes = presenceSnap.val() || {}; 
-        list.innerHTML = ""; // On vide pour afficher
+        list.innerHTML = ""; // On vide pour afficher les nouveaux résultats
 
-        // 3. BOUCLE DE TRAITEMENT (Le cœur de la modification)
+        // 3. BOUCLE DE TRAITEMENT DES ÉLÈVES
         usersSnap.forEach(u => {
             const val = u.val();
             if (!val || !val.infos_client) return;
             const data = val.infos_client;
 
-            // --- LA LOGIQUE QUE VOUS AVEZ VALIDÉE ---
-            // 1. On récupère la VRAIE catégorie de la base (A, B ou C)
+            // --- LOGIQUE DE FILTRAGE SÉCURISÉE ---
             const vraieCategorieDuClient = (data.categorie || "C").trim().toUpperCase();
-
-            // 2. On récupère le FILTRE sélectionné (TOUT, A, B ou C)
             const filtreSelectionne = filtre.trim().toUpperCase();
 
-            // 3. LOGIQUE DU FILTRE : On décide si on affiche la ligne ou pas
+            // Si on n'est pas sur "TOUT" et que la catégorie ne correspond pas, on ignore
             if (filtreSelectionne !== 'TOUT' && vraieCategorieDuClient !== filtreSelectionne) return;
 
-            // --- CALCULS ---
+            // --- CALCULS DES DONNÉES ---
             const jours = calculerJours(data.date_inscription);
             const prixConfiguré = parseInt(tarifs[vraieCategorieDuClient]) || 0;
             const isBanned = data.statut === "suspendu";
+            const estEnLigne = connectes[u.key] !== undefined;
             
+            // On incrémente les compteurs pour le Dashboard
+            nbAttendu++; 
             totalArgent += prixConfiguré;
             if (jours >= 35) nbRetards++; 
 
-            // --- GÉNÉRATION DU HTML (Correction Plein Écran incluse) ---
-            const estEnLigne = connectes[u.key] !== undefined;
+            // --- PRÉPARATION DU VISUEL ---
             let couleurCercle = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
-            
             const styleBtnBan = isBanned 
-                ? `background:#ef4444 !important; color:white !important;` 
+                ? `background:#ef4444 !important; border:1px solid #ef4444 !important; color:white !important; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);` 
                 : `background:transparent; border:1px solid #f59e0b; color:#f59e0b;`;
 
-            // Ajout de width:100% et margin:0 pour le plein écran
+            // --- GÉNÉRATION DU HTML (PLEIN ÉCRAN INCLUS) ---
             list.innerHTML += `
                 <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 0 8px 0; width: 100%; box-sizing: border-box; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
                     
@@ -782,39 +793,20 @@ async function loadUsers(filtre = 'TOUT') {
                 </div>`;
         });
 
-        // Mise à jour des compteurs du Dashboard
-        if(document.getElementById('dash-total-a')) {
-            document.getElementById('dash-total-a').innerText = totalArgent.toLocaleString() + " F";
-        }
-// --- MISE À JOUR SÉCURISÉE DU DASHBOARD ---
-try {
-    const elNb = document.getElementById('dash-nb-eleves');
-    const elAr = document.getElementById('dash-total-a');
-    const elRe = document.getElementById('dash-retard');
+        // 4. MISE À JOUR DU DASHBOARD (LES CASES DU HAUT)
+        const elNb = document.getElementById('dash-nb-eleves');
+        const elAr = document.getElementById('dash-total-a');
+        const elRe = document.getElementById('dash-retard');
 
-    if (elNb) elNb.innerText = nbAttendu; 
-    if (elAr) elAr.innerText = totalArgent.toLocaleString() + " F";
-    if (elRe) elRe.innerText = nbRetards;
-} catch (err) {
-    console.warn("Certaines cases du Dashboard sont introuvables dans le HTML.");
-}
+        if (elNb) elNb.innerText = nbAttendu; 
+        if (elAr) elAr.innerText = totalArgent.toLocaleString() + " F";
+        if (elRe) elRe.innerText = nbRetards;
+
     } catch (e) {
-        console.error("Erreur LoadUsers:", e);
-        list.innerHTML = `<p style="color:red; text-align:center;">Erreur de chargement.</p>`;
+        console.error("Erreur LoadUsers :", e);
+        list.innerHTML = `<p style="color:red; text-align:center; padding:20px;">⚠️ Erreur de chargement : ${e.message}</p>`;
     }
 }
-async function calculerGlobalStats(filtreActuel = 'TOUT') {
-    try {
-        const snap = await database.ref('clients').once('value');
-        let total = 0;
-        let catA = 0;
-        let catB = 0;
-        let catC = 0;
-
-        snap.forEach(u => {
-            const data = u.val().infos_client;
-            if (!data) return;
-
             // On compte SEULEMENT si ça correspond au filtre ou si le filtre est 'TOUT'
             if (filtreActuel === 'TOUT' || data.categorie === filtreActuel) {
                 total++;
