@@ -361,3 +361,26 @@ body, html {
     color: white !important;
     border: none !important;
 }
+/* 1. Style par défaut du bouton (Client Actif - 🚫) */
+.pay-btn {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* 2. Style automatique quand le client est SUSPENDU (🔓) */
+/* Cette règle cherche le bouton qui contient l'icône de déverrouillage */
+button.pay-btn:has(span:contains("🔓")), 
+.pay-btn[title*="Réactiver"], 
+.suspendu-active {
+    background-color: #ef4444 !important; /* Rouge vif */
+    color: white !important;
+    border: 1px solid #ff4d4d !important;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+    transform: scale(1.05);
+}
+
+/* 3. Petit badge discret sur le nom si suspendu */
+.user-row.is-banned {
+    border-left: 8px solid #ef4444 !important;
+    background: rgba(239, 68, 68, 0.05) !important;
+}
