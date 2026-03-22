@@ -820,6 +820,12 @@ function activerSignalPresence() {
     // 2. On demande à Firebase de nous effacer AUTOMATIQUEMENT à la déconnexion
     maPresenceRef.onDisconnect().remove();
 }
+function deconnecterApp() {
+    if(confirm("Voulez-vous verrouiller l'accès et retourner à l'activation ?")) {
+        localStorage.removeItem('v32_active');
+        window.location.reload();
+    }
+}
 
 // Lancement automatique au chargement de la page
 window.addEventListener('load', activerSignalPresence);
