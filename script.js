@@ -666,18 +666,18 @@ async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
     if (!list) return;
     
-    // 1. NETTOYAGE VISUEL IMMÉDIAT (La pompe repart à zéro)
+    // 1. RÉINITIALISATION VISUELLE
     list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Filtrage en cours...</p>`;
     
-    // Initialisation des variables de calcul (locales à la fonction)
+    // Initialisation des compteurs pour le calcul en temps réel
     let nbAttendu = 0;   
     let totalArgent = 0; 
     let nbRetards = 0;
 
     try {
-        // 2. RÉCUPÉRATION DES DONNÉES
+        // 2. RÉCUPÉRATION DES DONNÉES (Firebase)
         const tarifsSnap = await database.ref('reglages/tarifs').once('value');
-        const tarifs = tarifsSnap.val() || { A: 5000, B: 5000, C: 5000 };
+        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
 
         const [usersSnap, blackSnap, presenceSnap] = await Promise.all([
             database.ref('clients').once('value'),
@@ -688,9 +688,9 @@ async function loadUsers(filtre = 'TOUT') {
         const blacklisted = blackSnap.val() || {};
         const connectes = presenceSnap.val() || {}; 
         
-        list.innerHTML = ""; // On vide l'affichage des lignes
+        list.innerHTML = ""; // On vide pour afficher les nouveaux résultats
 
-        // 3. LA BOUCLE DE TRI ET DE CALCUL
+        // 3. BOUCLE DE TRAITEMENT
         usersSnap.forEach(u => {
             const val = u.val();
             if (!val || !val.infos_client) return;
@@ -699,27 +699,25 @@ async function loadUsers(filtre = 'TOUT') {
             const catClient = (data.categorie || "C").trim().toUpperCase();
             const monFiltre = filtre.trim().toUpperCase();
 
-            // --- LA BARRIÈRE DU FILTRE ---
-            // Si le client ne correspond pas au filtre, on arrête TOUT pour ce client (pas d'affichage, pas de calcul)
+            // --- LOGIQUE DU FILTRE ---
             if (monFiltre !== 'TOUT' && catClient !== monFiltre) return;
 
-            // --- SI ON EST ARRIVÉ ICI, LE CLIENT EST VALIDE ---
+            // --- CALCULS ---
             const jours = calculerJours(data.date_inscription);
-            const prixConfiguré = parseInt(tarifs[catClient]) || 5000;
+            const prixConfiguré = parseInt(tarifs[catClient]) || 0;
             const isBanned = blacklisted[u.key] === true;
             
-            // On incrémente les compteurs SEULEMENT pour les clients filtrés
             nbAttendu++; 
             totalArgent += prixConfiguré;
             if (jours >= 35) nbRetards++; 
 
-            // --- CONSTRUCTION DE LA LIGNE HTML (Toutes vos fonctionnalités conservées) ---
+            // --- GÉNÉRATION DU HTML DE LA LIGNE ---
             const estEnLigne = connectes[u.key] !== undefined;
             let couleurCercle = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
             const styleBtnBan = isBanned ? `background:#ef4444; border-color:#ef4444; color:white;` : `background:transparent; border-color:#f59e0b; color:#f59e0b;`;
 
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 20px 8px 20px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
+                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 10px 8px 10px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
                     <div style="width:55px; flex-shrink:0; display:flex; justify-content:center; position:relative;">
                         ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:2px; border:2px solid #000; box-shadow:0 0 8px #10b981;"></div>' : ''}
                         <div style="width:42px; height:42px; border-radius:50%; border: 3px solid ${estEnLigne ? '#10b981' : couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4);">
@@ -727,37 +725,36 @@ async function loadUsers(filtre = 'TOUT') {
                         </div>
                     </div>
                     <div style="flex:1; margin-left:15px; min-width:0;">
-                        <div style="font-weight:800; font-size:0.95rem; color:white; text-transform:uppercase;">${data.nom}</div>
+                        <div style="font-weight:800; font-size:0.9rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${data.nom}</div>
                         <div style="font-size:0.65rem; color:#777; margin-top:3px;">
-                            <span>📞 ${u.key}</span> | <span style="color:var(--p); font-weight:bold;">Cat. ${catClient}</span>
+                            <span>📞 ${u.key}</span> | <span style="color:#ffd700; font-weight:bold;">Cat. ${catClient}</span>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <select onchange="changerCategorie('${u.key}', this.value)" style="width:45px; background:#000; color:var(--p); border:1px solid #444; border-radius:4px; font-size:0.75rem; font-weight:900; height:32px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <select onchange="changerCategorie('${u.key}', this.value)" style="width:42px; background:#000; color:#ffd700; border:1px solid #444; border-radius:4px; font-size:0.7rem; font-weight:900; height:30px;">
                             <option value="A" ${catClient === 'A' ? 'selected' : ''}>A</option>
                             <option value="B" ${catClient === 'B' ? 'selected' : ''}>B</option>
                             <option value="C" ${catClient === 'C' ? 'selected' : ''}>C</option>
                         </select>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
-                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${catClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;">💬</button>
+                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn" title="Payer">💰</button>
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${catClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
                             <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="${styleBtnBan}">${isBanned ? '🔓' : '🚫'}</button>
-                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="border-color:var(--d); color:var(--d);">🗑️</button>
+                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="border-color:#e74c3c; color:#e74c3c;" title="Supprimer">🗑️</button>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // 4. MISE À JOUR FINALE DES COMPTEURS HAUT DE PAGE
-        // On ne met à jour les IDs que MAINTENANT, une fois que tout est compté proprement
-        const updateText = (id, text) => {
-            const el = document.getElementById(id);
-            if (el) el.innerText = text;
-        };
+        // 4. MISE À JOUR DU DASHBOARD (CORRECTIF IDs)
+        // On utilise les IDs présents dans le nouveau HTML
+        const elAttendu = document.getElementById('stat-attendu');
+        const elArgent = document.getElementById('stat-estime');
+        const elRetard = document.getElementById('stat-retard');
 
-        updateText('stat-attendu', nbAttendu);
-        updateText('stat-estime', totalArgent.toLocaleString() + " FG");
-        updateText('stat-retard', nbRetards);
+        if(elAttendu) elAttendu.innerText = nbAttendu;
+        if(elArgent) elArgent.innerText = totalArgent.toLocaleString() + " FG";
+        if(elRetard) elRetard.innerText = nbRetards;
 
     } catch(e) { 
         console.error("Erreur critique loadUsers:", e);
