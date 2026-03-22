@@ -298,35 +298,35 @@ async function mettreAJourDashboard() {
 }
 
 // 1. PAYER : Réinitialise la date à aujourd'hui
-async function validerLePaiement(numTel) {
-    // 1. On définit les infos par défaut
-    const montantFixe = 5000;
-    const dateJour = new Date().toLocaleDateString('fr-FR');
+// On utilise exactement le nom 'validerPaiement' du bouton HTML
+async function validerPaiement(idClient, filtreFacultatif) {
     
-    // 2. On demande confirmation
-    if (!confirm("Confirmer l'activation et le paiement de 5000 F ?")) return;
+    // 1. CONFIRMATION VISUELLE
+    if (!confirm("Confirmer l'activation et l'enregistrement du paiement de 5000 F ?")) return;
 
     try {
-        // 3. Mise à jour simple dans Firebase
-        await database.ref('clients/' + numTel + '/infos_client').update({
+        // 2. MISE À JOUR FIREBASE (On utilise l'idClient envoyé par ${u.key})
+        // Note : On met à jour le montant et la date pour l'historique
+        await database.ref('clients/' + idClient + '/infos_client').update({
             statut: "actif",
-            montant: montantFixe,
-            datePaiement: dateJour,
-            categorie: "Maths 5e"
+            montant: 5000,
+            datePaiement: new Date().toLocaleDateString('fr-FR'),
+            categorie: "Maths 5ème"
         });
 
-        alert("✅ Client activé ! L'historique est mis à jour.");
+        alert("✅ Paiement validé ! L'historique est à jour.");
         
-        // 4. On rafraîchit la liste pour voir le changement
+        // 3. RAFRAÎCHIR L'AFFICHAGE
+        // Si vous avez une fonction qui affiche la liste, on l'appelle
         if (typeof afficherListeClients === 'function') {
-            afficherListeClients(); 
+            afficherListeClients(filtreFacultatif); 
         } else {
-            location.reload();
+            location.reload(); // Sinon on recharge la page
         }
 
-    } catch (erreur) {
-        console.error("Erreur de validation:", erreur);
-        alert("❌ Erreur technique : " + erreur.message);
+    } catch (e) {
+        console.error("Erreur lors du paiement:", e);
+        alert("❌ Erreur : " + e.message);
     }
 }
 // 2. WHATSAPP : Message automatique
