@@ -865,8 +865,83 @@ async function ouvrirRecuperation() {
         alert("❌ Une erreur est survenue lors de la vérification.");
     }
 }
+async function ouvrirHistorique() {
+    // 1. Afficher la page (la Gate)
+    document.getElementById('page-historique').style.display = 'flex';
+    const corps = document.getElementById('corps-historique');
+    corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>Chargement des données... ⏳</td></tr>";
 
- 
+    try {
+        // 2. Récupérer TOUS les clients depuis Firebase
+        const snapshot = await database.ref('clients').once('value');
+        const data = snapshot.val();
+        
+        let html = "";
+        let totalGeneral = 0;
+
+        if (data) {
+            // Transformer l'objet Firebase en tableau pour trier par date
+            const listePaiements = [];
+            
+            Object.keys(data).forEach(key => {
+                const client = data[key].infos_client;
+                // On ne prend que ceux qui ont une date de paiement (donc qui ont payé)
+                if (client.datePaiement) {
+                    listePaiements.push(client);
+                }
+            });
+
+            // Trier du plus récent au plus ancien
+            listePaiements.sort((a, b) => new Date(b.datePaiement) - new Date(a.datePaiement));
+
+            // 3. Construire les lignes du tableau
+            listePaiements.forEach(c => {
+                const montant = parseInt(c.montant || 0);
+                totalGeneral += montant;
+
+                html += `
+                    <tr class="ligne-paiement">
+                        <td style="color: #888;">${c.datePaiement}</td>
+                        <td style="font-weight:bold;">${c.nom}</td>
+                        <td>${c.telephone}</td>
+                        <td><span style="background:#333; padding:2px 6px; border-radius:4px;">${c.categorie || 'Standard'}</span></td>
+                        <td style="text-align:right; font-weight:bold; color:#2ecc71;">${montant.toLocaleString()} FCFA</td>
+                    </tr>
+                `;
+            });
+        }
+
+        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center;'>Aucun paiement trouvé.</td></tr>";
+        document.getElementById('total-historique').innerText = totalGeneral.toLocaleString() + " FCFA";
+
+    } catch (e) {
+        console.error(e);
+        corps.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red;'>Erreur de chargement.</td></tr>";
+    }
+}
+ function filtrerHistorique() {
+    const input = document.getElementById('search-historique').value.toUpperCase();
+    const rows = document.querySelectorAll('.ligne-paiement');
+    let totalFiltre = 0;
+
+    rows.forEach(row => {
+        const texte = row.innerText.toUpperCase();
+        if (texte.indexOf(input) > -1) {
+            row.style.display = "";
+            // Extraire le montant de la 5ème colonne pour recalculer le total
+            const montantTexte = row.cells[4].innerText.replace(/[^0-9]/g, '');
+            totalFiltre += parseInt(montantTexte);
+        } else {
+            row.style.display = "none";
+        }
+    });
+
+    document.getElementById('total-historique').innerText = totalFiltre.toLocaleString() + " FCFA";
+}
+
+function fermerHistorique() {
+    document.getElementById('page-historique').style.display = 'none';
+}
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
     if(confirm("⚠️ TEST DE SÉCURITÉ :\nVoulez-vous verrouiller l'accès et revenir à la page d'activation ?")) {
