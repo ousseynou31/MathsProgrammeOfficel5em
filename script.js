@@ -298,25 +298,35 @@ async function mettreAJourDashboard() {
 }
 
 // 1. PAYER : Réinitialise la date à aujourd'hui
-function validerLePaiement(numTel) {
-    const montantFixe = 5000; // Le prix de l'inscription
-    const dateJour = new Date().toLocaleDateString('fr-FR'); // Ex: "22/03/2026"
-    const nomClient = document.querySelector(`#nom-${numTel}`)?.innerText || "Élève";
+async function validerLePaiement(numTel) {
+    // 1. On définit les infos par défaut
+    const montantFixe = 5000;
+    const dateJour = new Date().toLocaleDateString('fr-FR');
+    
+    // 2. On demande confirmation
+    if (!confirm("Confirmer l'activation et le paiement de 5000 F ?")) return;
 
-    // CONFIRMATION AVANT D'ENREGISTRER
-    if (confirm(`Confirmer le paiement de ${montantFixe} F pour ${nomClient} ?`)) {
-        
-        // MISE À JOUR DANS FIREBASE
-        database.ref(`clients/${numTel}/infos_client`).update({
-            statut: "actif",       // On l'active
-            montant: montantFixe,  // 🟢 INDISPENSABLE POUR L'HISTORIQUE
-            datePaiement: dateJour,// 🟢 INDISPENSABLE POUR L'HISTORIQUE
-            categorie: "Maths 5e"  // 🟢 INDISPENSABLE POUR L'HISTORIQUE
-        }).then(() => {
-            alert("✅ Paiement enregistré et compte activé !");
-            // On rafraîchit l'affichage si nécessaire
-            location.reload(); 
+    try {
+        // 3. Mise à jour simple dans Firebase
+        await database.ref('clients/' + numTel + '/infos_client').update({
+            statut: "actif",
+            montant: montantFixe,
+            datePaiement: dateJour,
+            categorie: "Maths 5e"
         });
+
+        alert("✅ Client activé ! L'historique est mis à jour.");
+        
+        // 4. On rafraîchit la liste pour voir le changement
+        if (typeof afficherListeClients === 'function') {
+            afficherListeClients(); 
+        } else {
+            location.reload();
+        }
+
+    } catch (erreur) {
+        console.error("Erreur de validation:", erreur);
+        alert("❌ Erreur technique : " + erreur.message);
     }
 }
 // 2. WHATSAPP : Message automatique
