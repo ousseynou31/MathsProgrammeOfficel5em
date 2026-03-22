@@ -698,82 +698,83 @@ async function loadUsers(filtre = 'TOUT') {
     // 1. RÉINITIALISATION VISUELLE
     list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Filtrage en cours...</p>`;
     
-    // Initialisation des compteurs pour le calcul en temps réel
-    let nbAttendu = 0;   
     let totalArgent = 0; 
     let nbRetards = 0;
 
     try {
-        // 2. RÉCUPÉRATION DES DONNÉES (Firebase)
+        // 2. RÉCUPÉRATION DES PARAMÈTRES (Tarifs et Clients)
         const tarifsSnap = await database.ref('reglages/tarifs').once('value');
         const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
 
-        const [usersSnap, blackSnap, presenceSnap] = await Promise.all([
+        const [usersSnap, presenceSnap] = await Promise.all([
             database.ref('clients').once('value'),
-            database.ref('blacklist').once('value'),
             database.ref('presence').once('value')
         ]);
 
-        const blacklisted = blackSnap.val() || {};
         const connectes = presenceSnap.val() || {}; 
-        
-        list.innerHTML = ""; // On vide pour afficher les nouveaux résultats
+        list.innerHTML = ""; // On vide pour afficher
 
-        // 3. BOUCLE DE TRAITEMENT
+        // 3. BOUCLE DE TRAITEMENT (Le cœur de la modification)
         usersSnap.forEach(u => {
             const val = u.val();
             if (!val || !val.infos_client) return;
             const data = val.infos_client;
 
-            const catClient = (data.categorie || "C").trim().toUpperCase();
-            const monFiltre = filtre.trim().toUpperCase();
+            // --- LA LOGIQUE QUE VOUS AVEZ VALIDÉE ---
+            // 1. On récupère la VRAIE catégorie de la base (A, B ou C)
+            const vraieCategorieDuClient = (data.categorie || "C").trim().toUpperCase();
 
-            // --- LOGIQUE DU FILTRE ---
-            if (monFiltre !== 'TOUT' && catClient !== monFiltre) return;
+            // 2. On récupère le FILTRE sélectionné (TOUT, A, B ou C)
+            const filtreSelectionne = filtre.trim().toUpperCase();
+
+            // 3. LOGIQUE DU FILTRE : On décide si on affiche la ligne ou pas
+            if (filtreSelectionne !== 'TOUT' && vraieCategorieDuClient !== filtreSelectionne) return;
 
             // --- CALCULS ---
             const jours = calculerJours(data.date_inscription);
-            const prixConfiguré = parseInt(tarifs[catClient]) || 0;
-           const isBanned = data.statut === "suspendu";
+            const prixConfiguré = parseInt(tarifs[vraieCategorieDuClient]) || 0;
+            const isBanned = data.statut === "suspendu";
             
-            nbAttendu++; 
             totalArgent += prixConfiguré;
             if (jours >= 35) nbRetards++; 
 
-            // --- GÉNÉRATION DU HTML DE LA LIGNE ---
+            // --- GÉNÉRATION DU HTML (Correction Plein Écran incluse) ---
             const estEnLigne = connectes[u.key] !== undefined;
             let couleurCercle = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
-            // Remplacez simplement la ligne styleBtnBan par celle-ci (plus autoritaire) :
-const styleBtnBan = isBanned 
-    ? `background:#ef4444 !important; border:1px solid #ef4444 !important; color:white !important; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);` 
-    : `background:transparent; border:1px solid #f59e0b; color:#f59e0b;`;
+            
+            const styleBtnBan = isBanned 
+                ? `background:#ef4444 !important; color:white !important;` 
+                : `background:transparent; border:1px solid #f59e0b; color:#f59e0b;`;
 
+            // Ajout de width:100% et margin:0 pour le plein écran
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 10px 8px 10px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
+                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 0 8px 0; width: 100%; box-sizing: border-box; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
+                    
                     <div style="width:55px; flex-shrink:0; display:flex; justify-content:center; position:relative;">
                         ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:2px; border:2px solid #000; box-shadow:0 0 8px #10b981;"></div>' : ''}
                         <div style="width:42px; height:42px; border-radius:50%; border: 3px solid ${estEnLigne ? '#10b981' : couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4);">
                             ${jours}J
                         </div>
                     </div>
+
                     <div style="flex:1; margin-left:15px; min-width:0;">
                         <div style="font-weight:800; font-size:0.9rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-    ${data.nom} ${isBanned ? '<span style="color:#ef4444; font-size:0.6rem; font-weight:900; margin-left:5px;">⚠️ [SUSPENDU]</span>' : ''}
-</div>
+                            ${data.nom} ${isBanned ? '<span style="color:#ef4444; font-size:0.6rem; font-weight:900; margin-left:5px;">⚠️ [SUSPENDU]</span>' : ''}
+                        </div>
                         <div style="font-size:0.65rem; color:#777; margin-top:3px;">
-                        `<span>📞 ${u.key}</span> | <span style="color:#ffd700; font-weight:bold;">Cat. ${vraieCategorieDuClient}</span>`
-                            
+                            <span>📞 ${u.key}</span> | <span style="color:#ffd700; font-weight:bold;">Cat. ${vraieCategorieDuClient}</span>
                         </div>
                     </div>
+
                     <div style="display:flex; align-items:center; gap:8px;">
                         <select onchange="changerCategorie('${u.key}', this.value)" style="width:42px; background:#000; color:#ffd700; border:1px solid #444; border-radius:4px; font-size:0.7rem; font-weight:900; height:30px;">
-                            <option value="A" ${catClient === 'A' ? 'selected' : ''}>A</option>
-                            <option value="B" ${catClient === 'B' ? 'selected' : ''}>B</option>
-                            <option value="C" ${catClient === 'C' ? 'selected' : ''}>C</option>
+                            <option value="A" ${vraieCategorieDuClient === 'A' ? 'selected' : ''}>A</option>
+                            <option value="B" ${vraieCategorieDuClient === 'B' ? 'selected' : ''}>B</option>
+                            <option value="C" ${vraieCategorieDuClient === 'C' ? 'selected' : ''}>C</option>
                         </select>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
                             <button onclick="validerPaiement('${u.key}', '${filtre}', this)" class="pay-btn" title="Payer">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${catClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${vraieCategorieDuClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
                             <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="${styleBtnBan}">${isBanned ? '🔓' : '🚫'}</button>
                             <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="border-color:#e74c3c; color:#e74c3c;" title="Supprimer">🗑️</button>
                         </div>
@@ -781,19 +782,14 @@ const styleBtnBan = isBanned
                 </div>`;
         });
 
-        // 4. MISE À JOUR DU DASHBOARD (CORRECTIF IDs)
-        // On utilise les IDs présents dans le nouveau HTML
-        const elAttendu = document.getElementById('stat-attendu');
-        const elArgent = document.getElementById('stat-estime');
-        const elRetard = document.getElementById('stat-retard');
+        // Mise à jour des compteurs du Dashboard
+        if(document.getElementById('dash-total-a')) {
+            document.getElementById('dash-total-a').innerText = totalArgent.toLocaleString() + " F";
+        }
 
-        if(elAttendu) elAttendu.innerText = nbAttendu;
-        if(elArgent) elArgent.innerText = totalArgent.toLocaleString() + " FG";
-        if(elRetard) elRetard.innerText = nbRetards;
-
-    } catch(e) { 
-        console.error("Erreur critique loadUsers:", e);
-        list.innerHTML = "<p style='text-align:center; color:red;'>Erreur de chargement.</p>";
+    } catch (e) {
+        console.error("Erreur LoadUsers:", e);
+        list.innerHTML = `<p style="color:red; text-align:center;">Erreur de chargement.</p>`;
     }
 }
 async function calculerGlobalStats(filtreActuel = 'TOUT') {
