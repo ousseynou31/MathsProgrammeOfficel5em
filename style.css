@@ -384,5 +384,3 @@ button.pay-btn:has(span:contains("🔓")),
     border-left: 8px solid #ef4444 !important;
     background: rgba(239, 68, 68, 0.05) !important;
 }
-const borderStatus = isBanned ? "8px solid #ef4444" : "4px solid transparent";
-// Appliquez ensuite ${borderStatus} dans le style de votre <div class="user-row">
