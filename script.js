@@ -298,40 +298,34 @@ async function mettreAJourDashboard() {
 }
 
 // 1. PAYER : Réinitialise la date à aujourd'hui
-// On utilise exactement le nom 'validerPaiement' du bouton HTML
-async function validerPaiement(idClient, filtre) {
-    // 1. CONFIRMATION RAPIDE (Appuyez sur 'Entrée' pour aller vite)
-    if (!confirm("Valider ce paiement de 5000 F ?")) return;
+async function validerPaiement(idClient, filtreActuel) {
+    // 1. Demande de confirmation simple
+    if (!confirm("Confirmer le paiement de 5000 F ?")) return;
 
     try {
-        // 2. ENREGISTREMENT SANS RECHARGER
+        // 2. Enregistrement dans Firebase
         await database.ref('clients/' + idClient + '/infos_client').update({
             statut: "actif",
             montant: 5000,
             datePaiement: new Date().toLocaleDateString('fr-FR'),
-            categorie: filtre // Utilise directement A, B ou C selon le bouton cliqué
+            categorie: filtreActuel // On garde le nom du filtre (ex: catA, catB...)
         });
 
-        // 3. MISE À JOUR VISUELLE IMMÉDIATE (Pas de rechargement !)
-        // On cherche le bouton ou la ligne du client pour indiquer que c'est fait
-        const boutonCliqué = event.target; 
-        if(boutonCliqué) {
-            boutonCliqué.innerHTML = "✅"; // Le bouton devient un check vert
-            boutonCliqué.style.background = "#27ae60";
-            boutonCliqué.disabled = true; // On désactive pour éviter les doubles clics
-        }
+        alert("✅ Paiement validé !");
 
-        // Optionnel : Si vous avez une fonction qui rafraîchit la liste des clients
-        // sans quitter la page, appelez-la ici :
+        // 3. MISE À JOUR DISCRÈTE (La clé pour ne pas casser l'affichage)
+        // Au lieu de recharger la page, on relance votre fonction qui affiche la liste
+        // en lui redonnant le filtre qu'on utilisait déjà.
         if (typeof afficherListeClients === 'function') {
-            afficherListeClients(filtre); 
+            afficherListeClients(filtreActuel); 
+        } else {
+            // Si la fonction a un autre nom chez vous, utilisez-le ici
+            location.reload(); 
         }
-
-        // On peut ajouter une petite notification discrète au lieu d'une alerte bloquante
-        console.log("Paiement validé pour : " + idClient);
 
     } catch (e) {
-        alert("Erreur : " + e.message);
+        console.error("Erreur de validation:", e);
+        alert("Erreur technique : " + e.message);
     }
 }
 // 2. WHATSAPP : Message automatique
