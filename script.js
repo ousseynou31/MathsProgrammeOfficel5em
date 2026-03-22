@@ -715,7 +715,10 @@ async function loadUsers(filtre = 'TOUT') {
             // --- GÉNÉRATION DU HTML DE LA LIGNE ---
             const estEnLigne = connectes[u.key] !== undefined;
             let couleurCercle = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
-            const styleBtnBan = isBanned ? `background:#ef4444; border:1px solid #ef4444; color:white; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);` : `background:transparent; border:1px solid #f59e0b; color:#f59e0b;`;
+            // Remplacez simplement la ligne styleBtnBan par celle-ci (plus autoritaire) :
+const styleBtnBan = isBanned 
+    ? `background:#ef4444 !important; border:1px solid #ef4444 !important; color:white !important; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);` 
+    : `background:transparent; border:1px solid #f59e0b; color:#f59e0b;`;
 
             list.innerHTML += `
                 <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 10px 8px 10px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
