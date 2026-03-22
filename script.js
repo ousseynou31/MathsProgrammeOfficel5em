@@ -826,16 +826,45 @@ function activerSignalPresence() {
     // 2. On demande à Firebase de nous effacer AUTOMATIQUEMENT à la déconnexion
     maPresenceRef.onDisconnect().remove();
 }
-async function tenterRecuperationCompte(numTel) {
-    // 1. On cherche l'utilisateur dans la base
-    const snapshot = await database.ref(`clients/${numTel}`).once('value');
+async function ouvrirRecuperation() {
+    const num = prompt("Entrez votre numéro de téléphone (celui utilisé lors de l'inscription) :");
     
-    if (!snapshot.exists()) {
-        // CAS 1 : L'utilisateur n'existe pas (ou a été SUPPRIMÉ de Firebase)
-        alert("❌ Ce numéro n'existe pas. Veuillez vous inscrire.");
-        naviguer('page-inscription');
-        return;
+    if (!num || num.trim() === "") return;
+
+    try {
+        // 1. RECHERCHE DANS LA BASE
+        const snap = await database.ref(`clients/${num}`).once('value');
+        
+        if (!snap.exists()) {
+            // CAS : JAMAIS INSCRIT ou SUPPRIMÉ
+            alert("❌ Erreur : Ce numéro n'est pas reconnu par le système.");
+            return;
+        }
+
+        const data = snap.val().infos_client;
+
+        // 2. VÉRIFICATION DU STATUT (LE VERROU)
+        if (data.statut === "suspendu") {
+            // CAS : CLIENT SUSPENDU
+            alert("🚫 ACCÈS REFUSÉ : Votre compte est suspendu. Veuillez contacter l'administration.");
+            return;
+        }
+
+        // 3. TOUT EST OK : ON RESTAURE LA SESSION
+        // On recrée les clés locales comme si l'inscription venait de se faire
+        localStorage.setItem('mon_numero_cle', num);
+        localStorage.setItem('v32_active', 'true'); // Votre clé de session
+        
+        alert("✅ Bon retour " + data.nom + " ! Votre accès est rétabli.");
+        
+        // On redirige vers le menu
+        naviguer('hub-accueil'); 
+
+    } catch (e) {
+        console.error(e);
+        alert("❌ Une erreur est survenue lors de la vérification.");
     }
+}
 
     const data = snapshot.val().infos_client;
 
