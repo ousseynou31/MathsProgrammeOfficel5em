@@ -299,34 +299,39 @@ async function mettreAJourDashboard() {
 
 // 1. PAYER : Réinitialise la date à aujourd'hui
 // On utilise exactement le nom 'validerPaiement' du bouton HTML
-async function validerPaiement(idClient, filtreFacultatif) {
-    
-    // 1. CONFIRMATION VISUELLE
-    if (!confirm("Confirmer l'activation et l'enregistrement du paiement de 5000 F ?")) return;
+async function validerPaiement(idClient, filtre) {
+    // 1. CONFIRMATION RAPIDE (Appuyez sur 'Entrée' pour aller vite)
+    if (!confirm("Valider ce paiement de 5000 F ?")) return;
 
     try {
-        // 2. MISE À JOUR FIREBASE (On utilise l'idClient envoyé par ${u.key})
-        // Note : On met à jour le montant et la date pour l'historique
+        // 2. ENREGISTREMENT SANS RECHARGER
         await database.ref('clients/' + idClient + '/infos_client').update({
             statut: "actif",
             montant: 5000,
             datePaiement: new Date().toLocaleDateString('fr-FR'),
-            categorie: "Maths 5ème"
+            categorie: filtre // Utilise directement A, B ou C selon le bouton cliqué
         });
 
-        alert("✅ Paiement validé ! L'historique est à jour.");
-        
-        // 3. RAFRAÎCHIR L'AFFICHAGE
-        // Si vous avez une fonction qui affiche la liste, on l'appelle
-        if (typeof afficherListeClients === 'function') {
-            afficherListeClients(filtreFacultatif); 
-        } else {
-            location.reload(); // Sinon on recharge la page
+        // 3. MISE À JOUR VISUELLE IMMÉDIATE (Pas de rechargement !)
+        // On cherche le bouton ou la ligne du client pour indiquer que c'est fait
+        const boutonCliqué = event.target; 
+        if(boutonCliqué) {
+            boutonCliqué.innerHTML = "✅"; // Le bouton devient un check vert
+            boutonCliqué.style.background = "#27ae60";
+            boutonCliqué.disabled = true; // On désactive pour éviter les doubles clics
         }
 
+        // Optionnel : Si vous avez une fonction qui rafraîchit la liste des clients
+        // sans quitter la page, appelez-la ici :
+        if (typeof afficherListeClients === 'function') {
+            afficherListeClients(filtre); 
+        }
+
+        // On peut ajouter une petite notification discrète au lieu d'une alerte bloquante
+        console.log("Paiement validé pour : " + idClient);
+
     } catch (e) {
-        console.error("Erreur lors du paiement:", e);
-        alert("❌ Erreur : " + e.message);
+        alert("Erreur : " + e.message);
     }
 }
 // 2. WHATSAPP : Message automatique
