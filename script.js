@@ -298,11 +298,25 @@ async function mettreAJourDashboard() {
 }
 
 // 1. PAYER : Réinitialise la date à aujourd'hui
-async function validerPaiement(telId, filtreActuel) {
-    if(confirm("Confirmer le paiement ?")) {
-        await database.ref(`clients/${telId}/infos_client/date_inscription`).set(new Date().toISOString());
-        // On recharge la liste ET le dashboard avec le filtre en cours
-        loadUsers(filtreActuel); 
+function validerLePaiement(numTel) {
+    const montantFixe = 5000; // Le prix de l'inscription
+    const dateJour = new Date().toLocaleDateString('fr-FR'); // Ex: "22/03/2026"
+    const nomClient = document.querySelector(`#nom-${numTel}`)?.innerText || "Élève";
+
+    // CONFIRMATION AVANT D'ENREGISTRER
+    if (confirm(`Confirmer le paiement de ${montantFixe} F pour ${nomClient} ?`)) {
+        
+        // MISE À JOUR DANS FIREBASE
+        database.ref(`clients/${numTel}/infos_client`).update({
+            statut: "actif",       // On l'active
+            montant: montantFixe,  // 🟢 INDISPENSABLE POUR L'HISTORIQUE
+            datePaiement: dateJour,// 🟢 INDISPENSABLE POUR L'HISTORIQUE
+            categorie: "Maths 5e"  // 🟢 INDISPENSABLE POUR L'HISTORIQUE
+        }).then(() => {
+            alert("✅ Paiement enregistré et compte activé !");
+            // On rafraîchit l'affichage si nécessaire
+            location.reload(); 
+        });
     }
 }
 // 2. WHATSAPP : Message automatique
