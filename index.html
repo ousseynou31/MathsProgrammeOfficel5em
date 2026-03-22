@@ -221,6 +221,49 @@
     
 
     <script src="script.js"></script>
+
+    <div id="page-historique" class="gate" style="display:none; background: rgba(0,0,0,0.95); z-index: 9999;">
+    <div class="glass-card" style="width: 95%; max-width: 1000px; height: 90vh; display: flex; flex-direction: column; padding: 15px;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="color: var(--p); margin: 0; font-size: 1.1rem; font-weight: 900;">📊 HISTORIQUE DE PAIEMENT</h2>
+            
+            <div style="display: flex; gap: 8px;">
+                <button onclick="exporterCSV()" class="btn-mini" style="background: #27ae60;">Excel</button>
+                <button onclick="exporterPDF()" class="btn-mini" style="background: #e67e22;">PDF</button>
+                <button onclick="fermerHistorique()" class="btn-mini" style="background: #c0392b;">FERMER</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="search-historique" onkeyup="filtrerHistorique()" 
+                   placeholder="Rechercher par Nom, Date (ex: 2026-03), Tel ou Montant..." 
+                   style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #444; background: #222; color: white; font-size: 0.9rem;">
+        </div>
+
+        <div style="flex: 1; overflow-y: auto; border: 1px solid #333; border-radius: 8px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem; color: #eee;">
+                <thead style="position: sticky; top: 0; background: #111; color: var(--p); text-align: left;">
+                    <tr>
+                        <th style="padding: 10px; border-bottom: 2px solid #333;">DATE</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #333;">CLIENT</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #333;">TEL</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #333;">CATÉGORIE</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #333; text-align: right;">MONTANT</th>
+                    </tr>
+                </thead>
+                <tbody id="corps-historique">
+                    </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 15px; padding: 15px; background: #111; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--p);">
+            <span style="font-weight: bold; color: gray;">TOTAL ENCAISSÉ :</span>
+            <span id="total-historique" style="font-size: 1.2rem; font-weight: 900; color: #2ecc71;">0 FCFA</span>
+        </div>
+
+    </div>
+</div>
 </body>
 </html>
 
