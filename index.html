@@ -10,47 +10,30 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>  
-<div id="page-admin" class="full-page" style="display:none;">
-
-    <div style="margin: 20px; padding: 15px; background: #1a1a1a; border-radius: 12px; border: 1px dashed #444; text-align: center;">
-    <p style="color: #888; font-size: 0.75rem; margin-bottom: 10px;">🔒 PROTECTION DE L'INTERFACE</p>
+<div id="page-admin" style="display:none; background:#000; min-height:100vh; color:white; padding:20px 10px;">
     
-    <button onclick="deconnecterApp()" 
-            style="background: #e67e22; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; box-shadow: 0 4px 10px rgba(230, 126, 34, 0.2);">
-        VERROUILLER L'ACCÈS
-    </button>
-    
-    <small style="display: block; margin-top: 10px; color: #555; font-size: 0.65rem;">
-        Ceci vous ramènera à l'écran de saisie du code PIN.
-    </small>
-</div>
-    
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333;">
-        <h2 style="color:var(--p); margin:0; font-size: 1.1rem; font-weight:800;">🛡️ ADMIN PRO</h2>
-        <button onclick="naviguer('hub-accueil')" style="background:none; border:1px solid #444; color:white; padding:6px 12px; border-radius:8px; font-size:0.7rem; font-weight:bold; cursor:pointer;">RETOUR</button>
-    </div>
-    <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 25px;">
-        <input type="text" 
-               id="admin-search" 
-               placeholder="🔍 Rechercher un nom ou un numéro..." 
-               onkeyup="filtrerClients()" 
-               style="width:90%; max-width:500px; padding:12px; border-radius:12px; border:1px solid #333; background:#111; color:white; outline:none; font-size:0.9rem; border-left: 4px solid var(--p); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-    </div>
     <div id="admin-dashboard" style="display:flex; gap:8px; margin-bottom:15px;">
-        <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border-left:3px solid #ffd700; text-align:center; border: 1px solid #222;">
-            <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase; margin-bottom:2px;">Attendu</small>
-            <b id="dash-total-a" style="color:white; font-size:0.85rem;">0 F</b>
+        <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border: 1px solid #333; text-align:center;">
+            <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase;">Élèves</small>
+            <b id="stat-attendu" style="color:white; font-size:0.85rem;">0</b>
         </div>
-        <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border-left:3px solid #2ecc71; text-align:center; border: 1px solid #222;">
-            <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase; margin-bottom:2px;">Estimé</small>
-            <b id="dash-total-global" style="color:#2ecc71; font-size:0.85rem;">0 F</b>
+        
+        <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border: 1px solid #333; text-align:center;">
+            <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase;">Argent</small>
+            <b id="stat-estime" style="color:#2ecc71; font-size:0.85rem;">0 FG</b>
         </div>
-        <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border-left:3px solid #e74c3c; text-align:center; border: 1px solid #222;">
-            <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase; margin-bottom:2px;">Retard</small>
-            <b id="dash-retard" style="color:#e74c3c; font-size:0.85rem;">0</b>
+        
+        <div style="flex:1; background:#111; padding:10px 5px; border-radius:12px; border: 1px solid #333; text-align:center;">
+            <small style="color:gray; font-size:0.5rem; display:block; text-transform:uppercase;">Retards</small>
+            <b id="stat-retard" style="color:#e74c3c; font-size:0.85rem;">0</b>
         </div>
-    </div>    
-    
+    </div>
+
+    <div style="margin-bottom:15px;">
+        <input type="text" id="admin-search" onkeyup="filtrerClients()" placeholder="Rechercher un nom ou numéro..." 
+               style="width:100%; background:#111; border:1px solid #333; padding:12px; border-radius:10px; color:white; font-size:0.8rem;">
+    </div>
+
     <div id="admin-filters" style="display:flex; gap:5px; margin-bottom:15px;">
         <button onclick="loadUsers('TOUT')" class="filter-btn active" style="flex:1; font-size:0.65rem; font-weight:800; background:var(--p); border:none; padding:8px; border-radius:6px; color:white;">TOUT</button>
         <button onclick="loadUsers('A')" class="filter-btn" style="flex:1; font-size:0.65rem; border:1px solid #ffd700; background:transparent; color:white; padding:8px; border-radius:6px;">CAT A</button>
@@ -58,64 +41,63 @@
         <button onclick="loadUsers('C')" class="filter-btn" style="flex:1; font-size:0.65rem; border:1px solid #cd7f32; background:transparent; color:white; padding:8px; border-radius:6px;">CAT C</button>
     </div>
 
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
+    <div style="margin-bottom:20px;">
        <button onclick="naviguer('page-bilan'); ouvrirRapport();" 
-        style="background:white; color:black; border:none; padding:10px; font-size:0.7rem; border-radius:8px; font-weight:bold; width:100%;">
-    📋 VOIR LE BILAN FINANCIER
-</button>
+               style="background:white; color:black; border:none; padding:12px; font-size:0.75rem; border-radius:8px; font-weight:bold; width:100%; display:flex; align-items:center; justify-content:center; gap:10px;">
+           📋 VOIR LE BILAN FINANCIER COMPLET
+       </button>
     </div>
 
     <div id="admin-prices-config" style="background:#111; padding:12px; border-radius:12px; border:1px solid #333; margin-bottom:20px;">
+        <p style="font-size:0.6rem; color:var(--p); margin-bottom:8px; font-weight:bold; text-transform:uppercase;">Réglage des tarifs mensuels (FG)</p>
         <div style="display:flex; gap:8px; align-items:flex-end;">
             <div style="flex:1;"><label style="font-size:0.5rem; color:gray; display:block;">CAT A</label><input type="number" id="price-A" value="5000" style="width:100%; background:#000; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.75rem;"></div>
             <div style="flex:1;"><label style="font-size:0.5rem; color:gray; display:block;">CAT B</label><input type="number" id="price-B" value="3000" style="width:100%; background:#000; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.75rem;"></div>
             <div style="flex:1;"><label style="font-size:0.5rem; color:gray; display:block;">CAT C</label><input type="number" id="price-C" value="1500" style="width:100%; background:#000; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.75rem;"></div>
-            <button onclick="sauvegarderTarifs()" style="background:var(--s); border:none; padding:8px 12px; border-radius:6px; font-weight:bold; color:black; font-size:0.8rem;">OK</button>
+            <button onclick="sauvegarderTarifs()" style="background:#2ecc71; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; color:black; font-size:0.8rem;">OK</button>
         </div>
     </div>
 
-    <div id="admin-user-list" style="padding-bottom: 50px;">
-        <p style="text-align:center; color:#444; padding:20px; font-size:0.8rem;">Chargement...</p>
+    <div id="admin-user-list" style="padding-bottom: 80px;">
+        <p style="text-align:center; color:#444; padding:20px; font-size:0.8rem;">Chargement des élèves...</p>
     </div>
 </div>
 
-    <div id="page-bilan" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:99999; color:white; font-family:sans-serif; flex-direction:column;">
+<div id="page-bilan" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:99999; color:white; font-family:sans-serif; flex-direction:column;">
     
     <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #333; background:#111;">
-        
         <button onclick="document.getElementById('page-bilan').style.display='none'; naviguer('page-admin');" 
-                style="background:#444; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:0.75rem;">
+                style="background:#333; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; font-size:0.75rem;">
             ⬅️ RETOUR
         </button>
 
-        <h3 style="margin:0; font-size:0.85rem; color:var(--p); text-transform:uppercase; font-weight:800; letter-spacing:1px;">Bilan Mensuel</h3>
+        <h3 style="margin:0; font-size:0.85rem; color:var(--p); text-transform:uppercase; font-weight:800;">Bilan Financier</h3>
 
-        <div style="display:flex; gap:8px; margin-right: 70px;">
-            <button onclick="exporterCSV()" style="background:#27ae60; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:0.65rem; font-weight:bold; cursor:pointer;">
-            CSV</button>
-            <button onclick="exporterPDF()" style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:0.65rem; font-weight:bold; cursor:pointer;">PDF</button>
+        <div style="display:flex; gap:8px;">
+            <button onclick="exporterCSV()" style="background:#27ae60; color:white; border:none; padding:8px 10px; border-radius:6px; font-size:0.6rem; font-weight:bold;">CSV</button>
+            <button onclick="exporterPDF()" style="background:#e74c3c; color:white; border:none; padding:8px 10px; border-radius:6px; font-size:0.6rem; font-weight:bold;">PDF</button>
         </div>
     </div>
 
     <div style="flex:1; overflow:auto; padding:10px;">
-        <table style="width:100%; border-collapse: collapse; min-width:450px;">
+        <table style="width:100%; border-collapse: collapse;">
             <thead>
-    <tr style="background:#222; color:var(--p); font-size:0.75rem; letter-spacing:1px;">
-        <th style="padding:15px; text-align:left; border-bottom:2px solid #333;">NOM DE L'ÉLÈVE</th>
-        <th style="padding:15px; text-align:center; border-bottom:2px solid #333;">CATÉGORIE</th>
-        <th style="padding:15px; text-align:right; border-bottom:2px solid #333;">MONTANT DÛ / MOIS</th>
-    </tr>
-</thead>
-           
+                <tr style="background:#222; color:var(--p); font-size:0.7rem;">
+                    <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #333;">ÉLÈVE</th>
+                    <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #333;">CAT.</th>
+                    <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #333;">MONTANT</th>
+                </tr>
+            </thead>
             <tbody id="corps-bilan" style="font-size:0.8rem;">
                 </tbody>
-            <tfoot style="position: sticky; bottom: 0; background:#111;">
-                <tr style="border-top:2px solid var(--p);">
-                    <td colspan="3" style="padding:15px; text-align:right; font-weight:bold; color:var(--p); font-size:0.9rem;">TOTAL RECETTES :</td>
-                    <td id="total-bilan-argent" style="padding:15px; text-align:right; font-weight:900; color:#2ecc71; font-size:1rem;">0 F CFA</td>
-                </tr>
-            </tfoot>
         </table>
+    </div>
+
+    <div style="background:#111; border-top:2px solid var(--p); padding:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:bold; color:gray; font-size:0.8rem;">TOTAL ESTIMÉ :</span>
+            <span id="total-bilan-argent" style="font-weight:900; color:#2ecc71; font-size:1.2rem;">0 FG</span>
+        </div>
     </div>
 </div>
     
