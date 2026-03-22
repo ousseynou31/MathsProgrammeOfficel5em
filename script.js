@@ -255,9 +255,9 @@ async function sauvegarderTarifs() {
     };
     await database.ref('reglages/tarifs').set(tarifs);
     alert("✅ Tarifs mis à jour !");
-    mettreAJourDashboard(); // Rafraîchir les calculs
+    // APPEL DE LA BONNE FONCTION DE MISE À JOUR
+    loadUsers('TOUT'); 
 }
-
 // Charger les prix au démarrage de l'admin
 async function chargerTarifs() {
     const snap = await database.ref('reglages/tarifs').once('value');
@@ -764,7 +764,48 @@ async function loadUsers(filtre = 'TOUT') {
         list.innerHTML = "<p style='text-align:center; color:red;'>Erreur de chargement.</p>";
     }
 }
+async function calculerGlobalStats(filtreActuel = 'TOUT') {
+    try {
+        const snap = await database.ref('clients').once('value');
+        let total = 0;
+        let catA = 0;
+        let catB = 0;
+        let catC = 0;
 
+        snap.forEach(u => {
+            const data = u.val().infos_client;
+            if (!data) return;
+
+            // On compte SEULEMENT si ça correspond au filtre ou si le filtre est 'TOUT'
+            if (filtreActuel === 'TOUT' || data.categorie === filtreActuel) {
+                total++;
+                if (data.categorie === 'A') catA++;
+                if (data.categorie === 'B') catB++;
+                if (data.categorie === 'C') catC++;
+            }
+        });
+
+        // Mise à jour des éléments HTML (Vérifie que ces ID existent dans ton HTML)
+        if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total;
+        if(document.getElementById('stat-a')) document.getElementById('stat-a').innerText = catA;
+        if(document.getElementById('stat-b')) document.getElementById('stat-b').innerText = catB;
+        if(document.getElementById('stat-c')) document.getElementById('stat-c').innerText = catC;
+
+    } catch (e) {
+        console.error("Erreur stats:", e);
+    }
+}
+// Sauvegarder les prix dans Firebase
+async function sauvegarderTarifs() {
+    const tarifs = {
+        A: document.getElementById('price-A').value || 0,
+        B: document.getElementById('price-B').value || 0,
+        C: document.getElementById('price-C').value || 0
+    };
+    await database.ref('reglages/tarifs').set(tarifs);
+    alert("✅ Tarifs mis à jour !");
+    mettreAJourDashboard(); // Rafraîchir les calculs
+}
 // Cette fonction doit être appelée dès que l'application démarre
 function activerSignalPresence() {
     const tel = localStorage.getItem('user_tel_id');
