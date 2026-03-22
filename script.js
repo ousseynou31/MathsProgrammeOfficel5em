@@ -299,36 +299,38 @@ async function mettreAJourDashboard() {
 
 // 1. PAYER : Réinitialise la date à aujourd'hui
 async function validerPaiement(idClient, filtreActuel, btnElement) {
-    // 1. Demande de confirmation
     if (!confirm("Valider le paiement de 5000 F ?")) return;
 
     try {
-        // 2. Enregistrement Firebase
+        // 1. On récupère d'abord la vraie catégorie pour ne pas enregistrer "TOUT"
+        const snap = await database.ref('clients/' + idClient + '/infos_client').once('value');
+        const v = snap.val();
+        const vraieCat = v.categorie || "C"; 
+
+        // 2. Mise à jour sécurisée
         await database.ref('clients/' + idClient + '/infos_client').update({
             statut: "actif",
             montant: 5000,
             datePaiement: new Date().toLocaleDateString('fr-FR'),
-            categorie: filtreActuel 
+            categorie: vraieCat // On préserve la vraie catégorie A, B ou C
         });
 
-        // 3. MISE À JOUR VISUELLE SÉCURISÉE
+        // 3. Changement visuel immédiat sans recharger
         if (btnElement) {
             btnElement.innerHTML = "✅";
             btnElement.style.background = "#27ae60";
+            btnElement.style.color = "white";
             btnElement.disabled = true;
         }
 
-        alert("✅ Paiement validé avec succès !");
-
-        // 4. RELANCER LE FILTRE (Pour garder l'affichage propre)
-        // Remplacez 'afficherListeClients' par le nom EXACT de votre fonction qui affiche les A, B, C
-        if (typeof afficherListeClients === 'function') {
-            afficherListeClients(filtreActuel); 
-        }
+        // 4. On relance loadUsers avec le filtre actuel pour garder l'affichage propre
+        // On utilise un petit délai pour laisser l'utilisateur voir le "✅"
+        setTimeout(() => {
+            loadUsers(filtreActuel);
+        }, 800);
 
     } catch (e) {
-        console.error("Erreur de validation:", e);
-        alert("❌ Erreur : " + e.message);
+        alert("Erreur : " + e.message);
     }
 }
 // 2. WHATSAPP : Message automatique
