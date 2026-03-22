@@ -715,7 +715,7 @@ async function loadUsers(filtre = 'TOUT') {
             // --- GÉNÉRATION DU HTML DE LA LIGNE ---
             const estEnLigne = connectes[u.key] !== undefined;
             let couleurCercle = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
-            const styleBtnBan = isBanned ? `background:#ef4444; border-color:#ef4444; color:white;` : `background:transparent; border-color:#f59e0b; color:#f59e0b;`;
+            const styleBtnBan = isBanned ? `background:#ef4444; border:1px solid #ef4444; color:white; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);` : `background:transparent; border:1px solid #f59e0b; color:#f59e0b;`;
 
             list.innerHTML += `
                 <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 10px 8px 10px; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
@@ -726,7 +726,9 @@ async function loadUsers(filtre = 'TOUT') {
                         </div>
                     </div>
                     <div style="flex:1; margin-left:15px; min-width:0;">
-                        <div style="font-weight:800; font-size:0.9rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${data.nom}</div>
+                        <div style="font-weight:800; font-size:0.9rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+    ${data.nom} ${isBanned ? '<span style="color:#ef4444; font-size:0.6rem; font-weight:900; margin-left:5px;">⚠️ [SUSPENDU]</span>' : ''}
+</div>
                         <div style="font-size:0.65rem; color:#777; margin-top:3px;">
                             <span>📞 ${u.key}</span> | <span style="color:#ffd700; font-weight:bold;">Cat. ${catClient}</span>
                         </div>
