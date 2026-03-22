@@ -769,7 +769,7 @@ const styleBtnBan = isBanned
                             <option value="C" ${catClient === 'C' ? 'selected' : ''}>C</option>
                         </select>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
-                            <button onclick="validerPaiement('${u.key}', '${filtre}')" class="pay-btn" title="Payer">💰</button>
+                            <button onclick="validerPaiement('${u.key}', '${filtre}', this)" class="pay-btn" title="Payer">💰</button>
                             <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${catClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
                             <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="${styleBtnBan}">${isBanned ? '🔓' : '🚫'}</button>
                             <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="border-color:#e74c3c; color:#e74c3c;" title="Supprimer">🗑️</button>
