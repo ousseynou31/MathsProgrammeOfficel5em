@@ -827,8 +827,15 @@ function activerSignalPresence() {
     maPresenceRef.onDisconnect().remove();
 }
 function deconnecterApp() {
-    if(confirm("Voulez-vous verrouiller l'accès et retourner à l'activation ?")) {
-        localStorage.removeItem('v32_active');
+    // 1. Demande de confirmation pour éviter les erreurs de clic
+    if(confirm("⚠️ TEST DE SÉCURITÉ :\nVoulez-vous verrouiller l'accès et revenir à la page d'activation ?")) {
+        
+        // 2. SUPPRESSION DE LA CLÉ (Acquis de sécurité)
+        // Remplacez 'v32_active' par le nom exact de votre clé de stockage
+        localStorage.removeItem('v32_active'); 
+        
+        // 3. RECHARGEMENT TOTAL
+        // Cela renvoie l'application à son état initial (Page d'activation)
         window.location.reload();
     }
 }
