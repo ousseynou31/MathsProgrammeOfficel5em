@@ -761,7 +761,8 @@ const styleBtnBan = isBanned
     ${data.nom} ${isBanned ? '<span style="color:#ef4444; font-size:0.6rem; font-weight:900; margin-left:5px;">⚠️ [SUSPENDU]</span>' : ''}
 </div>
                         <div style="font-size:0.65rem; color:#777; margin-top:3px;">
-                            <span>📞 ${u.key}</span> | <span style="color:#ffd700; font-weight:bold;">Cat. ${catClient}</span>
+                        `<span>📞 ${u.key}</span> | <span style="color:#ffd700; font-weight:bold;">Cat. ${vraieCategorieDuClient}</span>`
+                            
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
