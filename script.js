@@ -690,19 +690,32 @@ function initAdminTrigger() {
         trigger.addEventListener('mouseleave', stopperChrono);
     }
 }
-
-
 async function calculerGlobalStats(filtreActuel = 'TOUT') {
     try {
         const snap = await database.ref('clients').once('value');
         let total = 0;
-        let catA = 0;
-        let catB = 0;
-        let catC = 0;
+        let catA = 0, catB = 0, catC = 0;
 
         snap.forEach(u => {
-            const data = u.val().infos_client;
-            if (!data) return;
+            const val = u.val();
+            if (!val || !val.infos_client) return;
+            const data = val.infos_client;
+            
+            const cat = (data.categorie || "C").trim().toUpperCase();
+            if (cat === 'A') catA++;
+            else if (cat === 'B') catB++;
+            else if (cat === 'C') catC++;
+            total++;
+        });
+
+        console.log(`📈 Stats : Total=${total}, A=${catA}, B=${catB}, C=${catC}`);
+        // Ici vous pouvez ajouter des document.getElementById si vous avez des cases globales
+    } catch (e) {
+        console.error("Erreur Stats :", e);
+    }
+} // <--- L'ACCOLADE QUI MANQUAIT ÉTAIT ICI
+
+
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
     if (!list) return;
