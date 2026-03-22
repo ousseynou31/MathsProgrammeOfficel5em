@@ -384,3 +384,25 @@ button.pay-btn:has(span:contains("🔓")),
     border-left: 8px solid #ef4444 !important;
     background: rgba(239, 68, 68, 0.05) !important;
 }
+.btn-mini {
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+#corps-historique tr {
+    border-bottom: 1px solid #222;
+}
+
+#corps-historique tr:nth-child(even) {
+    background: rgba(255,255,255,0.02);
+}
+
+#corps-historique td {
+    padding: 10px;
+}
