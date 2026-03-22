@@ -706,7 +706,7 @@ async function loadUsers(filtre = 'TOUT') {
             // --- CALCULS ---
             const jours = calculerJours(data.date_inscription);
             const prixConfiguré = parseInt(tarifs[catClient]) || 0;
-            const isBanned = blacklisted[u.key] === true;
+           const isBanned = data.statut === "suspendu";
             
             nbAttendu++; 
             totalArgent += prixConfiguré;
