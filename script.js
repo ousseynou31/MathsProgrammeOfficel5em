@@ -786,27 +786,18 @@ async function loadUsers(filtre = 'TOUT') {
         if(document.getElementById('dash-total-a')) {
             document.getElementById('dash-total-a').innerText = totalArgent.toLocaleString() + " F";
         }
-// --- MISE À JOUR DU DASHBOARD (LES 3 CASES) ---
-        
-        // 1. Mise à jour de la case "NOMBRE ATTENDU" (Nombre d'élèves affichés)
-        const caseNbPersonnes = document.getElementById('dash-nb-eleves'); // Vérifiez cet ID dans votre HTML
-        if (caseNbPersonnes) {
-            caseNbPersonnes.innerText = nbAttendu; 
-        }
+// --- MISE À JOUR SÉCURISÉE DU DASHBOARD ---
+try {
+    const elNb = document.getElementById('dash-nb-eleves');
+    const elAr = document.getElementById('dash-total-a');
+    const elRe = document.getElementById('dash-retard');
 
-        // 2. Mise à jour de la case "VALEUR ESTIMÉE" (Argent total du filtre)
-        const caseArgent = document.getElementById('dash-total-a');
-        if (caseArgent) {
-            caseArgent.innerText = totalArgent.toLocaleString() + " F";
-        }
-
-        // 3. Mise à jour de la case "NOMBRE DE RETARDS"
-        const caseRetards = document.getElementById('dash-retard');
-        if (caseRetards) {
-            caseRetards.innerText = nbRetards;
-        }
-
-        console.log(`📊 Dashboard mis à jour : ${nbAttendu} élèves, ${totalArgent} F, ${nbRetards} retards.`);
+    if (elNb) elNb.innerText = nbAttendu; 
+    if (elAr) elAr.innerText = totalArgent.toLocaleString() + " F";
+    if (elRe) elRe.innerText = nbRetards;
+} catch (err) {
+    console.warn("Certaines cases du Dashboard sont introuvables dans le HTML.");
+}
     } catch (e) {
         console.error("Erreur LoadUsers:", e);
         list.innerHTML = `<p style="color:red; text-align:center;">Erreur de chargement.</p>`;
