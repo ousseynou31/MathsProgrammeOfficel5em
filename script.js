@@ -922,72 +922,7 @@ function filtrerHistorique() {
     }
 }
 
-// A AJOUTER DANS SCRIPT.JS
-async function ouvrirHistorique() {
-    const page = document.getElementById('page-historique');
-    const corps = document.getElementById('corps-historique');
-    const totalElt = document.getElementById('total-historique');
-    
-    page.style.display = 'flex'; 
-    corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:30px; color:gray;'>Analyse du bilan...</td></tr>";
 
-    try {
-        const [tarifsSnap, usersSnap] = await Promise.all([
-            database.ref('reglages/tarifs').once('value'),
-            database.ref('clients').once('value')
-        ]);
-
-        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
-        let html = "";
-        let totalGeneral = 0;
-
-        usersSnap.forEach(client => {
-            const val = client.val();
-            if (val && val.infos_client) {
-                const info = val.infos_client;
-                const cat = (info.categorie || "C").trim().toUpperCase();
-                
-                // --- INTÉGRATION DU NETTOYAGE ---
-                const montantBrut = tarifs[cat] || 0;
-                const montantPropre = nettoyerChiffre(montantBrut);
-                const telPropre = nettoyerChiffre(client.key);
-                
-                const datePay = info.date_inscription ? info.date_inscription.split('T')[0] : "---";
-
-                totalGeneral += parseInt(montantPropre);
-
-                html += `
-                    <tr class="ligne-historique" style="border-bottom: 1px solid #222;">
-                        <td class="col-date" style="width:18%; padding:12px; color:#888;">
-                            ${datePay}
-                        </td>
-                        <td class="col-nom" style="width:32%; padding:12px; color:white;">
-                            <b>${info.nom.toUpperCase()}</b>
-                        </td>
-                        <td class="col-cat" style="width:10%; text-align:center;">
-                            <span style="border:1px solid #f1c40f; color:#f1c40f; padding:2px 5px; border-radius:4px; font-size:0.7rem;">
-                                ${cat}
-                            </span>
-                        </td>
-                        <td class="col-tel" style="width:22%; padding:12px; color:#888;">
-                            ${telPropre}
-                        </td>
-                        <td class="col-prix" style="width:18%; padding:12px; text-align:right; font-weight:bold; color:#2ecc71;">
-                       ${parseInt(montantPropre).toLocaleString()} FCFA
-                       </td>
-                    </tr>`;
-            }
-        });
-
-        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center;'>Aucune donnée trouvée.</td></tr>";
-        if(totalElt) {
-    totalElt.innerText = totalGeneral.toLocaleString() + " FCFA";
-}
-    } catch (e) {
-        console.error("Erreur historique:", e);
-        corps.innerHTML = "<tr><td colspan='5' style='color:red; text-align:center;'>Erreur Firebase</td></tr>";
-    }
-}
 function fermerHistorique() {
     document.getElementById('page-historique').style.display = 'none';
 }
@@ -1164,76 +1099,139 @@ function exporterPDF() {
     doc.save(`Rapport_Maths5eme_${new Date().getTime()}.pdf`);
 }
 async function sauvegarderPuisVider() {
-    // 1. Double confirmation de sécurité
-    const conf1 = confirm("ATTENTION : Cette action va GÉNÉRER UN EXCEL de sauvegarde puis EFFACER tout l'historique.");
-    if (!conf1) return;
+    // 1. Sécurités
+    const check1 = confirm("⚠️ ATTENTION : L'historique va être sauvegardé en Excel puis effacé de la base de données.\n\nContinuer ?");
+    if (!check1) return;
 
-    const conf2 = prompt("Tapez 'VALIDER' pour confirmer la clôture définitive :");
-    if (conf2 !== "VALIDER") {
+    const check2 = prompt("Tapez 'CLOTURE' (en majuscules) pour valider l'opération :");
+    if (check2 !== "CLOTURE") {
         alert("Action annulée.");
         return;
     }
 
     try {
-        // 2. ÉTAPE DE SAUVEGARDE AUTOMATIQUE (Génération du CSV)
-        console.log("Génération de la sauvegarde...");
         const lignes = document.querySelectorAll('.ligne-historique');
         
-        if (lignes.length > 0) {
-            let csv = "\ufeff"; 
-            csv += "DATE;NOM CLIENT;CAT;TELEPHONE;MONTANT\n";
-            let totalCloture = 0;
+        // 2. ÉTAPE DE SAUVEGARDE (On génère le fichier même s'il y a 0 ligne)
+        let csv = "\ufeff"; // BOM pour les accents
+        csv += "DATE;NOM CLIENT;CAT;TELEPHONE;MONTANT (FCFA)\n";
+        let totalFichier = 0;
 
-            lignes.forEach(ligne => {
-                const cellules = ligne.querySelectorAll('td');
-                const date = cellules[0].innerText.trim();
-                const nom = cellules[1].innerText.split('\n')[0].trim();
-                const cat = cellules[2].innerText.trim();
-                const tel = cellules[3].innerText.trim();
-                const prix = cellules[4].innerText.replace(/\D/g, '');
-                
-                totalCloture += parseInt(prix) || 0;
-                csv += `${date};${nom};${cat};${tel};${prix}\n`;
-            });
-
-            csv += `\n;;;TOTAL CLÔTURE;${totalCloture} FCFA\n`;
-
-            // Déclenchement du téléchargement automatique
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = `SAUVEGARDE_CLOTURE_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        lignes.forEach(ligne => {
+            const cellules = ligne.querySelectorAll('td');
+            const date = cellules[0].innerText.trim();
+            const nom = cellules[1].innerText.split('\n')[0].trim();
+            const cat = cellules[2].innerText.trim();
+            const tel = cellules[3].innerText.trim();
+            const prix = cellules[4].innerText.replace(/\D/g, '');
             
-            console.log("Sauvegarde téléchargée.");
-        }
+            totalFichier += parseInt(prix) || 0;
+            csv += `${date};${nom};${cat};${tel};${prix}\n`;
+        });
 
-        // 3. ÉTAPE DE VIDAGE FIREBASE (Seulement après la sauvegarde)
-        const corps = document.getElementById('corps-historique');
-        corps.innerHTML = "<tr><td colspan='5' style='text-align:center; color:orange;'>Nettoyage de la base de données...</td></tr>";
+        csv += `\n;;;TOTAL ENCAISSE;${totalFichier} FCFA\n`;
 
+        // Téléchargement automatique du CSV
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `SAUVEGARDE_PAIEMENTS_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // 3. ÉTAPE DE VIDAGE (On efface uniquement la date d'inscription)
         const snapshot = await database.ref('clients').once('value');
         if (snapshot.exists()) {
             const updates = {};
             snapshot.forEach(client => {
-                // On remet les compteurs de paiement à zéro pour chaque client
-                updates[`clients/${client.key}/infos_client/date_inscription`] = "";
-                updates[`clients/${client.key}/infos_client/categorie`] = "C"; 
+                // On met à 'null' uniquement la date pour réinitialiser le paiement
+                // On NE TOUCHE PAS à la catégorie (info.categorie)
+                updates[`clients/${client.key}/infos_client/date_inscription`] = null;
             });
 
             await database.ref().update(updates);
-            alert("Opération réussie : Sauvegarde effectuée et historique vidé !");
+            alert("✅ Succès ! Le fichier de sauvegarde est téléchargé et l'historique est maintenant vide.");
             
-            // Rafraîchir l'affichage (qui sera maintenant vide)
+            // Rafraîchir l'écran
             ouvrirHistorique();
         }
 
     } catch (e) {
-        console.error("Erreur lors de la clôture:", e);
-        alert("Une erreur est survenue. Vérifiez votre connexion.");
+        console.error("Erreur clôture:", e);
+        alert("Une erreur technique est survenue.");
+    }
+}
+async function ouvrirHistorique() {
+    const page = document.getElementById('page-historique');
+    const corps = document.getElementById('corps-historique');
+    const totalElt = document.getElementById('total-historique');
+    
+    page.style.display = 'flex'; 
+    corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:30px; color:gray;'>Analyse du bilan FCFA...</td></tr>";
+
+    try {
+        const [tarifsSnap, usersSnap] = await Promise.all([
+            database.ref('reglages/tarifs').once('value'),
+            database.ref('clients').once('value')
+        ]);
+
+        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
+        let html = "";
+        let sommeTotale = 0;
+
+        usersSnap.forEach(client => {
+            const val = client.val();
+            if (val && val.infos_client) {
+                const info = val.infos_client;
+                
+                // CONDITION : On n'affiche que si une date de paiement existe
+                if (info.date_inscription && info.date_inscription !== "") {
+                    
+                    const cat = (info.categorie || "C").trim().toUpperCase();
+                    
+                    // Nettoyage du montant pour le calcul
+                    const montantBrut = tarifs[cat] || 0;
+                    const montantNumerique = parseInt(montantBrut.toString().replace(/\D/g, '')) || 0;
+                    sommeTotale += montantNumerique;
+
+                    // Formatage de la date (AAAA-MM-DD)
+                    const datePay = info.date_inscription.split('T')[0];
+
+                    html += `
+                        <tr class="ligne-historique" style="border-bottom: 1px solid #222;">
+                            <td class="col-date" style="width:18%; padding:12px; color:#888; font-size:0.75rem;">
+                                ${datePay}
+                            </td>
+                            <td class="col-nom" style="width:32%; padding:12px; color:white; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                <b>${info.nom.toUpperCase()}</b>
+                            </td>
+                            <td class="col-cat" style="width:10%; text-align:center;">
+                                <span style="border:1px solid #f1c40f; color:#f1c40f; padding:2px 5px; border-radius:4px; font-size:0.65rem; font-weight:bold;">
+                                    ${cat}
+                                </span>
+                            </td>
+                            <td class="col-tel" style="width:22%; padding:12px; color:#888; font-size:0.75rem;">
+                                ${client.key.replace(/\D/g, '')}
+                            </td>
+                            <td class="col-prix" style="width:18%; padding:12px; text-align:right; font-weight:bold; color:#2ecc71; font-size:0.85rem;">
+                                ${montantNumerique.toLocaleString()} FCFA
+                            </td>
+                        </tr>`;
+                }
+            }
+        });
+
+        corps.innerHTML = html !== "" ? html : "<tr><td colspan='5' style='text-align:center; padding:50px; color:gray;'>Aucun paiement enregistré.</td></tr>";
+        
+        if(totalElt) {
+            totalElt.innerText = sommeTotale.toLocaleString() + " FCFA";
+        }
+
+    } catch (e) {
+        console.error("Erreur historique:", e);
+        corps.innerHTML = "<tr><td colspan='5' style='color:red; text-align:center;'>Erreur de connexion base de données</td></tr>";
     }
 }
 function deconnecterApp() {
