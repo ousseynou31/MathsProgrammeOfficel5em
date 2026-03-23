@@ -489,3 +489,23 @@ button.pay-btn:has(span:contains("🔓")),
     flex: 1;
     -webkit-overflow-scrolling: touch;
 }
+/* Force la table à respecter les colonnes même si le texte est long */
+.table-historique {
+    width: 100%;
+    table-layout: fixed; /* TRÈS IMPORTANT */
+    border-collapse: collapse;
+}
+
+.table-historique th, .table-historique td {
+    overflow: hidden;
+    text-overflow: ellipsis; /* Ajoute "..." si le nom est trop long */
+    white-space: nowrap;    /* Empêche le texte de passer à la ligne */
+    padding: 12px 8px;
+}
+
+/* Définition des largeurs par colonne */
+.col-date { width: 18%; }
+.col-nom  { width: 32%; }
+.col-cat  { width: 10%; text-align: center; }
+.col-tel  { width: 22%; }
+.col-prix { width: 18%; text-align: right; }
