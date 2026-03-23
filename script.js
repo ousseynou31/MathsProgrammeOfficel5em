@@ -1182,21 +1182,20 @@ async function ouvrirHistorique() {
 function filtrerClients() {
     const input = document.getElementById('admin-search');
     if (!input) return;
-    
-    const query = input.value.toLowerCase().trim();
-    
-    // On cible toutes les lignes (tr) du corps du tableau (tbody)
-    // Remplace 'table-clients-body' par l'ID de ton <tbody>
-    const rows = document.querySelectorAll('#table-clients-body tr'); 
 
-    rows.forEach(row => {
-        const contenu = row.innerText.toLowerCase();
-        
-        if (contenu.includes(query)) {
-            // On utilise "" pour laisser le navigateur décider du display (table-row)
-            row.style.display = ""; 
+    const filtre = input.value.toLowerCase().trim();
+    
+    // On cible les cartes d'utilisateurs que tu génères dans loadUsers
+    const cartes = document.querySelectorAll('.user-card');
+
+    cartes.forEach(carte => {
+        // On récupère tout le texte (Nom + Téléphone + Catégorie)
+        const contenu = carte.innerText.toLowerCase();
+
+        if (contenu.includes(filtre)) {
+            carte.style.display = "block"; // On affiche la carte
         } else {
-            row.style.display = "none";
+            carte.style.display = "none"; // On cache la carte
         }
     });
 }
