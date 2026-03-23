@@ -1,8 +1,4 @@
-// DÉCLARATION UNIQUE ET TOLÉRANTE
-var minuteurAdmin = null;
-var adminEnCours = false;
-
-// 1. CONFIGURATION & INITIALISATION 
+// 1. CONFIGURATION & INITIALISATION
 const firebaseConfig = {
     databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
 }; 
@@ -11,6 +7,11 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const database = firebase.database();
+
+// --- REMPLACE TES 'LET' PAR CES LIGNES SÉCURISÉES ---
+var minuteurAdmin = (typeof minuteurAdmin !== 'undefined') ? minuteurAdmin : null;
+var adminEnCours = (typeof adminEnCours !== 'undefined') ? adminEnCours : false;
+// ----------------------------------------------------
 // REMPLACE TON ANCIENNE LIGNE PAR CELLE-CI :
 var minuteurAdmin = (typeof minuteurAdmin !== 'undefined') ? minuteurAdmin : null;
 
