@@ -1082,7 +1082,7 @@ function exporterCSV() {
     });
 
     // --- AJOUT DE LA LIGNE TOTAL À LA FIN DU CSV ---
-    csv += `\n;;;TOTAL ENCAISSÉ;${totalPourCSV} FG\n`;
+    csv += `\n;;;TOTAL ENCAISSÉ;${totalPourCSV} FCFA\n`;
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
