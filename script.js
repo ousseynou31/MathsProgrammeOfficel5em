@@ -690,45 +690,44 @@ function initAdminTrigger() {
         trigger.addEventListener('mouseleave', stopperChrono);
     }
 }
+// ==========================================
+// 1. STATISTIQUES GLOBALES
+// ==========================================
 async function calculerGlobalStats(filtreActuel = 'TOUT') {
     try {
         const snap = await database.ref('clients').once('value');
-        let total = 0;
-        let catA = 0, catB = 0, catC = 0;
+        let total = 0, catA = 0, catB = 0, catC = 0;
 
         snap.forEach(u => {
             const val = u.val();
-            if (!val || !val.infos_client) return;
-            const data = val.infos_client;
-            
-            const cat = (data.categorie || "C").trim().toUpperCase();
-            if (cat === 'A') catA++;
-            else if (cat === 'B') catB++;
-            else if (cat === 'C') catC++;
-            total++;
+            if (val && val.infos_client) {
+                const cat = (val.infos_client.categorie || "C").trim().toUpperCase();
+                if (cat === 'A') catA++;
+                else if (cat === 'B') catB++;
+                else if (cat === 'C') catC++;
+                total++;
+            }
         });
-
-        console.log(`📈 Stats : Total=${total}, A=${catA}, B=${catB}, C=${catC}`);
-        // Ici vous pouvez ajouter des document.getElementById si vous avez des cases globales
+        console.log("📊 Stats chargées:", {total, catA, catB, catC});
     } catch (e) {
-        console.error("Erreur Stats :", e);
+        console.error("Erreur Stats:", e);
     }
-} // <--- L'ACCOLADE QUI MANQUAIT ÉTAIT ICI
+}
 
-
+// ==========================================
+// 2. CHARGEMENT DES ÉLÈVES (LOADUSERS)
+// ==========================================
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
     if (!list) return;
     
-    // 1. RÉINITIALISATION VISUELLE ET DÉCLARATION DES COMPTEURS
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px; font-size:0.8rem;">Filtrage en cours...</p>`;
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px;">Chargement...</p>`;
     
-    let nbAttendu = 0;    // Nombre d'élèves dans ce filtre
-    let totalArgent = 0;  // Somme totale pour ce filtre
-    let nbRetards = 0;    // Nombre d'élèves à +35 jours
+    let nbAttendu = 0;    
+    let totalArgent = 0;  
+    let nbRetards = 0;    
 
     try {
-        // 2. RÉCUPÉRATION DES DONNÉES DEPUIS FIREBASE
         const tarifsSnap = await database.ref('reglages/tarifs').once('value');
         const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
 
@@ -738,58 +737,48 @@ async function loadUsers(filtre = 'TOUT') {
         ]);
 
         const connectes = presenceSnap.val() || {}; 
-        list.innerHTML = ""; // On vide pour afficher les nouveaux résultats
+        list.innerHTML = ""; 
 
-        // 3. BOUCLE DE TRAITEMENT DES ÉLÈVES
         usersSnap.forEach(u => {
             const val = u.val();
             if (!val || !val.infos_client) return;
             const data = val.infos_client;
 
-            // --- LOGIQUE DE FILTRAGE SÉCURISÉE ---
             const vraieCategorieDuClient = (data.categorie || "C").trim().toUpperCase();
             const filtreSelectionne = filtre.trim().toUpperCase();
 
-            // Si on n'est pas sur "TOUT" et que la catégorie ne correspond pas, on ignore
             if (filtreSelectionne !== 'TOUT' && vraieCategorieDuClient !== filtreSelectionne) return;
 
-            // --- CALCULS DES DONNÉES ---
             const jours = calculerJours(data.date_inscription);
             const prixConfiguré = parseInt(tarifs[vraieCategorieDuClient]) || 0;
             const isBanned = data.statut === "suspendu";
             const estEnLigne = connectes[u.key] !== undefined;
             
-            // On incrémente les compteurs pour le Dashboard
             nbAttendu++; 
             totalArgent += prixConfiguré;
             if (jours >= 35) nbRetards++; 
 
-            // --- PRÉPARATION DU VISUEL ---
             let couleurCercle = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
             const styleBtnBan = isBanned 
-                ? `background:#ef4444 !important; border:1px solid #ef4444 !important; color:white !important; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);` 
+                ? `background:#ef4444 !important; border:1px solid #ef4444 !important; color:white !important;` 
                 : `background:transparent; border:1px solid #f59e0b; color:#f59e0b;`;
 
-            // --- GÉNÉRATION DU HTML (PLEIN ÉCRAN INCLUS) ---
             list.innerHTML += `
                 <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 0 8px 0; width: 100%; box-sizing: border-box; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
-                    
                     <div style="width:55px; flex-shrink:0; display:flex; justify-content:center; position:relative;">
                         ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:2px; border:2px solid #000; box-shadow:0 0 8px #10b981;"></div>' : ''}
                         <div style="width:42px; height:42px; border-radius:50%; border: 3px solid ${estEnLigne ? '#10b981' : couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4);">
                             ${jours}J
                         </div>
                     </div>
-
                     <div style="flex:1; margin-left:15px; min-width:0;">
                         <div style="font-weight:800; font-size:0.9rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                            ${data.nom} ${isBanned ? '<span style="color:#ef4444; font-size:0.6rem; font-weight:900; margin-left:5px;">⚠️ [SUSPENDU]</span>' : ''}
+                            ${data.nom} ${isBanned ? '<span style="color:#ef4444; font-size:0.6rem; font-weight:900; margin-left:5px;">⚠️</span>' : ''}
                         </div>
                         <div style="font-size:0.65rem; color:#777; margin-top:3px;">
                             <span>📞 ${u.key}</span> | <span style="color:#ffd700; font-weight:bold;">Cat. ${vraieCategorieDuClient}</span>
                         </div>
                     </div>
-
                     <div style="display:flex; align-items:center; gap:8px;">
                         <select onchange="changerCategorie('${u.key}', this.value)" style="width:42px; background:#000; color:#ffd700; border:1px solid #444; border-radius:4px; font-size:0.7rem; font-weight:900; height:30px;">
                             <option value="A" ${vraieCategorieDuClient === 'A' ? 'selected' : ''}>A</option>
@@ -797,58 +786,25 @@ async function loadUsers(filtre = 'TOUT') {
                             <option value="C" ${vraieCategorieDuClient === 'C' ? 'selected' : ''}>C</option>
                         </select>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
-                            <button onclick="validerPaiement('${u.key}', '${filtre}', this)" class="pay-btn" title="Payer">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${vraieCategorieDuClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;" title="WhatsApp">💬</button>
+                            <button onclick="validerPaiement('${u.key}', '${filtre}', this)" class="pay-btn">💰</button>
+                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${vraieCategorieDuClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;">💬</button>
                             <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="${styleBtnBan}">${isBanned ? '🔓' : '🚫'}</button>
-                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="border-color:#e74c3c; color:#e74c3c;" title="Supprimer">🗑️</button>
+                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="border-color:#e74c3c; color:#e74c3c;">🗑️</button>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // 4. MISE À JOUR DU DASHBOARD (LES CASES DU HAUT)
-        const elNb = document.getElementById('dash-nb-eleves');
-        const elAr = document.getElementById('dash-total-a');
-        const elRe = document.getElementById('dash-retard');
-
+        // MISE À JOUR DU DASHBOARD
+        const elNb = document.getElementById('dash-nb-eleves'), elAr = document.getElementById('dash-total-a'), elRe = document.getElementById('dash-retard');
         if (elNb) elNb.innerText = nbAttendu; 
         if (elAr) elAr.innerText = totalArgent.toLocaleString() + " F";
         if (elRe) elRe.innerText = nbRetards;
 
     } catch (e) {
-        console.error("Erreur LoadUsers :", e);
-        list.innerHTML = `<p style="color:red; text-align:center; padding:20px;">⚠️ Erreur de chargement : ${e.message}</p>`;
+        console.error("Erreur LoadUsers:", e);
+        list.innerHTML = `<p style="color:red; text-align:center;">Erreur : ${e.message}</p>`;
     }
-}
-            // On compte SEULEMENT si ça correspond au filtre ou si le filtre est 'TOUT'
-            if (filtreActuel === 'TOUT' || data.categorie === filtreActuel) {
-                total++;
-                if (data.categorie === 'A') catA++;
-                if (data.categorie === 'B') catB++;
-                if (data.categorie === 'C') catC++;
-            }
-        });
-
-        // Mise à jour des éléments HTML (Vérifie que ces ID existent dans ton HTML)
-        if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total;
-        if(document.getElementById('stat-a')) document.getElementById('stat-a').innerText = catA;
-        if(document.getElementById('stat-b')) document.getElementById('stat-b').innerText = catB;
-        if(document.getElementById('stat-c')) document.getElementById('stat-c').innerText = catC;
-
-    } catch (e) {
-        console.error("Erreur stats:", e);
-    }
-}
-// Sauvegarder les prix dans Firebase
-async function sauvegarderTarifs() {
-    const tarifs = {
-        A: document.getElementById('price-A').value || 0,
-        B: document.getElementById('price-B').value || 0,
-        C: document.getElementById('price-C').value || 0
-    };
-    await database.ref('reglages/tarifs').set(tarifs);
-    alert("✅ Tarifs mis à jour !");
-    mettreAJourDashboard(); // Rafraîchir les calculs
 }
 // Cette fonction doit être appelée dès que l'application démarre
 function activerSignalPresence() {
