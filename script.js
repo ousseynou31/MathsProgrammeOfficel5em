@@ -431,7 +431,7 @@ function envoyerRappel(tel, nom, cat) {
 
 function filtrerClients() {
     // 1. Récupère la saisie de l'utilisateur (en minuscules)
-    const query = document.getElementById('admin-search').value.toLowerCase().trim();
+    const query = document.getElementById('admin-search').value.toLowerCase().trim(); 
     
     // 2. Sélectionne toutes les lignes de clients
     const rows = document.querySelectorAll('.user-row');
