@@ -406,3 +406,30 @@ button.pay-btn:has(span:contains("🔓")),
 #corps-historique td {
     padding: 10px;
 }
+.led-fixe-top {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    border-radius: 50px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
+}
+
+.led-circle {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #666;
+    transition: 0.3s;
+}
+
+.led-text {
+    font-size: 0.6rem;
+    font-weight: 900;
+    color: #666;
+}
