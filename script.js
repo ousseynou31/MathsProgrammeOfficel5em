@@ -428,35 +428,6 @@ function envoyerRappel(tel, nom, cat) {
 }
 
 
-
-function filtrerClients() {
-    // 1. Récupère la saisie (avec sécurité si l'élément n'existe pas)
-    const inputElt = document.getElementById('admin-search');
-    if(!inputElt) return; 
-    
-    const query = inputElt.value.toLowerCase().trim();
-    
-    // 2. Sélectionne toutes les lignes
-    const rows = document.querySelectorAll('.user-row');
-    
-    rows.forEach(row => {
-        // On récupère le texte visible (Nom, Tel, etc.)
-        const contenu = row.innerText.toLowerCase();
-        
-        // 3. Logique d'affichage
-        if (contenu.includes(query)) {
-            // "REMETTRE PAR DÉFAUT" au lieu de forcer "flex"
-            // Cela permet à la ligne de reprendre son style CSS d'origine
-            row.style.display = ""; 
-        } else {
-            row.style.display = "none";
-        }
-    });
-
-    // Optionnel : Debug dans la console pour voir si ça réagit
-    const visibles = Array.from(rows).filter(r => r.style.display !== "none").length;
-    console.log("Recherche : " + query + " | Trouvés : " + visibles);
-}
 // CHANGEMENT DE CATÉGORIE (Enregistre le choix A/B/C)
 async function changerCategorie(telId, nouvelleCat) {
     try {
@@ -1206,6 +1177,28 @@ async function ouvrirHistorique() {
         console.error("Erreur historique:", e);
         corps.innerHTML = "<tr><td colspan='5' style='color:red; text-align:center;'>Erreur de connexion base de données</td></tr>";
     }
+}
+
+function filtrerClients() {
+    const input = document.getElementById('admin-search');
+    if (!input) return;
+    
+    const query = input.value.toLowerCase().trim();
+    
+    // On cible toutes les lignes (tr) du corps du tableau (tbody)
+    // Remplace 'table-clients-body' par l'ID de ton <tbody>
+    const rows = document.querySelectorAll('#table-clients-body tr'); 
+
+    rows.forEach(row => {
+        const contenu = row.innerText.toLowerCase();
+        
+        if (contenu.includes(query)) {
+            // On utilise "" pour laisser le navigateur décider du display (table-row)
+            row.style.display = ""; 
+        } else {
+            row.style.display = "none";
+        }
+    });
 }
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
