@@ -1163,6 +1163,79 @@ function exporterPDF() {
 
     doc.save(`Rapport_Maths5eme_${new Date().getTime()}.pdf`);
 }
+async function sauvegarderPuisVider() {
+    // 1. Double confirmation de sécurité
+    const conf1 = confirm("ATTENTION : Cette action va GÉNÉRER UN EXCEL de sauvegarde puis EFFACER tout l'historique.");
+    if (!conf1) return;
+
+    const conf2 = prompt("Tapez 'VALIDER' pour confirmer la clôture définitive :");
+    if (conf2 !== "VALIDER") {
+        alert("Action annulée.");
+        return;
+    }
+
+    try {
+        // 2. ÉTAPE DE SAUVEGARDE AUTOMATIQUE (Génération du CSV)
+        console.log("Génération de la sauvegarde...");
+        const lignes = document.querySelectorAll('.ligne-historique');
+        
+        if (lignes.length > 0) {
+            let csv = "\ufeff"; 
+            csv += "DATE;NOM CLIENT;CAT;TELEPHONE;MONTANT\n";
+            let totalCloture = 0;
+
+            lignes.forEach(ligne => {
+                const cellules = ligne.querySelectorAll('td');
+                const date = cellules[0].innerText.trim();
+                const nom = cellules[1].innerText.split('\n')[0].trim();
+                const cat = cellules[2].innerText.trim();
+                const tel = cellules[3].innerText.trim();
+                const prix = cellules[4].innerText.replace(/\D/g, '');
+                
+                totalCloture += parseInt(prix) || 0;
+                csv += `${date};${nom};${cat};${tel};${prix}\n`;
+            });
+
+            csv += `\n;;;TOTAL CLÔTURE;${totalCloture} FCFA\n`;
+
+            // Déclenchement du téléchargement automatique
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `SAUVEGARDE_CLOTURE_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            console.log("Sauvegarde téléchargée.");
+        }
+
+        // 3. ÉTAPE DE VIDAGE FIREBASE (Seulement après la sauvegarde)
+        const corps = document.getElementById('corps-historique');
+        corps.innerHTML = "<tr><td colspan='5' style='text-align:center; color:orange;'>Nettoyage de la base de données...</td></tr>";
+
+        const snapshot = await database.ref('clients').once('value');
+        if (snapshot.exists()) {
+            const updates = {};
+            snapshot.forEach(client => {
+                // On remet les compteurs de paiement à zéro pour chaque client
+                updates[`clients/${client.key}/infos_client/date_inscription`] = "";
+                updates[`clients/${client.key}/infos_client/categorie`] = "C"; 
+            });
+
+            await database.ref().update(updates);
+            alert("Opération réussie : Sauvegarde effectuée et historique vidé !");
+            
+            // Rafraîchir l'affichage (qui sera maintenant vide)
+            ouvrirHistorique();
+        }
+
+    } catch (e) {
+        console.error("Erreur lors de la clôture:", e);
+        alert("Une erreur est survenue. Vérifiez votre connexion.");
+    }
+}
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
     if(confirm("⚠️ TEST DE SÉCURITÉ :\nVoulez-vous verrouiller l'accès et revenir à la page d'activation ?")) {
