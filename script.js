@@ -718,68 +718,91 @@ async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
     if (!list) return;
     
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px;">Chargement des données...</p>`;
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px;">Analyse de la base en cours...</p>`;
     
-    // Initialisation des compteurs pour le calcul
+    // Variables pour le récapitulatif du dashboard
     let nbAttendu = 0;    
     let totalArgent = 0;  
     let nbRetards = 0;    
 
     try {
-        // 1. Récupération des tarifs et des utilisateurs en parallèle
+        // Récupération des tarifs configurés
         const tarifsSnap = await database.ref('reglages/tarifs').once('value');
         const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
 
+        // Récupération de tous les clients
         const usersSnap = await database.ref('clients').once('value');
-        list.innerHTML = ""; // On vide la liste avant d'afficher
+        list.innerHTML = ""; 
 
-        // 2. Boucle de traitement des élèves
         usersSnap.forEach(u => {
             const val = u.val();
             if (!val || !val.infos_client) return;
-            const data = val.infos_client;
-
-            // Détermination de la catégorie
-            const cat = (data.categorie || "C").trim().toUpperCase();
             
-            // Application du filtre (on ne traite que ce qui correspond au bouton cliqué)
+            const data = val.infos_client;
+            const tel = u.key; // Le numéro sert d'identifiant
+            const cat = (data.categorie || "C").trim().toUpperCase();
+
+            // 1. FILTRAGE
             if (filtre !== 'TOUT' && cat !== filtre) return;
 
-            // Calculs individuels
+            // 2. CALCULS DE SUIVI
             const jours = calculerJours(data.date_inscription);
             const prix = parseInt(tarifs[cat]) || 0;
             const isBanned = data.statut === "suspendu";
 
-            // Incrémentation des compteurs de statistiques
+            // Mise à jour des compteurs du dashboard
             nbAttendu++;
             totalArgent += prix;
             if (jours >= 35) nbRetards++;
 
-            // Choix de la couleur selon le retard
-            let coul = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
+            // Couleur du cercle selon l'urgence (Vert, Orange, Rouge)
+            let coul = (jours >= 35) ? "#e74c3c" : (jours >= 26 ? "#f1c40f" : "#2ecc71");
 
-            // Ajout de la ligne dans le HTML
+            // 3. GÉNÉRATION DU HTML (Les 5 fonctionnalités)
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; background:rgba(255,255,255,0.02); margin-bottom:8px; border-radius:12px; border-left:5px solid ${isBanned ? '#ef4444':'transparent'};">
-                    <div style="width:50px; display:flex; justify-content:center;">
-                        <div style="width:40px; height:40px; border-radius:50%; border:2px solid ${coul}; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:900; color:white;">${jours}J</div>
-                    </div>
-                    <div style="flex:1; margin-left:10px;">
-                        <div style="font-size:0.85rem; font-weight:800; color:white;">${data.nom.toUpperCase()}</div>
-                        <div style="font-size:0.65rem; color:gray;">${u.key} | <span style="color:#f1c40f">Cat. ${cat}</span></div>
-                    </div>
-                    <div style="display:flex; gap:5px;">
-                        <select onchange="changerCategorie('${u.key}', this.value)" style="background:#000; color:white; border:1px solid #444; border-radius:4px; font-size:0.7rem;">
-                            <option value="A" ${cat==='A'?'selected':''}>A</option>
-                            <option value="B" ${cat==='B'?'selected':''}>B</option>
-                            <option value="C" ${cat==='C'?'selected':''}>C</option>
-                        </select>
-                        <button onclick="toggleBan('${u.key}', '${filtre}')" style="background:none; border:1px solid #f59e0b; border-radius:4px; padding:4px;">${isBanned ? '🔓' : '🚫'}</button>
+                <div class="user-card" style="background:#111; margin-bottom:12px; padding:15px; border-radius:12px; border-left:5px solid ${isBanned ? '#e74c3c':'#2ecc71'}; border-bottom:1px solid #333;">
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        
+                        <div style="flex:1;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <b style="font-size:0.9rem; color:white;">${data.nom.toUpperCase()}</b>
+                                <span style="font-size:0.6rem; background:#333; color:#f1c40f; padding:2px 6px; border-radius:4px; font-weight:bold;">${cat}</span>
+                            </div>
+                            <div style="font-size:0.75rem; color:gray; margin-top:3px;">📞 ${tel}</div>
+                            ${isBanned ? '<div style="font-size:0.65rem; color:#e74c3c; font-weight:900; margin-top:5px;">⚠️ COMPTE SUSPENDU</div>' : ''}
+                        </div>
+
+                        <div style="margin: 0 15px; text-align:center;">
+                            <div style="width:38px; height:38px; border-radius:50%; border:2px solid ${coul}; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:900; color:white;">
+                                ${jours}
+                            </div>
+                            <small style="font-size:0.5rem; color:gray; display:block; margin-top:2px;">JOURS</small>
+                        </div>
+
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            
+                            <button onclick="window.open('https://wa.me/${tel}')" title="WhatsApp" style="background:#25D366; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:1rem;">🟢</button>
+                            
+                            <button onclick="validerPaiement('${tel}')" title="Payer" style="background:#2ecc71; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:1rem;">💰</button>
+                            
+                            <select onchange="changerCategorie('${tel}', this.value)" style="background:#222; color:white; border:1px solid #444; border-radius:6px; padding:6px; font-size:0.7rem; font-weight:bold;">
+                                <option value="A" ${cat==='A'?'selected':''}>A</option>
+                                <option value="B" ${cat==='B'?'selected':''}>B</option>
+                                <option value="C" ${cat==='C'?'selected':''}>C</option>
+                            </select>
+
+                            <button onclick="toggleBan('${tel}', '${filtre}')" title="Bloquer/Débloquer" style="background:${isBanned?'#f1c40f':'#333'}; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:1rem;">
+                                ${isBanned ? '🔓' : '🚫'}
+                            </button>
+
+                            <button onclick="deleteClient('${tel}', '${filtre}')" title="Supprimer" style="background:#e74c3c; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:1rem;">🗑️</button>
+                        </div>
                     </div>
                 </div>`;
         });
 
-        // 3. MISE À JOUR RÉELLE DES CASES DU DASHBOARD (VOTRE BLOC INTÉGRÉ)
+        // 4. MISE À JOUR DU DASHBOARD (VOTRE BLOC DE CODE)
         try {
             const eltNb = document.getElementById('stat-attendu');
             const eltPrix = document.getElementById('stat-estime');
@@ -789,14 +812,24 @@ async function loadUsers(filtre = 'TOUT') {
             if (eltPrix) eltPrix.innerText = totalArgent.toLocaleString() + " FG";
             if (eltRetard) eltRetard.innerText = nbRetards;
 
-            console.log("✅ Stats mises à jour : ", nbAttendu, totalArgent);
+            console.log("✅ Dashboard synchronisé : ", nbAttendu, "élèves.");
         } catch (e) {
-            console.error("Erreur d'affichage des stats:", e);
+            console.error("Erreur d'affichage dashboard:", e);
         }
 
     } catch (e) {
         console.error("Erreur critique loadUsers:", e);
-        list.innerHTML = `<p style="color:red; text-align:center;">Erreur de connexion Firebase</p>`;
+        list.innerHTML = `<p style="color:#e74c3c; text-align:center; padding:20px;">Erreur de connexion à Firebase</p>`;
+    }
+}
+
+// FONCTION COMPLÉMENTAIRE POUR LE PAIEMENT (BOUTON 💰)
+async function validerPaiement(id) {
+    if(confirm("Confirmer le paiement pour cet élève ? (Cela remettra ses jours à zéro)")) {
+        const nouvelleDate = new Date().toISOString();
+        await database.ref(`clients/${id}/infos_client/date_inscription`).set(nouvelleDate);
+        alert("✅ Paiement enregistré !");
+        loadUsers(); // Rafraîchir la liste
     }
 }
 // Cette fonction doit être appelée dès que l'application démarre
