@@ -216,59 +216,167 @@ function naviguer(id) {
         console.error("❌ Erreur : L'écran '" + id + "' n'existe pas dans le HTML.");
     }
 }
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
+// 1. La nouvelle fonction de récupération d'identité
+async function verifierIdentite() {
+    const telLocal = localStorage.getItem('user_tel_id');
+    
+    if (!telLocal) return "NO_PROFILE"; // L'élève doit s'inscrire
+
+    try {
+        const snap = await database.ref('clients/' + telLocal + '/infos_client').once('value');
+        if (!snap.exists()) {
+            // Le compte a été supprimé par l'admin !
+            localStorage.clear();
+            return "DELETED";
+        }
+        
+        const data = snap.val();
+        if (data.statut === "suspendu") return "BANNED";
+        
+        return "AUTHORIZED";
+    } catch (e) {
+        return "OFFLINE_MODE";
+    }
+}
+
+// 2. Le nouveau Tunnel de Lancement
 async function launchApp() {
     const isActive = localStorage.getItem('v32_active') === 'true';
-    const telStocke = localStorage.getItem('user_tel_id');
+    const statusIdentite = await verifierIdentite();
 
-    // ÉTAPE A : Vérification de la licence (PIN)
+    // A. Si pas de licence (PIN)
     if (!isActive) {
         naviguer('license-gate');
         return;
     }
 
-    // ÉTAPE B : Si on a un numéro, on vérifie sa validité RÉELLE
-    if (telStocke) {
-        try {
-            // On va chercher les infos dans 'clients/NUMERO/infos_client'
-            const snapshot = await database.ref('clients/' + telStocke + '/infos_client').once('value');
+    // B. Gestion des accès selon Firebase
+    switch (statusIdentite) {
+        case "AUTHORIZED":
+            naviguer('hub-accueil');
+            activerSignalEnLigne(); // On allume le voyant
+            break;
             
-            if (snapshot.exists()) {
-                const data = snapshot.val();
+        case "BANNED":
+            alert("🚫 Votre accès a été suspendu par l'établissement.");
+            // On peut afficher un écran noir ici
+            break;
+            
+        case "DELETED":
+            alert("⚠️ Votre compte n'existe plus. Veuillez vous réinscrire.");
+            naviguer('registration-gate');
+            break;
 
-                // 1. SÉCURITÉ : Vérifier si l'élève est suspendu
-                if (data.statut === "suspendu") {
-                    alert("🚫 Accès refusé : Votre compte est suspendu.");
-                    naviguer('registration-gate');
-                    return;
-                }
+        case "NO_PROFILE":
+            naviguer('registration-gate');
+            break;
 
-                // 2. RÉPARATION : On s'assure que le flag 'registered' est bien là
-                localStorage.setItem('v32_registered', 'true');
-                
-                // 3. ACCÈS : Tout est bon, on entre
-                naviguer('hub-accueil');
-                
-                // On allume le voyant vert
-                if (typeof signalerPresence === "function") signalerPresence();
-                return;
-            } else {
-                // Le numéro est dans le téléphone mais SUPPRIMÉ de Firebase
-                localStorage.removeItem('user_tel_id');
-                localStorage.removeItem('v32_registered');
-            }
-        } catch (e) {
-            console.error("Erreur de connexion base de données:", e);
-            // En cas d'erreur réseau, on tente quand même d'entrer si on était déjà inscrit
-            if (localStorage.getItem('v32_registered') === 'true') {
-                naviguer('hub-accueil');
-                return;
-            }
-        }
+        default:
+            // En cas d'erreur réseau, si on est déjà actif, on laisse passer
+            naviguer('hub-accueil');
+    }
+}
+async function ouvrirRecuperation() {
+    const tel = prompt("📱 Entrez le numéro de téléphone utilisé lors de votre inscription :");
+    
+    if (!tel || tel.length < 8) {
+        alert("⚠️ Numéro invalide.");
+        return;
     }
 
-    // ÉTAPE C : Par défaut, si rien ne correspond -> Inscription
-    naviguer('registration-gate');
+    try {
+        // On vérifie si ce numéro existe dans le dossier 'clients'
+        const snap = await database.ref('clients/' + tel).once('value');
+        
+        if (snap.exists()) {
+            // RÉCUPÉRATION RÉUSSIE
+            localStorage.setItem('user_tel_id', tel);
+            localStorage.setItem('v32_registered', 'true');
+            alert("✅ Compte retrouvé ! Bienvenue à nouveau.");
+            launchApp(); // On relance l'entrée dans l'application
+        } else {
+            alert("❌ Aucun compte trouvé pour ce numéro. Veuillez vous inscrire.");
+        }
+    } catch (e) {
+        alert("🌐 Erreur de connexion au serveur.");
+    }
 }
+async function enregistrerProfil() {
+    const nom = document.getElementById('reg-nom').value.trim();
+    const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
+    
+    if(!nom || tel.length < 8) return alert("Veuillez remplir correctement les champs.");
+
+    try {
+        const clientRef = database.ref('clients/' + tel + '/infos_client');
+        
+        // On utilise .update({}) au lieu de .set({}) pour ne pas effacer 
+        // d'autres données (comme l'historique de paiement)
+        await clientRef.update({
+            nom: nom,
+            tel: tel,
+            statut: "actif", // Par défaut à la création
+            date_inscription: new Date().toISOString(),
+            device_source: getDeviceId()
+        });
+
+        localStorage.setItem('user_tel_id', tel);
+        localStorage.setItem('v32_registered', 'true');
+        
+        alert("✅ Profil validé !");
+        launchApp();
+    } catch(e) {
+        alert("❌ Erreur Firebase : Vérifiez votre connexion.");
+    }
+}
+function synchroniserPresence() {
+    const tel = localStorage.getItem('user_tel_id');
+    if (!tel) return;
+
+    // Liaison avec le nœud spécial de Firebase qui détecte la connexion internet
+    const connectedRef = database.ref('.info/connected');
+    
+    connectedRef.on('value', (snap) => {
+        if (snap.val() === true) {
+            // L'élève dit : "Je suis là"
+            database.ref('clients/' + tel + '/status').set("en_ligne");
+            
+            // Liaison automatique de déconnexion (si l'app est fermée)
+            database.ref('clients/' + tel + '/status').onDisconnect().set("hors_ligne");
+        }
+    });
+}
+function surveillerStatutEnDirect(tel) {
+    if (!tel) return;
+
+    // Cette liaison "écoute" Firebase en permanence (0.1s de réaction)
+    database.ref('clients/' + tel + '/infos_client/statut').on('value', (snapshot) => {
+        const statut = snapshot.val();
+        
+        if (statut === "suspendu") {
+            // Communication immédiate : on coupe tout !
+            afficherEcranBloque();
+        }
+    });
+}
+function afficherEcranBloque() {
+    document.body.innerHTML = `
+        <div style="height:100vh; background:#000; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family:sans-serif; padding:20px;">
+            <h1 style="font-size:5rem;">🚫</h1>
+            <h2 style="color:#e67e22; letter-spacing:2px;">ACCÈS SUSPENDU</h2>
+            <p style="max-width:400px; line-height:1.6; color:#bbb;">Votre compte a été désactivé par l'administration. Veuillez régulariser votre situation pour retrouver vos cours.</p>
+            <button onclick="location.reload()" style="margin-top:20px; padding:12px 30px; border-radius:50px; border:none; background:#333; color:white; cursor:pointer;">Actualiser</button>
+        </div>
+    `;
+}
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
 
 function togglePreview() {
     const content = document.getElementById('preview-content');
