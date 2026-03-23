@@ -3,7 +3,7 @@
 let minuteurAdmin; // Déclaration indispensable pour l'appui long
 const firebaseConfig = {
     databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
-};
+}; 
 
 // INITIALISATION
 if (!firebase.apps.length) {
