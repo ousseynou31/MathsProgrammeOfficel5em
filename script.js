@@ -1082,9 +1082,12 @@ function exporterPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
+    // Titre
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text("RAPPORT DE PAIEMENT - MATHS 5ÈME", 14, 20);
     
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.text(`Date : ${new Date().toLocaleString()}`, 14, 28);
 
@@ -1095,11 +1098,11 @@ function exporterPDF() {
         if (ligne.style.display !== "none") {
             const cellules = ligne.querySelectorAll('td');
             rows.push([
-                cellules[0].innerText,
-                cellules[1].innerText.split('\n')[0],
+                cellules[0].innerText.trim(),
+                cellules[1].innerText.split('\n')[0].trim(),
                 cellules[2].innerText.trim(),
-                cellules[3].innerText,
-                cellules[4].innerText
+                cellules[3].innerText.trim(),
+                cellules[4].innerText.trim()
             ]);
         }
     });
@@ -1109,26 +1112,29 @@ function exporterPDF() {
         head: [['Date', 'Nom', 'Cat', 'Téléphone', 'Montant']],
         body: rows,
         headStyles: { fillStyle: [44, 62, 80], textColor: 255 },
-        styles: { fontSize: 8 }
+        styles: { fontSize: 8, font: "helvetica" }, // On force helvetica partout
     });
 
-    // --- RÉCUPÉRATION DU TOTAL DEPUIS L'INTERFACE ---
-    const totalText = document.getElementById('total-historique').innerText;
-    
-    // On se place après le tableau
+    // --- CORRECTION DU TOTAL (NETTOYAGE) ---
+    const totalElt = document.getElementById('total-historique');
+    // On récupère le texte, on enlève les espaces bizarres et on reconstruit proprement
+    let totalBrut = totalElt ? totalElt.innerText : "0 FG";
+    let totalNettoye = totalBrut.replace(/\s+/g, ' ').trim(); 
+
     const finalY = doc.lastAutoTable.finalY + 15;
     
-    // Dessiner une ligne de séparation
     doc.setDrawColor(200);
     doc.line(14, finalY - 5, 196, finalY - 5);
 
-    // Écrire le TOTAL en gras et en grand
-    doc.setFontSize(14);
+    // Paramètres de police très stricts pour éviter les décalages
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(39, 174, 96); // Couleur Verte
-    doc.text(`TOTAL ENCAISSÉ : ${totalText}`, 14, finalY);
+    doc.setFontSize(14);
+    doc.setTextColor(39, 174, 96); 
+    
+    // Utilisation de charSpace: 0 pour forcer le resserrement des lettres
+    doc.text(`TOTAL ENCAISSE : ${totalNettoye}`, 14, finalY, { charSpace: 0 });
 
-    doc.save(`Rapport_PDF_${new Date().getTime()}.pdf`);
+    doc.save(`Bilan_${new Date().getTime()}.pdf`);
 }
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
