@@ -1236,7 +1236,7 @@ function deconnecterApp() {
 //  DÉMARRAGE GLOBAL UNIQUE
 // ==========================================
 window.addEventListener('load', () => {
-    console.log("🚀 Lancement du système DIOUF 2026...");
+    console.log("🚀 Lancement du système DIOUF 2026..."); 
 
     // 1. On lance la surveillance de connexion (Le voyant LIVE/OFFLINE)
     surveillerConnexion(); 
