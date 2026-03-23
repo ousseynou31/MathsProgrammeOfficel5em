@@ -198,8 +198,33 @@ async function launchApp() {
             naviguer('hub-accueil');
     }
 }
+// REMPLACE TON ANCIENNE FONCTION deleteClient PAR CELLE-CI :
+async function deleteClient(telId, filtreActuel) {
+    const confirmation = confirm("⚠️ ALERTE : Supprimer définitivement le compte " + telId + " ?\nL'élève ne pourra plus se reconnecter.");
+
+    if (confirmation) {
+        try {
+            // .remove() efface TOUT le dossier du numéro (Clé + Données)
+            await database.ref('clients/' + telId).remove();
+            
+            // Nettoyage optionnel de la présence
+            await database.ref('presence/' + telId).remove();
+
+            alert("✅ RÉUSSI : Le compte a été totalement éjecté du système.");
+            
+            // Rafraîchir l'affichage de l'admin
+            if (typeof loadUsers === "function") {
+                loadUsers(filtreActuel || 'TOUT');
+            }
+        } catch (e) {
+            console.error(e);
+            alert("❌ ERREUR : Impossible de joindre la base de données.");
+        }
+    }
+}
+// REMPLACE TON ANCIENNE FONCTION ouvrirRecuperation PAR CELLE-CI :
 async function ouvrirRecuperation() {
-    const tel = prompt("📱 Entrez le numéro de téléphone utilisé lors de votre inscription :");
+    const tel = prompt("📱 Entrez le numéro de téléphone de votre compte :");
     
     if (!tel || tel.length < 8) {
         alert("⚠️ Numéro invalide.");
@@ -207,21 +232,47 @@ async function ouvrirRecuperation() {
     }
 
     try {
-        // On vérifie si ce numéro existe dans le dossier 'clients'
-        const snap = await database.ref('clients/' + tel).once('value');
+        // On vérifie spécifiquement si les INFOS du client existent
+        const snap = await database.ref('clients/' + tel + '/infos_client').once('value');
         
         if (snap.exists()) {
-            // RÉCUPÉRATION RÉUSSIE
+            // LE COMPTE EXISTE : On restaure les clés locales
             localStorage.setItem('user_tel_id', tel);
             localStorage.setItem('v32_registered', 'true');
-            alert("✅ Compte retrouvé ! Bienvenue à nouveau.");
-            launchApp(); // On relance l'entrée dans l'application
+            localStorage.setItem('v32_active', 'true'); // On réactive aussi la licence
+            
+            alert("✅ Compte retrouvé ! Bon retour parmi nous.");
+            
+            // On relance l'application
+            if (typeof launchApp === "function") {
+                launchApp();
+            }
         } else {
-            alert("❌ Aucun compte trouvé pour ce numéro. Veuillez vous inscrire.");
+            // LE COMPTE N'EXISTE PAS (Supprimé ou jamais créé)
+            alert("❌ AUCUN COMPTE TROUVÉ : Ce numéro n'est pas enregistré ou a été supprimé par l'administration.");
         }
     } catch (e) {
+        console.error(e);
         alert("🌐 Erreur de connexion au serveur.");
     }
+}
+// REMPLACE (OU AJOUTE) CETTE FONCTION :
+function surveillerStatutEnDirect(tel) {
+    if (!tel) return;
+
+    // On écoute tout le dossier du client
+    database.ref('clients/' + tel).on('value', (snapshot) => {
+        const data = snapshot.val();
+        
+        // SI LE DOSSIER EST SUPPRIMÉ (null) OU SI LE STATUT EST SUSPENDU
+        if (!snapshot.exists()) {
+            alert("⚠️ Votre compte n'existe plus. Redirection...");
+            localStorage.clear();
+            location.reload(); 
+        } else if (data.infos_client && data.infos_client.statut === "suspendu") {
+            afficherEcranBloque();
+        }
+    });
 }
 async function enregistrerProfil() {
     const nom = document.getElementById('reg-nom').value.trim();
@@ -268,19 +319,7 @@ function synchroniserPresence() {
         }
     });
 }
-function surveillerStatutEnDirect(tel) {
-    if (!tel) return;
 
-    // Cette liaison "écoute" Firebase en permanence (0.1s de réaction)
-    database.ref('clients/' + tel + '/infos_client/statut').on('value', (snapshot) => {
-        const statut = snapshot.val();
-        
-        if (statut === "suspendu") {
-            // Communication immédiate : on coupe tout !
-            afficherEcranBloque();
-        }
-    });
-}
 function afficherEcranBloque() {
     document.body.innerHTML = `
         <div style="height:100vh; background:#000; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family:sans-serif; padding:20px;">
@@ -574,46 +613,7 @@ function exporterPDF() {
     // Lance l'interface d'impression du système (Génère un PDF sur mobile)
     window.print();
 }
-// ==========================================
-// FONCTION : INITIALISER L'APPUI LONG (ADMIN)
-// ==========================================
-// --- SUPPRESSION TOTALE ET UNIVERSELLE ---
-// --- SUPPRESSION TOTALE AVEC DOUBLE VÉRIFICATION ---
-async function deleteClient(telId, filtreActuel) {
-    // 1. Première alerte de sensibilisation
-    const confirmationInitiale = confirm(
-        "⚠️ ALERTE SÉCURITÉ : Vous allez supprimer ce compte de TOUS les appareils (PC/Mobile).\n\n" +
-        "Cette action effacera définitivement l'accès pour l'élève au numéro : " + telId + ".\n\n" +
-        "Voulez-vous continuer ?"
-    );
 
-    if (!confirmationInitiale) return;
-
-    // 2. DEUXIÈME BARRIÈRE : Saisie de sécurité
-    // L'administrateur doit taper "SUPPRIMER" pour valider
-    const verrou = prompt("🔒 ACTION SENSIBLE : Tapez 'SUPPRIMER' en majuscules pour confirmer l'effacement définitif :");
-
-    if (verrou === "SUPPRIMER") {
-        try {
-            // Suppression dans Firebase (effet universel immédiat)
-            await database.ref('clients/' + telId).remove();
-            
-            // Nettoyage de la présence si nécessaire
-            await database.ref('presence/' + telId).remove();
-
-            alert("✅ RÉUSSI : Le compte " + telId + " a été éjecté du système avec succès.");
-            
-            // Rafraîchissement de l'interface
-            loadUsers(filtreActuel);
-        } catch (e) {
-            console.error(e);
-            alert("❌ ERREUR RÉSEAU : Impossible de joindre la base de données.");
-        }
-    } else {
-        // Si l'utilisateur tape mal ou annule
-        alert("🛡️ ANNULATION : Le mot de passe de confirmation est incorrect. Aucune suppression n'a été effectuée.");
-    }
-}
 // --- SUSPENSION UNIVERSELLE ---
 async function toggleBan(telId, filtreActuel) {
     try {
