@@ -596,50 +596,7 @@ async function toggleBan(telId, filtreActuel) {
 
 let adminEnCours = false; // 1. On ajoute ce verrou en haut
 
-function initAdminTrigger() {
-    const trigger = document.getElementById('admin-trigger');
-    
-    if (trigger) {
-        const demarrerChrono = (e) => {
-            // 2. Sécurité : Si une fenêtre est déjà ouverte ou un chrono tourne, on stop
-            if (adminEnCours) return;
 
-            // 3. Empêche le conflit touch/mouse sur mobile
-            if (e.type === 'touchstart') {
-                // e.preventDefault(); // Optionnel : à tester si le menu image s'ouvre encore
-            }
-
-            minuteurAdmin = setTimeout(() => {
-                // On verrouille avant même d'afficher le prompt
-                adminEnCours = true; 
-                
-                const p = prompt("🔑 CODE ACCÈS ADMIN :");
-                
-                if (p === ADMIN_PASS) {
-                    naviguer('page-admin'); 
-                    loadUsers('TOUT');
-                } else if (p !== null) {
-                    alert("❌ Code incorrect");
-                }
-                
-                // 4. On ne déverrouille qu'une fois le prompt fermé
-                adminEnCours = false; 
-            }, 2000); // 2 secondes (plus ergonomique que 3)
-        };
-
-        const stopperChrono = () => {
-            clearTimeout(minuteurAdmin);
-        };
-
-        // Utilisation d'écouteurs propres
-        trigger.addEventListener('touchstart', demarrerChrono, {passive: true});
-        trigger.addEventListener('mousedown', demarrerChrono);
-        
-        trigger.addEventListener('touchend', stopperChrono);
-        trigger.addEventListener('mouseup', stopperChrono);
-        trigger.addEventListener('mouseleave', stopperChrono);
-    }
-}
 // ==========================================
 // 1. STATISTIQUES GLOBALES
 // ==========================================
@@ -1217,6 +1174,52 @@ function filtrerClients() {
             carte.style.display = "none"; // On cache la carte
         }
     });
+}
+
+let adminEnCours = false; 
+
+function initAdminTrigger() {
+    const trigger = document.getElementById('admin-trigger');
+    if (!trigger) return;
+
+    // --- ÉTAPE A : NETTOYAGE (Pour éviter les doublons) ---
+    // On clone le bouton pour supprimer tous les anciens écouteurs d'événements
+    const nouveauTrigger = trigger.cloneNode(true);
+    trigger.parentNode.replaceChild(nouveauTrigger, trigger);
+
+    // --- ÉTAPE B : NOUVELLE LOGIQUE ---
+    const demarrerChrono = (e) => {
+        if (adminEnCours) return;
+        
+        // Empêche le clic droit natif du téléphone
+        if (e.type === 'contextmenu') e.preventDefault();
+
+        minuteurAdmin = setTimeout(() => {
+            adminEnCours = true; // On verrouille
+            const p = prompt("🔑 CODE ACCÈS ADMIN :");
+            
+            if (p === ADMIN_PASS) {
+                naviguer('page-admin'); 
+                loadUsers('TOUT');
+            } else if (p !== null) {
+                alert("❌ Code incorrect");
+            }
+            adminEnCours = false; // On libère
+        }, 2000); 
+    };
+
+    const stopperChrono = () => clearTimeout(minuteurAdmin);
+
+    // On utilise le nouveau bouton propre
+    nouveauTrigger.addEventListener('touchstart', demarrerChrono, {passive: true});
+    nouveauTrigger.addEventListener('mousedown', demarrerChrono);
+    
+    nouveauTrigger.addEventListener('touchend', stopperChrono);
+    nouveauTrigger.addEventListener('mouseup', stopperChrono);
+    nouveauTrigger.addEventListener('mouseleave', stopperChrono);
+    
+    // Sécurité supplémentaire pour mobile
+    nouveauTrigger.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
