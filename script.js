@@ -890,27 +890,36 @@ async function ouvrirRecuperation() {
 }
 
 function filtrerHistorique() {
-    const input = document.getElementById('search-historique').value.toUpperCase();
+    const input = document.getElementById('search-historique').value.toUpperCase().trim();
     const lignes = document.querySelectorAll('.ligne-historique');
     let totalFiltre = 0;
 
     lignes.forEach(ligne => {
-        // On récupère tout le texte de la ligne pour une recherche globale
-        const texteLigne = ligne.innerText.toUpperCase();
+        // 1. On récupère tout le texte brut de la ligne (Nom, Tel, Date)
+        const texteBrut = ligne.innerText.toUpperCase();
         
-        if (texteLigne.indexOf(input) > -1) {
-            ligne.style.display = "";
-            // On extrait le montant pour recalculer le total affiché
-            const montantTexte = ligne.querySelector('td:last-child').innerText.replace(/\D/g, '');
-            totalFiltre += parseInt(montantTexte) || 0;
+        // 2. On récupère spécifiquement le montant et on enlève les espaces et "FG"
+        // pour que la recherche sur "1500" fonctionne même si c'est écrit "1 500 FG"
+        const cellulePrix = ligne.querySelector('.col-prix');
+        const montantPur = cellulePrix ? cellulePrix.innerText.replace(/\s/g, '').replace('FG', '') : "";
+
+        // 3. Vérification : si l'input est dans le texte brut OU dans le montant pur
+        if (texteBrut.indexOf(input) > -1 || montantPur.indexOf(input) > -1) {
+            ligne.style.display = ""; // On utilise le style par défaut (table-row)
+            
+            // Recalcul du total visible
+            const montantLigne = parseInt(montantPur) || 0;
+            totalFiltre += montantLigne;
         } else {
             ligne.style.display = "none";
         }
     });
 
-    // Mise à jour du total en bas selon la recherche
+    // 4. Mise à jour du total en bas de page
     const totalElt = document.getElementById('total-historique');
-    if(totalElt) totalElt.innerText = totalFiltre.toLocaleString() + " FG";
+    if (totalElt) {
+        totalElt.innerText = totalFiltre.toLocaleString() + " FG";
+    }
 }
 
 // A AJOUTER DANS SCRIPT.JS
