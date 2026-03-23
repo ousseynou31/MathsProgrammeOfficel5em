@@ -403,39 +403,21 @@ async function mettreAJourDashboard() {
 }
 
 // 1. PAYER : Réinitialise la date à aujourd'hui
-async function validerPaiement(idClient, filtreActuel, btnElement) {
-    if (!confirm("Valider le paiement de 5000 F ?")) return;
-
+// Fonction que tu appelles quand tu cliques sur "Valider Paiement"
+async function validerPaiementClient(telId, categorie) {
+    const dateJour = new Date().toLocaleDateString('fr-FR');
+    
     try {
-        // 1. On récupère d'abord la vraie catégorie pour ne pas enregistrer "TOUT"
-        const snap = await database.ref('clients/' + idClient + '/infos_client').once('value');
-        const v = snap.val();
-        const vraieCat = v.categorie || "C"; 
-
-        // 2. Mise à jour sécurisée
-        await database.ref('clients/' + idClient + '/infos_client').update({
-            statut: "actif",
-            montant: 5000,
-            datePaiement: new Date().toLocaleDateString('fr-FR'),
-            categorie: vraieCat // On préserve la vraie catégorie A, B ou C
+        await database.ref('clients/' + telId + '/paiement').set({
+            statut: "VALIDE",
+            date: dateJour,
+            offre: categorie,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
         });
-
-        // 3. Changement visuel immédiat sans recharger
-        if (btnElement) {
-            btnElement.innerHTML = "✅";
-            btnElement.style.background = "#27ae60";
-            btnElement.style.color = "white";
-            btnElement.disabled = true;
-        }
-
-        // 4. On relance loadUsers avec le filtre actuel pour garder l'affichage propre
-        // On utilise un petit délai pour laisser l'utilisateur voir le "✅"
-        setTimeout(() => {
-            loadUsers(filtreActuel);
-        }, 800);
-
+        alert("✅ Paiement enregistré !");
+        // Optionnel : rafraîchir la liste de l'historique ici
     } catch (e) {
-        alert("Erreur : " + e.message);
+        alert("Erreur lors de la validation");
     }
 }
 // 2. WHATSAPP : Message automatique
@@ -920,10 +902,9 @@ async function chargerContenuHistorique() {
     const totalElt = document.getElementById('total-historique');
     if(!corps) return;
 
-    corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px; color:gray;'>Analyse des transactions...</td></tr>";
+    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px; color:gray;'>Calcul du bilan financier...</td></tr>";
 
     try {
-        // 1. Récupérer les tarifs officiels et les clients
         const [tarifsSnap, usersSnap] = await Promise.all([
             database.ref('reglages/tarifs').once('value'),
             database.ref('clients').once('value')
@@ -933,31 +914,29 @@ async function chargerContenuHistorique() {
         let html = "";
         let totalGeneral = 0;
 
-        // 2. Parcourir les clients pour construire l'historique
         usersSnap.forEach(client => {
             const val = client.val();
-            if (val && val.infos_client) {
+            
+            // FILTRE STRICT : On ne prend que ceux qui ont payé (statut === 'actif')
+            if (val && val.infos_client && val.infos_client.statut === "actif") {
+                
                 const info = val.infos_client;
-                
-                // On récupère la catégorie réelle de l'élève
                 const cat = (info.categorie || "C").trim().toUpperCase();
-                
-                // On récupère le prix correspondant à sa catégorie
                 const montantReel = parseInt(tarifs[cat]) || 0;
                 
-                // On ne l'affiche que s'il a une date de paiement (ou inscription)
+                // On utilise la date d'inscription comme date de transaction
                 const dateAffiche = info.date_inscription ? info.date_inscription.split('T')[0] : "---";
 
                 totalGeneral += montantReel;
 
                 html += `
-                    <tr style="border-bottom: 1px solid #222; font-size: 0.8rem;">
-                        <td style="padding:12px 10px; color:gray;">${dateAffiche}</td>
+                    <tr style="border-bottom: 1px solid #222; font-size: 0.85rem;">
+                        <td style="padding:12px 10px; color:#888;">${dateAffiche}</td>
                         <td style="padding:12px 10px;">
                             <b style="color:white; display:block;">${info.nom.toUpperCase()}</b>
-                            <small style="color:#f1c40f;">CATÉGORIE ${cat}</small>
+                            <small style="color:#f1c40f;">OFFRE ${cat}</small>
                         </td>
-                        <td style="padding:12px 10px; color:gray;">${client.key}</td>
+                        <td style="padding:12px 10px; color:#888;">${client.key}</td>
                         <td style="padding:12px 10px; text-align:right;">
                             <b style="color:#2ecc71;">${montantReel.toLocaleString()}</b> <small style="color:#2ecc71;">FG</small>
                         </td>
@@ -965,18 +944,23 @@ async function chargerContenuHistorique() {
             }
         });
 
-        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center; padding:20px;'>Aucun historique disponible.</td></tr>";
+        // Affichage si la liste est vide après filtrage
+        if (totalGeneral === 0) {
+            corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:40px; color:gray;'>Aucun encaissement enregistré.</td></tr>";
+        } else {
+            corps.innerHTML = html;
+        }
         
+        // Mise à jour du montant total en bas de page
         if(totalElt) {
             totalElt.innerText = totalGeneral.toLocaleString() + " FG";
         }
 
     } catch (e) {
         console.error("Erreur historique:", e);
-        corps.innerHTML = "<tr><td colspan='5' style='color:red; text-align:center;'>Erreur de chargement</td></tr>";
+        corps.innerHTML = "<tr><td colspan='4' style='color:red; text-align:center;'>Erreur de connexion.</td></tr>";
     }
 }
-
 function exporterCSV() {
     const lignes = document.querySelectorAll('.ligne-historique');
     if (lignes.length === 0) return alert("Rien à exporter !");
