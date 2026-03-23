@@ -11,6 +11,27 @@ if (!firebase.apps.length) {
 }
 const database = firebase.database();
 
+
+// --- DÉCLENCHEUR DE VOYANT (À METTRE CÔTÉ ÉLÈVE/CLIENT) ---
+function activerSignalEnLigne() {
+    const monTel = localStorage.getItem('user_tel_id'); // Récupère votre numéro
+    
+    if (monTel) {
+        const maRefStatus = database.ref('clients/' + monTel + '/status');
+
+        // 1. Quand l'application s'ouvre, on dit "Je suis en ligne"
+        maRefStatus.set("en_ligne");
+
+        // 2. TRÈS IMPORTANT : Si je ferme l'onglet ou perd internet, 
+        // Firebase me met en "hors_ligne" automatiquement après quelques secondes.
+        maRefStatus.onDisconnect().set("hors_ligne");
+        
+        console.log("📡 Signal de présence activé pour le numéro :", monTel);
+    }
+}
+
+// Lancer l'activation dès que la page est prête
+window.addEventListener('DOMContentLoaded', activerSignalEnLigne);
 // --- LA FONCTION DE SURVEILLANCE (MISE À JOUR) ---
 function surveillerConnexion() {
     const ledContainer = document.getElementById('cloud-status');
