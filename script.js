@@ -889,24 +889,28 @@ async function ouvrirRecuperation() {
     }
 }
 
- function filtrerHistorique() {
+function filtrerHistorique() {
     const input = document.getElementById('search-historique').value.toUpperCase();
-    const rows = document.querySelectorAll('.ligne-paiement');
+    const lignes = document.querySelectorAll('.ligne-historique');
     let totalFiltre = 0;
 
-    rows.forEach(row => {
-        const texte = row.innerText.toUpperCase();
-        if (texte.indexOf(input) > -1) {
-            row.style.display = "";
-            // Extraire le montant de la 5ème colonne pour recalculer le total
-            const montantTexte = row.cells[4].innerText.replace(/[^0-9]/g, '');
-            totalFiltre += parseInt(montantTexte);
+    lignes.forEach(ligne => {
+        // On récupère tout le texte de la ligne pour une recherche globale
+        const texteLigne = ligne.innerText.toUpperCase();
+        
+        if (texteLigne.indexOf(input) > -1) {
+            ligne.style.display = "";
+            // On extrait le montant pour recalculer le total affiché
+            const montantTexte = ligne.querySelector('td:last-child').innerText.replace(/\D/g, '');
+            totalFiltre += parseInt(montantTexte) || 0;
         } else {
-            row.style.display = "none";
+            ligne.style.display = "none";
         }
     });
 
-    document.getElementById('total-historique').innerText = totalFiltre.toLocaleString() + " FCFA";
+    // Mise à jour du total en bas selon la recherche
+    const totalElt = document.getElementById('total-historique');
+    if(totalElt) totalElt.innerText = totalFiltre.toLocaleString() + " FG";
 }
 
 // A AJOUTER DANS SCRIPT.JS
@@ -915,12 +919,10 @@ async function ouvrirHistorique() {
     const corps = document.getElementById('corps-historique');
     const totalElt = document.getElementById('total-historique');
     
-    // 1. Affichage plein écran
-    page.style.display = 'flex';
-    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px; color:gray;'>Chargement du bilan...</td></tr>";
+    page.style.display = 'flex'; // Activation du plein écran
+    corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:30px; color:gray;'>Chargement...</td></tr>";
 
     try {
-        // 2. Récupération des tarifs et des clients
         const [tarifsSnap, usersSnap] = await Promise.all([
             database.ref('reglages/tarifs').once('value'),
             database.ref('clients').once('value')
@@ -934,36 +936,34 @@ async function ouvrirHistorique() {
             const val = client.val();
             if (val && val.infos_client) {
                 const info = val.infos_client;
-                
-                // Calcul dynamique du montant selon la catégorie de l'élève
                 const cat = (info.categorie || "C").trim().toUpperCase();
                 const montant = parseInt(tarifs[cat]) || 0;
-                
-                const datePay = info.date_inscription ? info.date_inscription.split('T')[0] : "Non définie";
+                const datePay = info.date_inscription ? info.date_inscription.split('T')[0] : "---";
 
                 totalGeneral += montant;
 
+                // Création de la ligne avec alignement vertical strict
                 html += `
-                    <tr style="border-bottom: 1px solid #222;">
-                        <td style="padding:12px 8px; color:#888; font-size:0.7rem;">${datePay}</td>
-                        <td style="padding:12px 8px;">
-                            <div style="font-weight:bold; color:white;">${info.nom.toUpperCase()}</div>
-                            <div style="font-size:0.6rem; color:#f1c40f;">CATÉGORIE ${cat}</div>
+                    <tr class="ligne-historique" style="border-bottom: 1px solid #222;">
+                        <td style="padding:15px 10px; width:20%; color:#888; font-size:0.75rem;">${datePay}</td>
+                        <td style="padding:15px 10px; width:35%;">
+                            <b class="search-name" style="color:white; display:block; font-size:0.85rem;">${info.nom.toUpperCase()}</b>
+                            <small style="color:#f1c40f;">CAT ${cat}</small>
                         </td>
-                        <td style="padding:12px 8px; color:#888; font-size:0.7rem;">${client.key}</td>
-                        <td style="padding:12px 8px; text-align:right; font-weight:900; color:#2ecc71;">
+                        <td class="search-tel" style="padding:15px 10px; width:20%; color:#888; font-size:0.75rem;">${client.key}</td>
+                        <td style="padding:15px 10px; width:25%; text-align:right; font-weight:900; color:#2ecc71;">
                             ${montant.toLocaleString()} FG
                         </td>
                     </tr>`;
             }
         });
 
-        corps.innerHTML = html || "<tr><td colspan='4' style='text-align:center;'>Aucun élève trouvé.</td></tr>";
+        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center;'>Aucun élève.</td></tr>";
         if(totalElt) totalElt.innerText = totalGeneral.toLocaleString() + " FG";
 
     } catch (e) {
         console.error(e);
-        corps.innerHTML = "<tr><td colspan='4' style='color:red;'>Erreur de chargement.</td></tr>";
+        corps.innerHTML = "<tr><td colspan='5' style='color:red;'>Erreur.</td></tr>";
     }
 }
 
