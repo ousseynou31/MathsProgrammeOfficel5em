@@ -246,19 +246,18 @@
         </div>
 
       <div style="overflow-x: auto; width: 100%;">
-    <table style="width: 100%; table-layout: fixed; border-collapse: collapse; min-width: 600px;">
-        <thead>
-            <tr style="background: #111; color: #666; font-size: 0.7rem; text-transform: uppercase;">
-                <th style="width: 15%; padding: 12px; text-align: left;">Date</th>
-                <th style="width: 35%; padding: 12px; text-align: left;">Nom Client</th>
-                <th style="width: 10%; padding: 12px; text-align: center;">Cat</th>
-                <th style="width: 20%; padding: 12px; text-align: left;">Téléphone</th>
-                <th style="width: 20%; padding: 12px; text-align: right;">Montant</th>
-            </tr>
-        </thead>
-        <tbody id="corps-historique">
-            </tbody>
-    </table>
+   <table class="table-historique">
+    <thead>
+        <tr style="background: #111; color: #555; font-size: 0.7rem;">
+            <th class="col-date">Date</th>
+            <th class="col-nom">Nom Client</th>
+            <th class="col-cat">Cat</th>
+            <th class="col-tel">Téléphone</th>
+            <th class="col-prix">Montant</th>
+        </tr>
+    </thead>
+    <tbody id="corps-historique"></tbody>
+</table>
 </div>
 
         <div style="margin-top: 15px; padding: 15px; background: #111; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--p);">
