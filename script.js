@@ -1101,8 +1101,14 @@ function exporterPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
+    // Configuration de la police pour éviter les bugs d'encodage
     doc.setFont("helvetica", "bold");
-    doc.text("BILAN DE PAIEMENT - MATHS 5ÈME", 14, 20);
+    doc.setFontSize(16);
+    doc.text("RAPPORT DE PAIEMENT - MATHS 5EME", 14, 20);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Genere le : ${new Date().toLocaleString()}`, 14, 28);
 
     const rows = [];
     const lignes = document.querySelectorAll('.ligne-historique');
@@ -1111,36 +1117,51 @@ function exporterPDF() {
         if (ligne.style.display !== "none") {
             const cellules = ligne.querySelectorAll('td');
             
-            // NETTOYAGE STRICT POUR LE PDF
-            const date = cellules[0].innerText.trim();
-            const nom = cellules[1].innerText.split('\n')[0].trim();
-            const cat = cellules[2].innerText.trim();
-            const tel = nettoyerChiffre(cellules[3].innerText);
-            const montant = nettoyerChiffre(cellules[4].innerText);
+            // NETTOYAGE CHIRURGICAL : 
+            // On récupère le texte, on remplace tous les types d'espaces bizarres (\s+) 
+            // par un espace normal, et on retire les caractères non-standards.
+            const date = cellules[0].innerText.replace(/\s+/g, ' ').trim();
+            const nom = cellules[1].innerText.split('\n')[0].replace(/\s+/g, ' ').trim();
+            const cat = cellules[2].innerText.replace(/\s+/g, ' ').trim();
+            const tel = cellules[3].innerText.replace(/\s+/g, ' ').trim();
+            const montant = cellules[4].innerText.replace(/\s+/g, ' ').trim();
 
-            rows.push([date, nom, cat, tel, parseInt(montant).toLocaleString() + " FG"]);
+            rows.push([date, nom, cat, tel, montant]);
         }
     });
 
+    // Generation du tableau
     doc.autoTable({
-        startY: 30,
-        head: [['Date', 'Nom', 'Cat', 'Tel', 'Montant']],
+        startY: 35,
+        head: [['Date', 'Nom Client', 'Cat', 'Telephone', 'Montant']],
         body: rows,
-        styles: { font: "helvetica", fontSize: 9 },
-        headStyles: { fillStyle: [44, 62, 80] }
+        theme: 'striped',
+        headStyles: { fillStyle: [44, 62, 80], textColor: 255 },
+        styles: { 
+            font: "helvetica", 
+            fontSize: 8,
+            cellPadding: 3 
+        },
+        // Cette option force jsPDF à ne pas espacer les lettres bizarrement
+        columnStyles: {
+            4: { halign: 'right' } // Aligne la colonne Montant à droite
+        }
     });
 
-    // TOTAL SANS ESPACES BUGGÉS
+    // AJOUT DU TOTAL EN BAS DU PDF
     const totalElt = document.getElementById('total-historique');
-    const totalNet = nettoyerChiffre(totalElt.innerText);
-    const finalY = doc.lastAutoTable.finalY + 15;
+    if (totalElt) {
+        // Nettoyage du texte du total pour le PDF
+        const totalTexte = totalElt.innerText.replace(/\s+/g, ' ').trim();
+        const finalY = doc.lastAutoTable.finalY + 15;
+        
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(39, 174, 96); // Vert
+        doc.text("TOTAL ENCAISSE : " + totalTexte, 14, finalY);
+    }
 
-    doc.setFontSize(14);
-    doc.setTextColor(39, 174, 96);
-    // On écrit le texte SANS caractères spéciaux
-    doc.text("TOTAL ENCAISSE : " + parseInt(totalNet).toLocaleString() + " FG", 14, finalY);
-
-    doc.save("Bilan_Propre.pdf");
+    doc.save(`Rapport_Maths5eme_${new Date().getTime()}.pdf`);
 }
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
