@@ -1426,41 +1426,29 @@ function deconnecterApp() {
 }
 
 // ==========================================
-//  DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
+// . DÉMARRAGE GLOBAL (VERSION NETTOYÉE)
 // ==========================================
 window.addEventListener('load', () => {
-    console.log("🚀 Lancement du système de sécurité...");
+    console.log("🚀 Lancement du système sécurisé DIOUF 2026...");
 
-    // 1. LE GARDIEN (Vérifie en temps réel si le compte est Supprimé ou Suspendu)
+    // 1. Surveillance en temps réel
     surveillerStatutCompte(); 
-
-    // 2. Allume la LED (Vérification de la connexion Firebase)
     surveillerConnexion(); 
-    
-    // 3. Signal de présence (Pour que l'Admin voit le voyant vert)
     synchroniserPresence(); 
     
-    // 4. Initialise l'accès caché pour l'Admin (Appui long 3s)
+    // 2. Fonctions utilitaires
     initAdminTrigger(); 
 
-    // 5. Affiche l'ID de l'appareil pour l'activation PIN
+    // 3. Affichage de l'ID (Important pour votre zone de texte)
     const devIdDisplay = document.getElementById('display-device-id');
     if(devIdDisplay) {
         devIdDisplay.innerText = getDeviceId();
     }
 
-    // 6. LIAISON DU BOUTON RÉCUPÉRATION (Nouvelle sécurité)
-    const btnRecup = document.getElementById('btn-recuperer'); 
-    if (btnRecup) {
-        btnRecup.onclick = ouvrirRecuperation;
-    }
-
-    // 7. DÉCISION D'ACCÈS (Licence -> Inscription -> Accueil)
+    // 4. Décision d'accès (Licence -> Inscription -> Accueil)
     launchApp(); 
-    
-    console.log("✅ Système de communication initialisé.");
 
-    // LIAISON DU BOUTON PDF (Exportation Bilan)
+    // 5. Liaison PDF
     const btnPdf = document.getElementById('mon-bouton-pdf-id'); 
     if (btnPdf) {
         btnPdf.addEventListener('click', exporterPDF);
