@@ -68,16 +68,7 @@ function surveillerConnexion() {
         }
     });
 }
-// FORCE L'APPARITION DANS LA BASE DE DONNÉES
-function signalerPresence() {
-    const device = getDeviceId();
-    database.ref('appareils_en_ligne/' + device).set({
-        dernier_acces: new Date().toISOString(),
-        statut: "Connecté"
-    });
-    // Supprimer l'entrée quand l'utilisateur ferme l'application
-    database.ref('appareils_en_ligne/' + device).onDisconnect().remove();
-}
+
 
 // Appelle cette fonction dans ton window.onload ou addEventListener
 // LANCEMENT AUTOMATIQUE
@@ -121,63 +112,6 @@ function verifierLicence() {
     }
 }
 
-// ==========================================
-// 5. INSCRIPTION (PROFIL ÉLÈVE)
-// ==========================================
-async function enregistrerProfil() {
-    const nom = document.getElementById('reg-nom').value.trim();
-    const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
-    
-    if(!nom || tel.length < 8) {
-        return alert("Veuillez remplir tous les champs correctement.");
-    }
-
-    try {
-        // Chemin exact : clients / NUMERO / infos_client
-        const clientRef = database.ref('clients/' + tel + '/infos_client');
-        
-        // On vérifie si le client existe déjà pour ne pas écraser ses jours
-        const snapshot = await clientRef.once('value');
-        let joursActuels = 1;
-        let catActuelle = 'C';
-
-        if (snapshot.exists()) {
-            const existingData = snapshot.val();
-            joursActuels = existingData.jours || 1;
-            catActuelle = existingData.categorie || 'C';
-        }
-
-        // Enregistrement / Mise à jour
-        await clientRef.set({
-            nom: nom,
-            tel: tel,
-            jours: joursActuels,         // Initialisé à 1 ou garde l'ancien score
-            categorie: catActuelle,     // Initialisé à C ou garde l'ancienne catégorie
-            date_inscription: new Date().toISOString(),
-            device_source: typeof getDeviceId === 'function' ? getDeviceId() : 'unknown'
-        });
-
-        // Sauvegarde locale pour la session
-        localStorage.setItem('user_tel_id', tel);
-        localStorage.setItem('v32_registered', 'true');
-        
-        alert("✅ Profil créé avec succès !");
-        
-        // Lancement de l'application
-        if (typeof launchApp === 'function') {
-            launchApp();
-        } else {
-            location.reload(); // Sécurité si launchApp n'est pas définie
-        }
-
-    } catch(e) { 
-        console.error("Erreur Firebase:", e);
-        alert("Erreur de connexion à la base de données."); 
-    }
-}
-// ==========================================
-// 6. VERROUILLAGE (DÉCONNEXION)
-// ==========================================
 
 function deconnecterApp() {
     if(confirm("Voulez-vous verrouiller l'accès et retourner à l'activation ?")) {
@@ -383,24 +317,6 @@ function togglePreview() {
     content.style.display = (content.style.display === "block") ? "none" : "block";
 }
 
-
-// --- FONCTION POUR APPARAÎTRE DANS L'ONGLET DATA ---
-function marquerPresence() {
-    const idAppareil = getDeviceId(); // Récupère votre D-XXXXXX
-    
-    // On crée une référence dans la base
-    const presenceRef = database.ref('appareils_actifs/' + idAppareil);
-
-    // On écrit les infos
-    presenceRef.set({
-        statut: "EN LIGNE",
-        derniere_connexion: new Date().toLocaleString(),
-        plateforme: navigator.platform
-    });
-
-    // TRÈS IMPORTANT : Supprime la ligne automatiquement quand vous fermez l'app
-    presenceRef.onDisconnect().remove();
-}
 // CALCUL DES JOURS (Essentiel pour afficher la liste)
 function calculerJours(dateInsc) {
     if (!dateInsc) return 0;
@@ -506,101 +422,8 @@ function envoyerRappel(tel, nom, cat) {
     window.open(url, '_blank');
 }
 
-async function supprimerCompteDefinitif(telClient) {
-    if(confirm("❗ Action IRRÉVERSIBLE : Supprimer ce compte sur TOUS les appareils ?")) {
-        try {
-            // 1. SUPPRESSION GÉNÉRALE (Efface le client de la base de données)
-            // Cela coupe l'accès instantanément partout dans le monde.
-            await database.ref('clients/' + telClient).remove();
 
-            // 2. NETTOYAGE LOCAL (Uniquement si c'est l'appareil actuel)
-            const monTelLocal = localStorage.getItem('user_tel_id');
-            if(telClient === monTelLocal) {
-                localStorage.clear(); 
-                window.location.reload();
-            } else {
-                alert("✅ Compte " + telClient + " supprimé de partout.");
-                ouvrirRapport(); 
-            }
-        } catch(e) {
-            alert("Erreur réseau.");
-        }
-    }
-}
-function verifierExistenceCompte() {
-    const tel = localStorage.getItem('user_tel_id');
-    
-    if(tel) {
-        // On demande à Firebase : "Est-ce que ce numéro existe encore ?"
-        database.ref('clients/' + tel).on('value', (snapshot) => {
-            if(!snapshot.exists()) {
-                // SI LE COMPTE N'EXISTE PLUS DANS FIREBASE
-                alert("🚫 Votre compte a été supprimé ou désactivé.");
-                localStorage.clear(); // On vide la mémoire de la machine
-                window.location.reload(); // On renvoie à l'inscription
-            }
-        });
-    }
-}
-function surveillerStatutCompte() {
-    const tel = localStorage.getItem('user_tel_id');
-    
-    if(tel) {
-        // On écoute les changements sur 'infos_client' en temps réel
-        database.ref('clients/' + tel + '/infos_client').on('value', (snapshot) => {
-            const data = snapshot.val();
 
-            // CAS 1 : Le compte n'existe plus (Suppression)
-            if(!snapshot.exists()) {
-                localStorage.clear();
-                window.location.reload();
-                return;
-            }
-
-            // CAS 2 : Le compte est marqué comme "suspendu"
-            if(data.statut === "suspendu") {
-                // On bloque l'écran immédiatement
-                document.body.innerHTML = `
-                    <div style="height:100vh; background:#000; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family:sans-serif; padding:20px;">
-                        <h1 style="font-size:4rem;">🚫</h1>
-                        <h2 style="color:#e67e22;">ACCÈS SUSPENDU</h2>
-                        <p>Votre compte a été temporairement désactivé par l'établissement.</p>
-                        <p style="color:gray; font-size:0.8rem;">Veuillez contacter l'administrateur pour régulariser votre situation.</p>
-                        <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; border-radius:50px; border:none; background:#333; color:white;">Actualiser</button>
-                    </div>
-                `;
-                // On empêche toute autre action
-                throw new Error("Compte suspendu."); 
-            }
-        });
-    }
-}
-async function suspendreCompte(telClient) {
-    if(confirm("Voulez-vous suspendre l'accès de cet élève ?")) {
-        try {
-            await database.ref('clients/' + telClient + '/infos_client').update({
-                statut: "suspendu"
-            });
-            alert("🟠 Accès suspendu. L'élève sera bloqué au prochain démarrage.");
-            ouvrirRapport(); // Actualise le tableau
-        } catch(e) {
-            alert("Erreur lors de la suspension.");
-        }
-    }
-}
-async function reactiverCompte(telClient) {
-    if(confirm("Voulez-vous rétablir l'accès pour cet élève ?")) {
-        try {
-            await database.ref('clients/' + telClient + '/infos_client').update({
-                statut: "actif"
-            });
-            alert("✅ Compte réactivé ! L'élève peut de nouveau utiliser l'app.");
-            ouvrirRapport(); // Rafraîchit le tableau
-        } catch(e) {
-            alert("Erreur lors de la réactivation.");
-        }
-    }
-}
 function filtrerClients() {
     // 1. Récupère la saisie de l'utilisateur (en minuscules)
     const query = document.getElementById('admin-search').value.toLowerCase().trim();
