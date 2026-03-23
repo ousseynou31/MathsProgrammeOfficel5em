@@ -430,27 +430,32 @@ function envoyerRappel(tel, nom, cat) {
 
 
 function filtrerClients() {
-    // 1. Récupère la saisie de l'utilisateur (en minuscules)
-    const query = document.getElementById('admin-search').value.toLowerCase().trim(); 
+    // 1. Récupère la saisie (avec sécurité si l'élément n'existe pas)
+    const inputElt = document.getElementById('admin-search');
+    if(!inputElt) return; 
     
-    // 2. Sélectionne toutes les lignes de clients
+    const query = inputElt.value.toLowerCase().trim();
+    
+    // 2. Sélectionne toutes les lignes
     const rows = document.querySelectorAll('.user-row');
     
     rows.forEach(row => {
-        // On récupère tout le texte de la ligne (Nom + Tel + ID)
+        // On récupère le texte visible (Nom, Tel, etc.)
         const contenu = row.innerText.toLowerCase();
         
-        // 3. Si la recherche correspond au contenu, on affiche, sinon on cache
+        // 3. Logique d'affichage
         if (contenu.includes(query)) {
-            row.style.display = "flex";
+            // "REMETTRE PAR DÉFAUT" au lieu de forcer "flex"
+            // Cela permet à la ligne de reprendre son style CSS d'origine
+            row.style.display = ""; 
         } else {
             row.style.display = "none";
         }
     });
 
-    // Optionnel : Afficher un message si aucun résultat n'est trouvé après filtrage
-    const visibleRows = Array.from(rows).filter(r => r.style.display !== "none");
-    console.log(`Résultats trouvés : ${visibleRows.length}`);
+    // Optionnel : Debug dans la console pour voir si ça réagit
+    const visibles = Array.from(rows).filter(r => r.style.display !== "none").length;
+    console.log("Recherche : " + query + " | Trouvés : " + visibles);
 }
 // CHANGEMENT DE CATÉGORIE (Enregistre le choix A/B/C)
 async function changerCategorie(telId, nouvelleCat) {
