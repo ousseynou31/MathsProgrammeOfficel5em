@@ -594,29 +594,48 @@ async function toggleBan(telId, filtreActuel) {
     }
 }
 
+let adminEnCours = false; // 1. On ajoute ce verrou en haut
+
 function initAdminTrigger() {
     const trigger = document.getElementById('admin-trigger');
     
     if (trigger) {
-        const demarrerChrono = () => {
+        const demarrerChrono = (e) => {
+            // 2. Sécurité : Si une fenêtre est déjà ouverte ou un chrono tourne, on stop
+            if (adminEnCours) return;
+
+            // 3. Empêche le conflit touch/mouse sur mobile
+            if (e.type === 'touchstart') {
+                // e.preventDefault(); // Optionnel : à tester si le menu image s'ouvre encore
+            }
+
             minuteurAdmin = setTimeout(() => {
+                // On verrouille avant même d'afficher le prompt
+                adminEnCours = true; 
+                
                 const p = prompt("🔑 CODE ACCÈS ADMIN :");
+                
                 if (p === ADMIN_PASS) {
-                    // CHANGEMENT ICI : On va vers le menu de gestion, pas le bilan direct
                     naviguer('page-admin'); 
-                    // On charge les données en arrière-plan pour que ce soit prêt
                     loadUsers('TOUT');
                 } else if (p !== null) {
                     alert("❌ Code incorrect");
                 }
-            }, 3000); 
+                
+                // 4. On ne déverrouille qu'une fois le prompt fermé
+                adminEnCours = false; 
+            }, 2000); // 2 secondes (plus ergonomique que 3)
         };
 
-        const stopperChrono = () => clearTimeout(minuteurAdmin);
+        const stopperChrono = () => {
+            clearTimeout(minuteurAdmin);
+        };
 
-        trigger.addEventListener('touchstart', demarrerChrono);
-        trigger.addEventListener('touchend', stopperChrono);
+        // Utilisation d'écouteurs propres
+        trigger.addEventListener('touchstart', demarrerChrono, {passive: true});
         trigger.addEventListener('mousedown', demarrerChrono);
+        
+        trigger.addEventListener('touchend', stopperChrono);
         trigger.addEventListener('mouseup', stopperChrono);
         trigger.addEventListener('mouseleave', stopperChrono);
     }
