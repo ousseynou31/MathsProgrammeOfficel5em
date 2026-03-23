@@ -910,9 +910,65 @@ async function ouvrirRecuperation() {
 }
 
 // A AJOUTER DANS SCRIPT.JS
-function ouvrirHistorique() {
-    document.getElementById('page-historique').style.display = 'flex';
-    chargerContenuHistorique();
+async function ouvrirHistorique() {
+    const page = document.getElementById('page-historique');
+    const corps = document.getElementById('corps-historique');
+    const totalElt = document.getElementById('total-historique');
+    
+    // 1. Affichage plein écran
+    page.style.display = 'flex';
+    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px; color:gray;'>Chargement du bilan...</td></tr>";
+
+    try {
+        // 2. Récupération des tarifs et des clients
+        const [tarifsSnap, usersSnap] = await Promise.all([
+            database.ref('reglages/tarifs').once('value'),
+            database.ref('clients').once('value')
+        ]);
+
+        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
+        let html = "";
+        let totalGeneral = 0;
+
+        usersSnap.forEach(client => {
+            const val = client.val();
+            if (val && val.infos_client) {
+                const info = val.infos_client;
+                
+                // Calcul dynamique du montant selon la catégorie de l'élève
+                const cat = (info.categorie || "C").trim().toUpperCase();
+                const montant = parseInt(tarifs[cat]) || 0;
+                
+                const datePay = info.date_inscription ? info.date_inscription.split('T')[0] : "Non définie";
+
+                totalGeneral += montant;
+
+                html += `
+                    <tr style="border-bottom: 1px solid #222;">
+                        <td style="padding:12px 8px; color:#888; font-size:0.7rem;">${datePay}</td>
+                        <td style="padding:12px 8px;">
+                            <div style="font-weight:bold; color:white;">${info.nom.toUpperCase()}</div>
+                            <div style="font-size:0.6rem; color:#f1c40f;">CATÉGORIE ${cat}</div>
+                        </td>
+                        <td style="padding:12px 8px; color:#888; font-size:0.7rem;">${client.key}</td>
+                        <td style="padding:12px 8px; text-align:right; font-weight:900; color:#2ecc71;">
+                            ${montant.toLocaleString()} FG
+                        </td>
+                    </tr>`;
+            }
+        });
+
+        corps.innerHTML = html || "<tr><td colspan='4' style='text-align:center;'>Aucun élève trouvé.</td></tr>";
+        if(totalElt) totalElt.innerText = totalGeneral.toLocaleString() + " FG";
+
+    } catch (e) {
+        console.error(e);
+        corps.innerHTML = "<tr><td colspan='4' style='color:red;'>Erreur de chargement.</td></tr>";
+    }
+}
+
+function fermerHistorique() {
+    document.getElementById('page-historique').style.display = 'none';
 }
 
 function fermerHistorique() {
