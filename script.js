@@ -1,3 +1,13 @@
+// TOUT EN HAUT DU FICHIER script.js
+(function() { 
+    "use strict";
+
+    // On utilise 'var' ici, à l'intérieur de la bulle, pour une sécurité totale
+    var minuteurAdmin = null;
+    var adminEnCours = false;
+
+    // ... GARDE TOUT TON CODE EXISTANT ICI ...
+    // (Toutes tes fonctions : naviguer, verifierLicence, etc.)
 
 // 1. CONFIGURATION & INITIALISATION
 const firebaseConfig = {
@@ -1222,39 +1232,26 @@ function deconnecterApp() {
 //  DÉMARRAGE SÉCURISÉ (ÉVITE LES DOUBLONS)
 // ==========================================
 
-// NOUVEAUX NOMS UNIQUES POUR TUER LES ERREURS SYNTAXE
-var activationAdmin = false; 
-var chronoAdmin = null;
-function initAdminTrigger() {
-    const trigger = document.getElementById('admin-trigger');
-    if (!trigger) return;
+// ... ET REMPLACE TON BLOC DE DÉMARRAGE PAR CELUI-CI (toujours dans la bulle) :
+    
+    window.addEventListener('load', () => {
+        console.log("🚀 Système DIOUF 2026 opérationnel...");
 
-    const demarrerChrono = (e) => {
-        if (activationAdmin) return; // Nouveau nom
-        if (e.type === 'contextmenu') e.preventDefault();
+        if (typeof surveillerConnexion === "function") surveillerConnexion(); 
+        
+        const telLocal = localStorage.getItem('user_tel_id');
+        if (telLocal) {
+            if (typeof synchroniserPresence === "function") synchroniserPresence(); 
+            if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
+        }
 
-        // On utilise le nouveau nom chronoAdmin
-        chronoAdmin = setTimeout(() => {
-            activationAdmin = true; // Nouveau nom
-            const p = prompt("🔑 CODE ACCÈS ADMIN :");
-            
-            if (p === "TON_CODE") { 
-                naviguer('page-admin'); 
-                loadUsers('TOUT');
-            } else if (p !== null) {
-                alert("❌ Code incorrect");
-            }
-            activationAdmin = false; 
-        }, 2000); 
-    };
+        const devIdDisplay = document.getElementById('display-device-id');
+        if (devIdDisplay && typeof getDeviceId === "function") {
+            devIdDisplay.innerText = getDeviceId();
+        }
 
-    const stopperChrono = () => {
-        clearTimeout(chronoAdmin); // Nouveau nom
-    };
+        if (typeof initAdminTrigger === "function") initAdminTrigger();
+        if (typeof launchApp === "function") launchApp();
+    });
 
-    trigger.addEventListener('touchstart', demarrerChrono);
-    trigger.addEventListener('mousedown', demarrerChrono);
-    trigger.addEventListener('touchend', stopperChrono);
-    trigger.addEventListener('mouseup', stopperChrono);
-    trigger.addEventListener('mouseleave', stopperChrono);
-}
+})(); // <--- TOUT EN BAS DU FICHIER : Referme la bulle
