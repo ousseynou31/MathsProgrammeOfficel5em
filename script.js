@@ -929,7 +929,7 @@ async function ouvrirHistorique() {
     const totalElt = document.getElementById('total-historique');
     
     page.style.display = 'flex'; 
-    corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:30px; color:gray;'>Chargement...</td></tr>";
+    corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:30px; color:gray;'>Analyse du bilan...</td></tr>";
 
     try {
         const [tarifsSnap, usersSnap] = await Promise.all([
@@ -946,32 +946,48 @@ async function ouvrirHistorique() {
             if (val && val.infos_client) {
                 const info = val.infos_client;
                 const cat = (info.categorie || "C").trim().toUpperCase();
-                const montant = parseInt(tarifs[cat]) || 0;
+                
+                // --- INTÉGRATION DU NETTOYAGE ---
+                const montantBrut = tarifs[cat] || 0;
+                const montantPropre = nettoyerChiffre(montantBrut);
+                const telPropre = nettoyerChiffre(client.key);
+                
                 const datePay = info.date_inscription ? info.date_inscription.split('T')[0] : "---";
 
-                totalGeneral += montant;
+                totalGeneral += parseInt(montantPropre);
 
                 html += `
                     <tr class="ligne-historique" style="border-bottom: 1px solid #222;">
-                        <td class="col-date" style="color:#888; font-size:0.75rem;">${datePay}</td>
-                        <td class="col-nom" style="color:white; font-weight:bold; font-size:0.85rem;">${info.nom.toUpperCase()}</td>
-                        <td class="col-cat">
-                            <span style="border:1px solid #f1c40f; color:#f1c40f; padding:2px 4px; border-radius:4px; font-size:0.65rem;">${cat}</span>
+                        <td class="col-date" style="width:18%; padding:12px; color:#888;">
+                            ${datePay}
                         </td>
-                        <td class="col-tel" style="color:#888; font-size:0.75rem;">${client.key}</td>
-                        <td class="col-prix" style="font-weight:900; color:#2ecc71; font-size:0.85rem;">
-                            ${montant.toLocaleString()} FG
+                        <td class="col-nom" style="width:32%; padding:12px; color:white;">
+                            <b>${info.nom.toUpperCase()}</b>
+                        </td>
+                        <td class="col-cat" style="width:10%; text-align:center;">
+                            <span style="border:1px solid #f1c40f; color:#f1c40f; padding:2px 5px; border-radius:4px; font-size:0.7rem;">
+                                ${cat}
+                            </span>
+                        </td>
+                        <td class="col-tel" style="width:22%; padding:12px; color:#888;">
+                            ${telPropre}
+                        </td>
+                        <td class="col-prix" style="width:18%; padding:12px; text-align:right; font-weight:bold; color:#2ecc71;">
+                            ${parseInt(montantPropre).toLocaleString()} FG
                         </td>
                     </tr>`;
             }
         });
 
-        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center;'>Aucune donnée.</td></tr>";
-        if(totalElt) totalElt.innerText = totalGeneral.toLocaleString() + " FG";
+        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center;'>Aucune donnée trouvée.</td></tr>";
+        
+        if(totalElt) {
+            totalElt.innerText = totalGeneral.toLocaleString() + " FG";
+        }
 
     } catch (e) {
-        console.error(e);
-        corps.innerHTML = "<tr><td colspan='5' style='color:red;'>Erreur de chargement.</td></tr>";
+        console.error("Erreur historique:", e);
+        corps.innerHTML = "<tr><td colspan='5' style='color:red; text-align:center;'>Erreur Firebase</td></tr>";
     }
 }
 function fermerHistorique() {
@@ -1077,19 +1093,18 @@ function exporterCSV() {
     link.download = `Bilan_Maths5eme_${new Date().toLocaleDateString()}.csv`;
     link.click();
 }
+function nettoyerChiffre(str) {
+    if (!str) return "0";
+    // Enlève tout ce qui n'est pas un chiffre (slashs, espaces, lettres)
+    return str.toString().replace(/\D/g, '');
+}
 
 function exporterPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Titre
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("RAPPORT DE PAIEMENT - MATHS 5ÈME", 14, 20);
-    
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Date : ${new Date().toLocaleString()}`, 14, 28);
+    doc.text("BILAN DE PAIEMENT - MATHS 5ÈME", 14, 20);
 
     const rows = [];
     const lignes = document.querySelectorAll('.ligne-historique');
@@ -1097,44 +1112,37 @@ function exporterPDF() {
     lignes.forEach(ligne => {
         if (ligne.style.display !== "none") {
             const cellules = ligne.querySelectorAll('td');
-            rows.push([
-                cellules[0].innerText.trim(),
-                cellules[1].innerText.split('\n')[0].trim(),
-                cellules[2].innerText.trim(),
-                cellules[3].innerText.trim(),
-                cellules[4].innerText.trim()
-            ]);
+            
+            // NETTOYAGE STRICT POUR LE PDF
+            const date = cellules[0].innerText.trim();
+            const nom = cellules[1].innerText.split('\n')[0].trim();
+            const cat = cellules[2].innerText.trim();
+            const tel = nettoyerChiffre(cellules[3].innerText);
+            const montant = nettoyerChiffre(cellules[4].innerText);
+
+            rows.push([date, nom, cat, tel, parseInt(montant).toLocaleString() + " FG"]);
         }
     });
 
     doc.autoTable({
-        startY: 35,
-        head: [['Date', 'Nom', 'Cat', 'Téléphone', 'Montant']],
+        startY: 30,
+        head: [['Date', 'Nom', 'Cat', 'Tel', 'Montant']],
         body: rows,
-        headStyles: { fillStyle: [44, 62, 80], textColor: 255 },
-        styles: { fontSize: 8, font: "helvetica" }, // On force helvetica partout
+        styles: { font: "helvetica", fontSize: 9 },
+        headStyles: { fillStyle: [44, 62, 80] }
     });
 
-    // --- CORRECTION DU TOTAL (NETTOYAGE) ---
+    // TOTAL SANS ESPACES BUGGÉS
     const totalElt = document.getElementById('total-historique');
-    // On récupère le texte, on enlève les espaces bizarres et on reconstruit proprement
-    let totalBrut = totalElt ? totalElt.innerText : "0 FG";
-    let totalNettoye = totalBrut.replace(/\s+/g, ' ').trim(); 
-
+    const totalNet = nettoyerChiffre(totalElt.innerText);
     const finalY = doc.lastAutoTable.finalY + 15;
-    
-    doc.setDrawColor(200);
-    doc.line(14, finalY - 5, 196, finalY - 5);
 
-    // Paramètres de police très stricts pour éviter les décalages
-    doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.setTextColor(39, 174, 96); 
-    
-    // Utilisation de charSpace: 0 pour forcer le resserrement des lettres
-    doc.text(`TOTAL ENCAISSE : ${totalNettoye}`, 14, finalY, { charSpace: 0 });
+    doc.setTextColor(39, 174, 96);
+    // On écrit le texte SANS caractères spéciaux
+    doc.text("TOTAL ENCAISSE : " + parseInt(totalNet).toLocaleString() + " FG", 14, finalY);
 
-    doc.save(`Bilan_${new Date().getTime()}.pdf`);
+    doc.save("Bilan_Propre.pdf");
 }
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
