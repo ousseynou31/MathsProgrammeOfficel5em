@@ -1,4 +1,8 @@
-// 1. CONFIGURATION & INITIALISATION
+// --- DÉCLARATIONS GLOBALES (SANS DOUBLONS) ---
+var minuteurAdmin = (typeof minuteurAdmin !== 'undefined') ? minuteurAdmin : null;
+var adminEnCours = (typeof adminEnCours !== 'undefined') ? adminEnCours : false;
+
+// 1. CONFIGURATION FIREBASE
 const firebaseConfig = {
     databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
 }; 
@@ -7,13 +11,6 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const database = firebase.database();
-
-// --- REMPLACE TES 'LET' PAR CES LIGNES SÉCURISÉES ---
-var minuteurAdmin = (typeof minuteurAdmin !== 'undefined') ? minuteurAdmin : null;
-var adminEnCours = (typeof adminEnCours !== 'undefined') ? adminEnCours : false;
-// ----------------------------------------------------
-// REMPLACE TON ANCIENNE LIGNE PAR CELLE-CI :
-var minuteurAdmin = (typeof minuteurAdmin !== 'undefined') ? minuteurAdmin : null;
 
 // 2. DÉFINITION DES FONCTIONS (On les déclare toutes ici)
 function activerSignalEnLigne() {
