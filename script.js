@@ -1229,29 +1229,29 @@ function deconnecterApp() {
     }
 }
 // ==========================================
-//  DÉMARRAGE SÉCURISÉ (ÉVITE LES DOUBLONS)
+//  LANCEMENT GLOBAL SÉCURISÉ (FIN DU FICHIER)
 // ==========================================
+window.addEventListener('load', async () => {
+    console.log("🚀 Système DIOUF 2026 : Vérification de sécurité...");
 
-// ... ET REMPLACE TON BLOC DE DÉMARRAGE PAR CELUI-CI (toujours dans la bulle) :
-    
-    window.addEventListener('load', () => {
-        console.log("🚀 Système DIOUF 2026 opérationnel...");
+    // 1. On prépare l'ID de l'appareil
+    const devIdDisplay = document.getElementById('display-device-id');
+    if(devIdDisplay && typeof getDeviceId === "function") {
+        devIdDisplay.innerText = getDeviceId();
+    }
 
-        if (typeof surveillerConnexion === "function") surveillerConnexion(); 
-        
-        const telLocal = localStorage.getItem('user_tel_id');
-        if (telLocal) {
-            if (typeof synchroniserPresence === "function") synchroniserPresence(); 
-            if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
-        }
+    // 2. On initialise le bouton Admin caché
+    if (typeof initAdminTrigger === "function") {
+        initAdminTrigger();
+    }
 
-        const devIdDisplay = document.getElementById('display-device-id');
-        if (devIdDisplay && typeof getDeviceId === "function") {
-            devIdDisplay.innerText = getDeviceId();
-        }
+    // 3. On lance la surveillance en direct si l'utilisateur est connu
+    const telLocal = localStorage.getItem('user_tel_id');
+    if (telLocal) {
+        synchroniserPresence(); 
+        surveillerStatutEnDirect(telLocal);
+    }
 
-        if (typeof initAdminTrigger === "function") initAdminTrigger();
-        if (typeof launchApp === "function") launchApp();
-    });
-
-})(); // <--- TOUT EN BAS DU FICHIER : Referme la bulle
+    // 4. ON LANCE LE TUNNEL DE DÉCISION (Ta nouvelle fonction sécurisée)
+    await launchApp(); 
+});
