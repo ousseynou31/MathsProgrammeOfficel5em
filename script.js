@@ -216,23 +216,60 @@ function naviguer(id) {
         console.error("❌ Erreur : L'écran '" + id + "' n'existe pas dans le HTML.");
     }
 }
-function launchApp() {
+async function launchApp() {
     const isActive = localStorage.getItem('v32_active') === 'true';
-    const isReg = localStorage.getItem('v32_registered') === 'true';
+    const telStocke = localStorage.getItem('user_tel_id');
 
+    // ÉTAPE A : Vérification de la licence (PIN)
     if (!isActive) {
         naviguer('license-gate');
-    } else if (!isReg) {
-        naviguer('registration-gate');
-    } else {
-        // C'est ici que l'on affiche l'application principale
-        naviguer('hub-accueil'); 
-        
-        // On force l'affichage du titre au cas où
-        const titre = document.getElementById('admin-trigger');
-        
+        return;
     }
+
+    // ÉTAPE B : Si on a un numéro, on vérifie sa validité RÉELLE
+    if (telStocke) {
+        try {
+            // On va chercher les infos dans 'clients/NUMERO/infos_client'
+            const snapshot = await database.ref('clients/' + telStocke + '/infos_client').once('value');
+            
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+
+                // 1. SÉCURITÉ : Vérifier si l'élève est suspendu
+                if (data.statut === "suspendu") {
+                    alert("🚫 Accès refusé : Votre compte est suspendu.");
+                    naviguer('registration-gate');
+                    return;
+                }
+
+                // 2. RÉPARATION : On s'assure que le flag 'registered' est bien là
+                localStorage.setItem('v32_registered', 'true');
+                
+                // 3. ACCÈS : Tout est bon, on entre
+                naviguer('hub-accueil');
+                
+                // On allume le voyant vert
+                if (typeof signalerPresence === "function") signalerPresence();
+                return;
+            } else {
+                // Le numéro est dans le téléphone mais SUPPRIMÉ de Firebase
+                localStorage.removeItem('user_tel_id');
+                localStorage.removeItem('v32_registered');
+            }
+        } catch (e) {
+            console.error("Erreur de connexion base de données:", e);
+            // En cas d'erreur réseau, on tente quand même d'entrer si on était déjà inscrit
+            if (localStorage.getItem('v32_registered') === 'true') {
+                naviguer('hub-accueil');
+                return;
+            }
+        }
+    }
+
+    // ÉTAPE C : Par défaut, si rien ne correspond -> Inscription
+    naviguer('registration-gate');
 }
+
 function togglePreview() {
     const content = document.getElementById('preview-content');
     content.style.display = (content.style.display === "block") ? "none" : "block";
