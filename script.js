@@ -924,34 +924,60 @@ async function chargerContenuHistorique() {
     const totalElt = document.getElementById('total-historique');
     if(!corps) return;
 
-    corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>Analyse des paiements...</td></tr>";
+    corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px; color:gray;'>Analyse des transactions...</td></tr>";
 
     try {
-        const snap = await database.ref('clients').once('value');
-        let html = "";
-        let total = 0;
+        // 1. Récupérer les tarifs officiels et les clients
+        const [tarifsSnap, usersSnap] = await Promise.all([
+            database.ref('reglages/tarifs').once('value'),
+            database.ref('clients').once('value')
+        ]);
 
-        snap.forEach(client => {
-            const info = client.val().infos_client;
-            if(info && info.datePaiement) { // On n'affiche que ceux qui ont payé
-                const montant = parseInt(info.montant) || 0;
-                total += montant;
+        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
+        let html = "";
+        let totalGeneral = 0;
+
+        // 2. Parcourir les clients pour construire l'historique
+        usersSnap.forEach(client => {
+            const val = client.val();
+            if (val && val.infos_client) {
+                const info = val.infos_client;
+                
+                // On récupère la catégorie réelle de l'élève
+                const cat = (info.categorie || "C").trim().toUpperCase();
+                
+                // On récupère le prix correspondant à sa catégorie
+                const montantReel = parseInt(tarifs[cat]) || 0;
+                
+                // On ne l'affiche que s'il a une date de paiement (ou inscription)
+                const dateAffiche = info.date_inscription ? info.date_inscription.split('T')[0] : "---";
+
+                totalGeneral += montantReel;
+
                 html += `
-                    <tr style="border-bottom: 1px solid #222;">
-                        <td style="padding:10px;">${info.datePaiement}</td>
-                        <td style="padding:10px; font-weight:bold;">${info.nom.toUpperCase()}</td>
-                        <td style="padding:10px;">${client.key}</td>
-                        <td style="padding:10px; color:var(--p);">CAT ${info.categorie || '?' }</td>
-                        <td style="padding:10px; text-align:right; color:#2ecc71; font-weight:900;">${montant.toLocaleString()} F</td>
+                    <tr style="border-bottom: 1px solid #222; font-size: 0.8rem;">
+                        <td style="padding:12px 10px; color:gray;">${dateAffiche}</td>
+                        <td style="padding:12px 10px;">
+                            <b style="color:white; display:block;">${info.nom.toUpperCase()}</b>
+                            <small style="color:#f1c40f;">CATÉGORIE ${cat}</small>
+                        </td>
+                        <td style="padding:12px 10px; color:gray;">${client.key}</td>
+                        <td style="padding:12px 10px; text-align:right;">
+                            <b style="color:#2ecc71;">${montantReel.toLocaleString()}</b> <small style="color:#2ecc71;">FG</small>
+                        </td>
                     </tr>`;
             }
         });
 
-        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center;'>Aucun historique de paiement trouvé.</td></tr>";
-        totalElt.innerText = total.toLocaleString() + " FG";
+        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center; padding:20px;'>Aucun historique disponible.</td></tr>";
+        
+        if(totalElt) {
+            totalElt.innerText = totalGeneral.toLocaleString() + " FG";
+        }
 
-    } catch(e) {
-        corps.innerHTML = "<tr><td colspan='5' style='color:red;'>Erreur : "+e.message+"</td></tr>";
+    } catch (e) {
+        console.error("Erreur historique:", e);
+        corps.innerHTML = "<tr><td colspan='5' style='color:red; text-align:center;'>Erreur de chargement</td></tr>";
     }
 }
 function deconnecterApp() {
