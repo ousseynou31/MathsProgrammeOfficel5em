@@ -1249,31 +1249,30 @@ function deconnecterApp() {
 }
 
 // ==========================================
-// . DÉMARRAGE GLOBAL (VERSION NETTOYÉE)
+//  DÉMARRAGE GLOBAL UNIQUE
 // ==========================================
 window.addEventListener('load', () => {
-    console.log("🚀 Lancement du système sécurisé DIOUF 2026...");
+    console.log("🚀 Lancement du système DIOUF 2026...");
 
-    // 1. Surveillance en temps réel
-    surveillerStatutCompte(); 
+    // 1. On lance la surveillance de connexion (Le voyant LIVE/OFFLINE)
     surveillerConnexion(); 
-    synchroniserPresence(); 
     
-    // 2. Fonctions utilitaires
-    initAdminTrigger(); 
+    // 2. On récupère le numéro stocké
+    const telLocal = localStorage.getItem('user_tel_id');
+    
+    // 3. Si l'élève est déjà connecté, on active sa présence et sa surveillance
+    if (telLocal) {
+        synchroniserPresence(); 
+        surveillerStatutEnDirect(telLocal);
+    }
 
-    // 3. Affichage de l'ID (Important pour votre zone de texte)
+    // 4. On prépare l'ID de l'appareil pour l'affichage
     const devIdDisplay = document.getElementById('display-device-id');
-    if(devIdDisplay) {
-        devIdDisplay.innerText = getDeviceId();
-    }
+    if(devIdDisplay) devIdDisplay.innerText = getDeviceId();
 
-    // 4. Décision d'accès (Licence -> Inscription -> Accueil)
-    launchApp(); 
+    // 5. On initialise le trigger Admin
+    initAdminTrigger();
 
-    // 5. Liaison PDF
-    const btnPdf = document.getElementById('mon-bouton-pdf-id'); 
-    if (btnPdf) {
-        btnPdf.addEventListener('click', exporterPDF);
-    }
+    // 6. ON LANCE L'APP (Le tunnel de décision)
+    launchApp();
 });
