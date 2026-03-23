@@ -942,23 +942,16 @@ async function ouvrirHistorique() {
 
                 totalGeneral += montant;
 
-                // CHAQUE DONNÉE DANS SA PROPRE COLONNE AVEC LARGEUR FIXE
                 html += `
                     <tr class="ligne-historique" style="border-bottom: 1px solid #222;">
-                        <td style="width:20%; padding:12px 10px; color:#888; font-size:0.75rem; overflow:hidden; white-space:nowrap;">
-                            ${datePay}
+                        <td class="col-date" style="color:#888; font-size:0.75rem;">${datePay}</td>
+                        <td class="col-nom" style="color:white; font-weight:bold; font-size:0.85rem;">${info.nom.toUpperCase()}</td>
+                        <td class="col-cat">
+                            <span style="border:1px solid #f1c40f; color:#f1c40f; padding:2px 4px; border-radius:4px; font-size:0.65rem;">${cat}</span>
                         </td>
-                        <td style="width:30%; padding:12px 10px; color:white; font-weight:bold; font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                            ${info.nom.toUpperCase()}
-                        </td>
-                        <td style="width:10%; padding:12px 10px; text-align:center;">
-                            <span style="background:#333; color:#f1c40f; padding:2px 5px; border-radius:4px; font-size:0.65rem; font-weight:bold;">${cat}</span>
-                        </td>
-                        <td style="width:20%; padding:12px 10px; color:#888; font-size:0.75rem;">
-                            ${client.key}
-                        </td>
-                        <td style="width:20%; padding:12px 10px; text-align:right; font-weight:900; color:#2ecc71; font-size:0.85rem;">
-                            ${montant.toLocaleString()}
+                        <td class="col-tel" style="color:#888; font-size:0.75rem;">${client.key}</td>
+                        <td class="col-prix" style="font-weight:900; color:#2ecc71; font-size:0.85rem;">
+                            ${montant.toLocaleString()} FG
                         </td>
                     </tr>`;
             }
@@ -969,7 +962,7 @@ async function ouvrirHistorique() {
 
     } catch (e) {
         console.error(e);
-        corps.innerHTML = "<tr><td colspan='5' style='color:red; text-align:center;'>Erreur de chargement.</td></tr>";
+        corps.innerHTML = "<tr><td colspan='5' style='color:red;'>Erreur de chargement.</td></tr>";
     }
 }
 function fermerHistorique() {
