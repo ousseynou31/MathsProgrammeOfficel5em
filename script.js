@@ -1048,23 +1048,27 @@ function exporterCSV() {
     const lignes = document.querySelectorAll('.ligne-historique');
     if (lignes.length === 0) return alert("Rien à exporter !");
 
-    // \ufeff permet à Excel de reconnaître les accents et le formatage
     let csv = "\ufeff"; 
     csv += "DATE;NOM CLIENT;CAT;TELEPHONE;MONTANT\n";
 
+    let totalPourCSV = 0;
+
     lignes.forEach(ligne => {
-        // On n'exporte que les lignes visibles (si une recherche est active)
         if (ligne.style.display !== "none") {
             const cellules = ligne.querySelectorAll('td');
             const date = cellules[0].innerText;
-            const nom = cellules[1].innerText.split('\n')[0]; // On prend juste le nom
+            const nom = cellules[1].innerText.split('\n')[0];
             const cat = cellules[2].innerText.trim();
             const tel = cellules[3].innerText;
-            const prix = cellules[4].innerText.replace(/\D/g, ''); // On garde juste les chiffres
-
-            csv += `${date};${nom};${cat};${tel};${prix}\n`;
+            const prixBrut = cellules[4].innerText.replace(/\D/g, '');
+            
+            totalPourCSV += parseInt(prixBrut) || 0;
+            csv += `${date};${nom};${cat};${tel};${prixBrut}\n`;
         }
     });
+
+    // --- AJOUT DE LA LIGNE TOTAL À LA FIN DU CSV ---
+    csv += `\n;;;TOTAL ENCAISSÉ;${totalPourCSV} FG\n`;
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -1073,17 +1077,16 @@ function exporterCSV() {
     link.download = `Bilan_Maths5eme_${new Date().toLocaleDateString()}.csv`;
     link.click();
 }
+
 function exporterPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Design du document
     doc.setFontSize(16);
-    doc.setTextColor(40);
     doc.text("RAPPORT DE PAIEMENT - MATHS 5ÈME", 14, 20);
     
     doc.setFontSize(10);
-    doc.text(`Date du rapport : ${new Date().toLocaleString()}`, 14, 28);
+    doc.text(`Date : ${new Date().toLocaleString()}`, 14, 28);
 
     const rows = [];
     const lignes = document.querySelectorAll('.ligne-historique');
@@ -1101,22 +1104,31 @@ function exporterPDF() {
         }
     });
 
-    // Création du tableau PDF
     doc.autoTable({
         startY: 35,
         head: [['Date', 'Nom', 'Cat', 'Téléphone', 'Montant']],
         body: rows,
-        headStyles: { fillStyle: [39, 174, 96], textColor: 255 }, // Vert pro
+        headStyles: { fillStyle: [44, 62, 80], textColor: 255 },
         styles: { fontSize: 8 }
     });
 
-    // Ajout du Total en bas
+    // --- RÉCUPÉRATION DU TOTAL DEPUIS L'INTERFACE ---
     const totalText = document.getElementById('total-historique').innerText;
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(12);
+    
+    // On se place après le tableau
+    const finalY = doc.lastAutoTable.finalY + 15;
+    
+    // Dessiner une ligne de séparation
+    doc.setDrawColor(200);
+    doc.line(14, finalY - 5, 196, finalY - 5);
+
+    // Écrire le TOTAL en gras et en grand
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(39, 174, 96); // Couleur Verte
     doc.text(`TOTAL ENCAISSÉ : ${totalText}`, 14, finalY);
 
-    doc.save(`Rapport_Maths5eme_${new Date().getTime()}.pdf`);
+    doc.save(`Rapport_PDF_${new Date().getTime()}.pdf`);
 }
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
