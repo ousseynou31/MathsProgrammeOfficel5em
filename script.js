@@ -1,19 +1,26 @@
 
-// CONFIGURATION AVEC LA BONNE RÉGION (EUROPE)
-let minuteurAdmin; // Déclaration indispensable pour l'appui long
+// 1. CONFIGURATION & INITIALISATION
 const firebaseConfig = {
     databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
 }; 
 
-// INITIALISATION
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const database = firebase.database();
+let minuteurAdmin; 
 
-// Lancer l'activation dès que la page est prête
-window.addEventListener('DOMContentLoaded', activerSignalEnLigne);
-// --- LA FONCTION DE SURVEILLANCE (MISE À JOUR) ---
+// 2. DÉFINITION DES FONCTIONS (On les déclare toutes ici)
+function activerSignalEnLigne() {
+    const monTel = localStorage.getItem('user_tel_id');
+    if (monTel) {
+        const maRefStatus = database.ref('clients/' + monTel + '/status');
+        maRefStatus.set("en_ligne");
+        maRefStatus.onDisconnect().set("hors_ligne");
+        console.log("📡 Signal de présence activé");
+    }
+}
+
 function surveillerConnexion() {
     const ledContainer = document.getElementById('cloud-status');
     if (!ledContainer) return;
@@ -21,39 +28,35 @@ function surveillerConnexion() {
     database.ref(".info/connected").on("value", (snap) => {
         const cercle = ledContainer.querySelector('.led-circle');
         const texte = ledContainer.querySelector('.led-text');
-
         if (snap.val() === true) {
-            // État Connecté
             ledContainer.style.background = "rgba(16, 185, 129, 0.1)";
-            ledContainer.style.border = "1px solid #10b981";
-            if(cercle) {
-                cercle.style.background = "#10b981";
-                cercle.style.boxShadow = "0 0 10px #10b981";
-            }
-            if(texte) {
-                texte.innerText = "LIVE";
-                texte.style.color = "#10b981";
-            }
+            if(cercle) cercle.style.background = "#10b981";
+            if(texte) texte.innerText = "LIVE";
         } else {
-            // État Recherche/Déconnecté
             ledContainer.style.background = "rgba(0,0,0,0.6)";
-            ledContainer.style.border = "1px solid #444";
-            if(cercle) {
-                cercle.style.background = "#666";
-                cercle.style.boxShadow = "none";
-            }
-            if(texte) {
-                texte.innerText = "OFFLINE";
-                texte.style.color = "#666";
-            }
+            if(cercle) cercle.style.background = "#666";
+            if(texte) texte.innerText = "OFFLINE";
         }
     });
 }
 
+// ... (Ajoute ici toutes tes autres fonctions : launchApp, naviguer, etc.) ...
 
-// Appelle cette fonction dans ton window.onload ou addEventListener
-// LANCEMENT AUTOMATIQUE
-window.addEventListener('DOMContentLoaded', surveillerConnexion);
+// 3. DÉMARRAGE (Toujours à la toute fin du fichier)
+window.addEventListener('load', () => {
+    console.log("🚀 Lancement du système...");
+    surveillerConnexion(); 
+    
+    const telLocal = localStorage.getItem('user_tel_id');
+    if (telLocal) {
+        // Au lieu d'appeler activerSignalEnLigne ici, 
+        // on laisse launchApp décider si l'élève est autorisé.
+        surveillerStatutEnDirect(telLocal);
+    }
+
+    initAdminTrigger();
+    launchApp(); // C'est cette fonction qui appellera activerSignalEnLigne() si tout est OK
+});
 
 const SECRET_KEY = 7391;
 const ADMIN_PASS = "0000";
