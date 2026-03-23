@@ -1241,3 +1241,28 @@ function deconnecterApp() {
 // ÉVITE L'ERREUR DE REDÉCLARATION
 var adminEnCours = (typeof adminEnCours !== 'undefined') ? adminEnCours : false;
 var minuteurAdmin = (typeof minuteurAdmin !== 'undefined') ? minuteurAdmin : null;
+// ==========================================
+function initialiserSysteme() {
+    console.log("🚀 Système DIOUF 2026 opérationnel...");
+
+    surveillerConnexion(); 
+    
+    const telLocal = localStorage.getItem('user_tel_id');
+    if (telLocal) {
+        synchroniserPresence(); 
+        surveillerStatutEnDirect(telLocal);
+    }
+
+    const devIdDisplay = document.getElementById('display-device-id');
+    if (devIdDisplay) devIdDisplay.innerText = getDeviceId();
+
+    initAdminTrigger();
+    launchApp();
+}
+
+// Sécurité : Ne lancer qu'une seule fois
+if (document.readyState === 'complete') {
+    initialiserSysteme();
+} else {
+    window.addEventListener('load', initialiserSysteme);
+}
