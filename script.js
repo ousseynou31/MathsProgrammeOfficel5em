@@ -11,7 +11,8 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const database = firebase.database();
-let minuteurAdmin; 
+// REMPLACE TON ANCIENNE LIGNE PAR CELLE-CI :
+var minuteurAdmin = (typeof minuteurAdmin !== 'undefined') ? minuteurAdmin : null;
 
 // 2. DÉFINITION DES FONCTIONS (On les déclare toutes ici)
 function activerSignalEnLigne() {
