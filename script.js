@@ -714,96 +714,89 @@ async function calculerGlobalStats(filtreActuel = 'TOUT') {
     }
 }
 
-// ==========================================
-// 2. CHARGEMENT DES ÉLÈVES (LOADUSERS)
-// ==========================================
 async function loadUsers(filtre = 'TOUT') {
     const list = document.getElementById('admin-user-list');
     if (!list) return;
     
-    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px;">Chargement...</p>`;
+    list.innerHTML = `<p style="text-align:center; color:gray; padding:20px;">Chargement des données...</p>`;
     
+    // Initialisation des compteurs pour le calcul
     let nbAttendu = 0;    
     let totalArgent = 0;  
     let nbRetards = 0;    
 
     try {
+        // 1. Récupération des tarifs et des utilisateurs en parallèle
         const tarifsSnap = await database.ref('reglages/tarifs').once('value');
         const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
 
-        const [usersSnap, presenceSnap] = await Promise.all([
-            database.ref('clients').once('value'),
-            database.ref('presence').once('value')
-        ]);
+        const usersSnap = await database.ref('clients').once('value');
+        list.innerHTML = ""; // On vide la liste avant d'afficher
 
-        const connectes = presenceSnap.val() || {}; 
-        list.innerHTML = ""; 
-
+        // 2. Boucle de traitement des élèves
         usersSnap.forEach(u => {
             const val = u.val();
             if (!val || !val.infos_client) return;
             const data = val.infos_client;
 
-            const vraieCategorieDuClient = (data.categorie || "C").trim().toUpperCase();
-            const filtreSelectionne = filtre.trim().toUpperCase();
-
-            if (filtreSelectionne !== 'TOUT' && vraieCategorieDuClient !== filtreSelectionne) return;
-
-            const jours = calculerJours(data.date_inscription);
-            const prixConfiguré = parseInt(tarifs[vraieCategorieDuClient]) || 0;
-            const isBanned = data.statut === "suspendu";
-            const estEnLigne = connectes[u.key] !== undefined;
+            // Détermination de la catégorie
+            const cat = (data.categorie || "C").trim().toUpperCase();
             
-            nbAttendu++; 
-            totalArgent += prixConfiguré;
-            if (jours >= 35) nbRetards++; 
+            // Application du filtre (on ne traite que ce qui correspond au bouton cliqué)
+            if (filtre !== 'TOUT' && cat !== filtre) return;
 
-            let couleurCercle = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
-            const styleBtnBan = isBanned 
-                ? `background:#ef4444 !important; border:1px solid #ef4444 !important; color:white !important;` 
-                : `background:transparent; border:1px solid #f59e0b; color:#f59e0b;`;
+            // Calculs individuels
+            const jours = calculerJours(data.date_inscription);
+            const prix = parseInt(tarifs[cat]) || 0;
+            const isBanned = data.statut === "suspendu";
 
+            // Incrémentation des compteurs de statistiques
+            nbAttendu++;
+            totalArgent += prix;
+            if (jours >= 35) nbRetards++;
+
+            // Choix de la couleur selon le retard
+            let coul = (jours >= 35) ? "#ef4444" : (jours >= 26 ? "#f59e0b" : "#10b981");
+
+            // Ajout de la ligne dans le HTML
             list.innerHTML += `
-                <div class="user-row" style="display:flex; align-items:center; padding:12px 15px; border-bottom:1px solid #222; background: rgba(255,255,255,0.02); margin: 0 0 8px 0; width: 100%; box-sizing: border-box; border-radius:12px; border-left: 5px solid ${isBanned ? '#ef4444' : 'transparent'};">
-                    <div style="width:55px; flex-shrink:0; display:flex; justify-content:center; position:relative;">
-                        ${estEnLigne ? '<div style="position:absolute; width:12px; height:12px; background:#10b981; border-radius:50%; top:-2px; right:2px; border:2px solid #000; box-shadow:0 0 8px #10b981;"></div>' : ''}
-                        <div style="width:42px; height:42px; border-radius:50%; border: 3px solid ${estEnLigne ? '#10b981' : couleurCercle}; display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:0.8rem; background: rgba(0,0,0,0.4);">
-                            ${jours}J
-                        </div>
+                <div class="user-row" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; background:rgba(255,255,255,0.02); margin-bottom:8px; border-radius:12px; border-left:5px solid ${isBanned ? '#ef4444':'transparent'};">
+                    <div style="width:50px; display:flex; justify-content:center;">
+                        <div style="width:40px; height:40px; border-radius:50%; border:2px solid ${coul}; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:900; color:white;">${jours}J</div>
                     </div>
-                    <div style="flex:1; margin-left:15px; min-width:0;">
-                        <div style="font-weight:800; font-size:0.9rem; color:white; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                            ${data.nom} ${isBanned ? '<span style="color:#ef4444; font-size:0.6rem; font-weight:900; margin-left:5px;">⚠️</span>' : ''}
-                        </div>
-                        <div style="font-size:0.65rem; color:#777; margin-top:3px;">
-                            <span>📞 ${u.key}</span> | <span style="color:#ffd700; font-weight:bold;">Cat. ${vraieCategorieDuClient}</span>
-                        </div>
+                    <div style="flex:1; margin-left:10px;">
+                        <div style="font-size:0.85rem; font-weight:800; color:white;">${data.nom.toUpperCase()}</div>
+                        <div style="font-size:0.65rem; color:gray;">${u.key} | <span style="color:#f1c40f">Cat. ${cat}</span></div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <select onchange="changerCategorie('${u.key}', this.value)" style="width:42px; background:#000; color:#ffd700; border:1px solid #444; border-radius:4px; font-size:0.7rem; font-weight:900; height:30px;">
-                            <option value="A" ${vraieCategorieDuClient === 'A' ? 'selected' : ''}>A</option>
-                            <option value="B" ${vraieCategorieDuClient === 'B' ? 'selected' : ''}>B</option>
-                            <option value="C" ${vraieCategorieDuClient === 'C' ? 'selected' : ''}>C</option>
+                    <div style="display:flex; gap:5px;">
+                        <select onchange="changerCategorie('${u.key}', this.value)" style="background:#000; color:white; border:1px solid #444; border-radius:4px; font-size:0.7rem;">
+                            <option value="A" ${cat==='A'?'selected':''}>A</option>
+                            <option value="B" ${cat==='B'?'selected':''}>B</option>
+                            <option value="C" ${cat==='C'?'selected':''}>C</option>
                         </select>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
-                            <button onclick="validerPaiement('${u.key}', '${filtre}', this)" class="pay-btn">💰</button>
-                            <button onclick="envoyerRappel('${u.key}', '${data.nom}', '${vraieCategorieDuClient}')" class="pay-btn" style="border-color:#25D366; color:#25D366;">💬</button>
-                            <button onclick="toggleBan('${u.key}', '${filtre}')" class="pay-btn" style="${styleBtnBan}">${isBanned ? '🔓' : '🚫'}</button>
-                            <button onclick="deleteClient('${u.key}', '${filtre}')" class="pay-btn" style="border-color:#e74c3c; color:#e74c3c;">🗑️</button>
-                        </div>
+                        <button onclick="toggleBan('${u.key}', '${filtre}')" style="background:none; border:1px solid #f59e0b; border-radius:4px; padding:4px;">${isBanned ? '🔓' : '🚫'}</button>
                     </div>
                 </div>`;
         });
 
-        // MISE À JOUR DU DASHBOARD
-        const elNb = document.getElementById('dash-nb-eleves'), elAr = document.getElementById('dash-total-a'), elRe = document.getElementById('dash-retard');
-        if (elNb) elNb.innerText = nbAttendu; 
-        if (elAr) elAr.innerText = totalArgent.toLocaleString() + " F";
-        if (elRe) elRe.innerText = nbRetards;
+        // 3. MISE À JOUR RÉELLE DES CASES DU DASHBOARD (VOTRE BLOC INTÉGRÉ)
+        try {
+            const eltNb = document.getElementById('stat-attendu');
+            const eltPrix = document.getElementById('stat-estime');
+            const eltRetard = document.getElementById('stat-retard');
+
+            if (eltNb) eltNb.innerText = nbAttendu;
+            if (eltPrix) eltPrix.innerText = totalArgent.toLocaleString() + " FG";
+            if (eltRetard) eltRetard.innerText = nbRetards;
+
+            console.log("✅ Stats mises à jour : ", nbAttendu, totalArgent);
+        } catch (e) {
+            console.error("Erreur d'affichage des stats:", e);
+        }
 
     } catch (e) {
-        console.error("Erreur LoadUsers:", e);
-        list.innerHTML = `<p style="color:red; text-align:center;">Erreur : ${e.message}</p>`;
+        console.error("Erreur critique loadUsers:", e);
+        list.innerHTML = `<p style="color:red; text-align:center;">Erreur de connexion Firebase</p>`;
     }
 }
 // Cette fonction doit être appelée dès que l'application démarre
@@ -862,60 +855,7 @@ async function ouvrirRecuperation() {
         alert("❌ Une erreur est survenue lors de la vérification.");
     }
 }
-async function ouvrirHistorique() {
-    // 1. Afficher la page (la Gate)
-    document.getElementById('page-historique').style.display = 'flex';
-    const corps = document.getElementById('corps-historique');
-    corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>Chargement des données... ⏳</td></tr>";
 
-    try {
-        // 2. Récupérer TOUS les clients depuis Firebase
-        const snapshot = await database.ref('clients').once('value');
-        const data = snapshot.val();
-        
-        let html = "";
-        let totalGeneral = 0;
-
-        if (data) {
-            // Transformer l'objet Firebase en tableau pour trier par date
-            const listePaiements = [];
-            
-            Object.keys(data).forEach(key => {
-                const client = data[key].infos_client;
-                // On ne prend que ceux qui ont une date de paiement (donc qui ont payé)
-                if (client.datePaiement) {
-                    listePaiements.push(client);
-                }
-            });
-
-            // Trier du plus récent au plus ancien
-            listePaiements.sort((a, b) => new Date(b.datePaiement) - new Date(a.datePaiement));
-
-            // 3. Construire les lignes du tableau
-            listePaiements.forEach(c => {
-                const montant = parseInt(c.montant || 0);
-                totalGeneral += montant;
-
-                html += `
-                    <tr class="ligne-paiement">
-                        <td style="color: #888;">${c.datePaiement}</td>
-                        <td style="font-weight:bold;">${c.nom}</td>
-                        <td>${c.telephone}</td>
-                        <td><span style="background:#333; padding:2px 6px; border-radius:4px;">${c.categorie || 'Standard'}</span></td>
-                        <td style="text-align:right; font-weight:bold; color:#2ecc71;">${montant.toLocaleString()} FCFA</td>
-                    </tr>
-                `;
-            });
-        }
-
-        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center;'>Aucun paiement trouvé.</td></tr>";
-        document.getElementById('total-historique').innerText = totalGeneral.toLocaleString() + " FCFA";
-
-    } catch (e) {
-        console.error(e);
-        corps.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red;'>Erreur de chargement.</td></tr>";
-    }
-}
  function filtrerHistorique() {
     const input = document.getElementById('search-historique').value.toUpperCase();
     const rows = document.querySelectorAll('.ligne-paiement');
@@ -936,8 +876,50 @@ async function ouvrirHistorique() {
     document.getElementById('total-historique').innerText = totalFiltre.toLocaleString() + " FCFA";
 }
 
+// A AJOUTER DANS SCRIPT.JS
+function ouvrirHistorique() {
+    document.getElementById('page-historique').style.display = 'flex';
+    chargerContenuHistorique();
+}
+
 function fermerHistorique() {
     document.getElementById('page-historique').style.display = 'none';
+}
+
+async function chargerContenuHistorique() {
+    const corps = document.getElementById('corps-historique');
+    const totalElt = document.getElementById('total-historique');
+    if(!corps) return;
+
+    corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>Analyse des paiements...</td></tr>";
+
+    try {
+        const snap = await database.ref('clients').once('value');
+        let html = "";
+        let total = 0;
+
+        snap.forEach(client => {
+            const info = client.val().infos_client;
+            if(info && info.datePaiement) { // On n'affiche que ceux qui ont payé
+                const montant = parseInt(info.montant) || 0;
+                total += montant;
+                html += `
+                    <tr style="border-bottom: 1px solid #222;">
+                        <td style="padding:10px;">${info.datePaiement}</td>
+                        <td style="padding:10px; font-weight:bold;">${info.nom.toUpperCase()}</td>
+                        <td style="padding:10px;">${client.key}</td>
+                        <td style="padding:10px; color:var(--p);">CAT ${info.categorie || '?' }</td>
+                        <td style="padding:10px; text-align:right; color:#2ecc71; font-weight:900;">${montant.toLocaleString()} F</td>
+                    </tr>`;
+            }
+        });
+
+        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center;'>Aucun historique de paiement trouvé.</td></tr>";
+        totalElt.innerText = total.toLocaleString() + " FG";
+
+    } catch(e) {
+        corps.innerHTML = "<tr><td colspan='5' style='color:red;'>Erreur : "+e.message+"</td></tr>";
+    }
 }
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
