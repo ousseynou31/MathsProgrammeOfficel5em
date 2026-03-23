@@ -1,7 +1,6 @@
 // DÉCLARATION UNIQUE ET TOLÉRANTE
-var minuteurAdmin = minuteurAdmin || null;
-var adminEnCours = adminEnCours || false;
-
+var minuteurAdmin = null;
+var adminEnCours = false;
 
 // 1. CONFIGURATION & INITIALISATION
 const firebaseConfig = {
