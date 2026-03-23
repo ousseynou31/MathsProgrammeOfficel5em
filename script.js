@@ -980,11 +980,9 @@ async function ouvrirHistorique() {
         });
 
         corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center;'>Aucune donnée trouvée.</td></tr>";
-        
         if(totalElt) {
-            totalElt.innerText = totalGeneral.toLocaleString() + " FG";
-        }
-
+    totalElt.innerText = totalGeneral.toLocaleString() + " FCFA";
+}
     } catch (e) {
         console.error("Erreur historique:", e);
         corps.innerHTML = "<tr><td colspan='5' style='color:red; text-align:center;'>Erreur Firebase</td></tr>";
