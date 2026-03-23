@@ -973,8 +973,8 @@ async function ouvrirHistorique() {
                             ${telPropre}
                         </td>
                         <td class="col-prix" style="width:18%; padding:12px; text-align:right; font-weight:bold; color:#2ecc71;">
-                            ${parseInt(montantPropre).toLocaleString()} FG
-                        </td>
+                       ${parseInt(montantPropre).toLocaleString()} FCFA
+                       </td>
                     </tr>`;
             }
         });
