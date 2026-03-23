@@ -273,14 +273,16 @@ async function chargerTarifs() {
 async function mettreAJourDashboard() {
     const usersSnap = await database.ref('clients').once('value');
     const tarifsSnap = await database.ref('reglages/tarifs').once('value');
-    const tarifs = tarifsSnap.val() || {A:0, B:0, C:0};
+    const tarifs = tarifsSnap.val() || {A: 5000, B: 3000, C: 1500};
 
     let totalAttendu = 0;
     let nbRetards = 0;
+    let nbTotal = 0;
 
     usersSnap.forEach(u => {
         const data = u.val().infos_client;
         if(data) {
+            nbTotal++;
             const jours = calculerJours(data.date_inscription);
             const prix = parseInt(tarifs[data.categorie]) || 0;
             
@@ -289,12 +291,10 @@ async function mettreAJourDashboard() {
         }
     });
 
-    // Mise à jour visuelle des chiffres en haut
-    document.getElementById('dash-total-a').innerText = totalAttendu.toLocaleString() + " F";
-    document.getElementById('dash-retard').innerText = nbRetards;
-    
-    // On lance aussi le chargement de la liste des abonnés
-    loadUsers('TOUT');
+    // Correction des IDs pour correspondre au HTML
+    document.getElementById('stat-attendu').innerText = nbTotal;
+    document.getElementById('stat-estime').innerText = totalAttendu.toLocaleString() + " FG";
+    document.getElementById('stat-retard').innerText = nbRetards;
 }
 
 // 1. PAYER : Réinitialise la date à aujourd'hui
