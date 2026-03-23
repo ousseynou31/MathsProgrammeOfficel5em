@@ -1234,44 +1234,10 @@ function deconnecterApp() {
         window.location.reload();
     }
 }
-
 // ==========================================
 //  DÉMARRAGE SÉCURISÉ (ÉVITE LES DOUBLONS)
 // ==========================================
 
-// On utilise var pour éviter l'erreur "Already declared" si le script recharge
-var adminEnCours = adminEnCours || false; 
-var minuteurAdmin; 
-
-function initialiserSysteme() {
-    console.log("🚀 Lancement du système DIOUF 2026...");
-
-    // 1. Surveillance de connexion (Le voyant LIVE/OFFLINE)
-    surveillerConnexion(); 
-    
-    // 2. Récupération du numéro stocké
-    const telLocal = localStorage.getItem('user_tel_id');
-    
-    // 3. Si l'élève est déjà connecté, activation présence et surveillance
-    if (telLocal) {
-        synchroniserPresence(); 
-        surveillerStatutEnDirect(telLocal);
-    }
-
-    // 4. Préparation de l'ID de l'appareil
-    const devIdDisplay = document.getElementById('display-device-id');
-    if(devIdDisplay) devIdDisplay.innerText = getDeviceId();
-
-    // 5. Initialisation du trigger Admin (Nettoyage automatique inclus)
-    initAdminTrigger();
-
-    // 6. Lancement de l'App (Le tunnel de décision)
-    launchApp();
-}
-
-// Lancement unique : vérifie si le DOM est déjà prêt
-if (document.readyState === 'complete') {
-    initialiserSysteme();
-} else {
-    window.addEventListener('load', initialiserSysteme);
-}
+// ÉVITE L'ERREUR DE REDÉCLARATION
+var adminEnCours = (typeof adminEnCours !== 'undefined') ? adminEnCours : false;
+var minuteurAdmin = (typeof minuteurAdmin !== 'undefined') ? minuteurAdmin : null;
