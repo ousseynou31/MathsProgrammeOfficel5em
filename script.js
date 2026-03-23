@@ -2,7 +2,7 @@
 var minuteurAdmin = null;
 var adminEnCours = false;
 
-// 1. CONFIGURATION & INITIALISATION
+// 1. CONFIGURATION & INITIALISATION 
 const firebaseConfig = {
     databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
 }; 
