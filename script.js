@@ -1222,32 +1222,39 @@ function deconnecterApp() {
 //  DÉMARRAGE SÉCURISÉ (ÉVITE LES DOUBLONS)
 // ==========================================
 
-// ÉVITE L'ERREUR DE REDÉCLARATION
-// On change le nom pour tuer le conflit de déclaration
-var adminActif = false; 
-var minuteurAdmin = null;
-// ==========================================
-function initialiserSysteme() {
-    console.log("🚀 Système DIOUF 2026 opérationnel...");
+// NOUVEAUX NOMS UNIQUES POUR TUER LES ERREURS SYNTAXE
+var activationAdmin = false; 
+var chronoAdmin = null;
+function initAdminTrigger() {
+    const trigger = document.getElementById('admin-trigger');
+    if (!trigger) return;
 
-    surveillerConnexion(); 
-    
-    const telLocal = localStorage.getItem('user_tel_id');
-    if (telLocal) {
-        synchroniserPresence(); 
-        surveillerStatutEnDirect(telLocal);
-    }
+    const demarrerChrono = (e) => {
+        if (activationAdmin) return; // Nouveau nom
+        if (e.type === 'contextmenu') e.preventDefault();
 
-    const devIdDisplay = document.getElementById('display-device-id');
-    if (devIdDisplay) devIdDisplay.innerText = getDeviceId();
+        // On utilise le nouveau nom chronoAdmin
+        chronoAdmin = setTimeout(() => {
+            activationAdmin = true; // Nouveau nom
+            const p = prompt("🔑 CODE ACCÈS ADMIN :");
+            
+            if (p === "TON_CODE") { 
+                naviguer('page-admin'); 
+                loadUsers('TOUT');
+            } else if (p !== null) {
+                alert("❌ Code incorrect");
+            }
+            activationAdmin = false; 
+        }, 2000); 
+    };
 
-    initAdminTrigger();
-    launchApp();
-}
+    const stopperChrono = () => {
+        clearTimeout(chronoAdmin); // Nouveau nom
+    };
 
-// Sécurité : Ne lancer qu'une seule fois
-if (document.readyState === 'complete') {
-    initialiserSysteme();
-} else {
-    window.addEventListener('load', initialiserSysteme);
+    trigger.addEventListener('touchstart', demarrerChrono);
+    trigger.addEventListener('mousedown', demarrerChrono);
+    trigger.addEventListener('touchend', stopperChrono);
+    trigger.addEventListener('mouseup', stopperChrono);
+    trigger.addEventListener('mouseleave', stopperChrono);
 }
