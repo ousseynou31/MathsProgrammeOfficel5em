@@ -245,21 +245,21 @@
                    style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #444; background: #222; color: white; font-size: 0.9rem;">
         </div>
 
-        <div style="flex: 1; overflow-y: auto; border: 1px solid #333; border-radius: 8px;">
-            <table style="width: 100%; table-layout: fixed; border-collapse: collapse;">
-    <thead>
-        <tr style="background: #1a1a1a; color: #555; text-transform: uppercase; font-size: 0.65rem;">
-            <th style="width: 20%; padding: 10px; text-align: left;">Date</th>
-            <th style="width: 30%; padding: 10px; text-align: left;">Nom Client</th>
-            <th style="width: 10%; padding: 10px; text-align: center;">Cat</th>
-            <th style="width: 20%; padding: 10px; text-align: left;">Téléphone</th>
-            <th style="width: 20%; padding: 10px; text-align: right;">Montant</th>
-        </tr>
-    </thead>
-    <tbody id="corps-historique">
-        </tbody>
-</table>
-        </div>
+      <div style="overflow-x: auto; width: 100%;">
+    <table style="width: 100%; table-layout: fixed; border-collapse: collapse; min-width: 600px;">
+        <thead>
+            <tr style="background: #111; color: #666; font-size: 0.7rem; text-transform: uppercase;">
+                <th style="width: 15%; padding: 12px; text-align: left;">Date</th>
+                <th style="width: 35%; padding: 12px; text-align: left;">Nom Client</th>
+                <th style="width: 10%; padding: 12px; text-align: center;">Cat</th>
+                <th style="width: 20%; padding: 12px; text-align: left;">Téléphone</th>
+                <th style="width: 20%; padding: 12px; text-align: right;">Montant</th>
+            </tr>
+        </thead>
+        <tbody id="corps-historique">
+            </tbody>
+    </table>
+</div>
 
         <div style="margin-top: 15px; padding: 15px; background: #111; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--p);">
             <span style="font-weight: bold; color: gray;">TOTAL ENCAISSÉ :</span>
