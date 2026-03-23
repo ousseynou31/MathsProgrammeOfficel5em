@@ -1425,41 +1425,44 @@ function deconnecterApp() {
     }
 }
 
-// Lancement automatique au chargement de la page
-window.addEventListener('load', activerSignalPresence);
-
 // ==========================================
-// 8. DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
+//  DÉMARRAGE GLOBAL (L'UNIQUE BLOC DE SORTIE)
 // ==========================================
 window.addEventListener('load', () => {
-    console.log("🚀 Lancement...");
+    console.log("🚀 Lancement du système de sécurité...");
 
-    // 1. LE GARDIEN (Vérifie si le compte est Supprimé ou Suspendu)
+    // 1. LE GARDIEN (Vérifie en temps réel si le compte est Supprimé ou Suspendu)
     surveillerStatutCompte(); 
 
     // 2. Allume la LED (Vérification de la connexion Firebase)
     surveillerConnexion(); 
     
-    // 3. Enregistre l'appareil dans l'onglet "Data" (Présence en temps réel)
-    marquerPresence(); 
+    // 3. Signal de présence (Pour que l'Admin voit le voyant vert)
+    synchroniserPresence(); 
     
-    // 4. Initialise l'appui long de 3s sur le titre pour l'admin
+    // 4. Initialise l'accès caché pour l'Admin (Appui long 3s)
     initAdminTrigger(); 
 
-    // 5. Affiche l'ID de l'appareil dans la zone d'activation
+    // 5. Affiche l'ID de l'appareil pour l'activation PIN
     const devIdDisplay = document.getElementById('display-device-id');
     if(devIdDisplay) {
         devIdDisplay.innerText = getDeviceId();
     }
 
-    // 6. Décide quelle page afficher (Licence, Inscription ou Accueil)
+    // 6. LIAISON DU BOUTON RÉCUPÉRATION (Nouvelle sécurité)
+    const btnRecup = document.getElementById('btn-recuperer'); 
+    if (btnRecup) {
+        btnRecup.onclick = ouvrirRecuperation;
+    }
+
+    // 7. DÉCISION D'ACCÈS (Licence -> Inscription -> Accueil)
     launchApp(); 
     
-    console.log("✅ Initialisation terminée et sous surveillance.");
-    // LIAISON DU BOUTON PDF
-    const btnPdf = document.getElementById('mon-bouton-pdf-id'); // Remplace par l'ID de ton bouton
+    console.log("✅ Système de communication initialisé.");
+
+    // LIAISON DU BOUTON PDF (Exportation Bilan)
+    const btnPdf = document.getElementById('mon-bouton-pdf-id'); 
     if (btnPdf) {
         btnPdf.addEventListener('click', exporterPDF);
     }
 });
-
