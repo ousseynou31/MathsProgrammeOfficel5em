@@ -765,10 +765,21 @@ async function loadUsers(filtre = 'TOUT') {
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         
                         <div style="flex:1;">
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <b style="font-size:0.9rem; color:white;">${data.nom.toUpperCase()}</b>
-                                <span style="font-size:0.6rem; background:#333; color:#f1c40f; padding:2px 6px; border-radius:4px; font-weight:bold;">${cat}</span>
-                            </div>
+                            <div style="display:flex; align-items:center; gap:10px;">
+    <b style="font-size:0.9rem; color:white; white-space:nowrap;">${data.nom.toUpperCase()}</b>
+    
+    <div title="${val.status === 'en_ligne' ? 'Connecté' : 'Hors ligne'}" style="
+        width: 9px; 
+        height: 9px; 
+        border-radius: 50%; 
+        background-color: ${val.status === 'en_ligne' ? '#2ecc71' : '#555'}; 
+        box-shadow: ${val.status === 'en_ligne' ? '0 0 10px #2ecc71' : 'none'};
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    "></div>
+
+    <span style="font-size:0.6rem; background:#222; color:#f1c40f; border:1px solid #444; padding:2px 6px; border-radius:4px; font-weight:bold;">${cat}</span>
+</div>
                             <div style="font-size:0.75rem; color:gray; margin-top:3px;">📞 ${tel}</div>
                             ${isBanned ? '<div style="font-size:0.65rem; color:#e74c3c; font-weight:900; margin-top:5px;">⚠️ COMPTE SUSPENDU</div>' : ''}
                         </div>
