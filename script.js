@@ -1,13 +1,7 @@
-// TOUT EN HAUT DU FICHIER script.js
-(function() { 
-    "use strict";
+// DÉCLARATION UNIQUE ET TOLÉRANTE
+var minuteurAdmin = minuteurAdmin || null;
+var adminEnCours = adminEnCours || false;
 
-    // On utilise 'var' ici, à l'intérieur de la bulle, pour une sécurité totale
-    var minuteurAdmin = null;
-    var adminEnCours = false;
-
-    // ... GARDE TOUT TON CODE EXISTANT ICI ...
-    // (Toutes tes fonctions : naviguer, verifierLicence, etc.)
 
 // 1. CONFIGURATION & INITIALISATION
 const firebaseConfig = {
