@@ -919,7 +919,7 @@ async function ouvrirHistorique() {
     const corps = document.getElementById('corps-historique');
     const totalElt = document.getElementById('total-historique');
     
-    page.style.display = 'flex'; // Activation du plein écran
+    page.style.display = 'flex'; 
     corps.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:30px; color:gray;'>Chargement...</td></tr>";
 
     try {
@@ -942,31 +942,36 @@ async function ouvrirHistorique() {
 
                 totalGeneral += montant;
 
-                // Création de la ligne avec alignement vertical strict
+                // CHAQUE DONNÉE DANS SA PROPRE COLONNE AVEC LARGEUR FIXE
                 html += `
                     <tr class="ligne-historique" style="border-bottom: 1px solid #222;">
-                        <td style="padding:15px 10px; width:20%; color:#888; font-size:0.75rem;">${datePay}</td>
-                        <td style="padding:15px 10px; width:35%;">
-                            <b class="search-name" style="color:white; display:block; font-size:0.85rem;">${info.nom.toUpperCase()}</b>
-                            <small style="color:#f1c40f;">CAT ${cat}</small>
+                        <td style="width:20%; padding:12px 10px; color:#888; font-size:0.75rem; overflow:hidden; white-space:nowrap;">
+                            ${datePay}
                         </td>
-                        <td class="search-tel" style="padding:15px 10px; width:20%; color:#888; font-size:0.75rem;">${client.key}</td>
-                        <td style="padding:15px 10px; width:25%; text-align:right; font-weight:900; color:#2ecc71;">
-                            ${montant.toLocaleString()} FG
+                        <td style="width:30%; padding:12px 10px; color:white; font-weight:bold; font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            ${info.nom.toUpperCase()}
+                        </td>
+                        <td style="width:10%; padding:12px 10px; text-align:center;">
+                            <span style="background:#333; color:#f1c40f; padding:2px 5px; border-radius:4px; font-size:0.65rem; font-weight:bold;">${cat}</span>
+                        </td>
+                        <td style="width:20%; padding:12px 10px; color:#888; font-size:0.75rem;">
+                            ${client.key}
+                        </td>
+                        <td style="width:20%; padding:12px 10px; text-align:right; font-weight:900; color:#2ecc71; font-size:0.85rem;">
+                            ${montant.toLocaleString()}
                         </td>
                     </tr>`;
             }
         });
 
-        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center;'>Aucun élève.</td></tr>";
+        corps.innerHTML = html || "<tr><td colspan='5' style='text-align:center;'>Aucune donnée.</td></tr>";
         if(totalElt) totalElt.innerText = totalGeneral.toLocaleString() + " FG";
 
     } catch (e) {
         console.error(e);
-        corps.innerHTML = "<tr><td colspan='5' style='color:red;'>Erreur.</td></tr>";
+        corps.innerHTML = "<tr><td colspan='5' style='color:red; text-align:center;'>Erreur de chargement.</td></tr>";
     }
 }
-
 function fermerHistorique() {
     document.getElementById('page-historique').style.display = 'none';
 }
