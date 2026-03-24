@@ -343,42 +343,6 @@ async function verifierIdentite() {
     }
 }
 
-
-
-// REMPLACE TON ANCIENNE FONCTION ouvrirRecuperation PAR CELLE-CI :
-async function ouvrirRecuperation() {
-    const tel = prompt("📱 Entrez le numéro de téléphone de votre compte :");
-    
-    if (!tel || tel.length < 8) {
-        alert("⚠️ Numéro invalide.");
-        return;
-    }
-
-    try {
-        // On vérifie spécifiquement si les INFOS du client existent
-        const snap = await database.ref('clients/' + tel + '/infos_client').once('value');
-        
-        if (snap.exists()) {
-            // LE COMPTE EXISTE : On restaure les clés locales
-            localStorage.setItem('user_tel_id', tel);
-            localStorage.setItem('v32_registered', 'true');
-            localStorage.setItem('v32_active', 'true'); // On réactive aussi la licence
-            
-            alert("✅ Compte retrouvé ! Bon retour parmi nous.");
-            
-            // On relance l'application
-            if (typeof launchApp === "function") {
-                launchApp();
-            }
-        } else {
-            // LE COMPTE N'EXISTE PAS (Supprimé ou jamais créé)
-            alert("❌ AUCUN COMPTE TROUVÉ : Ce numéro n'est pas enregistré ou a été supprimé par l'administration.");
-        }
-    } catch (e) {
-        console.error(e);
-        alert("🌐 Erreur de connexion au serveur.");
-    }
-}
 // REMPLACE (OU AJOUTE) CETTE FONCTION :
 function surveillerStatutEnDirect(tel) {
     if (!tel) return;
