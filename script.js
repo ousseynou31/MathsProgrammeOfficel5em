@@ -422,6 +422,15 @@ async function validerPaiementClient(telId, categorie) {
         alert("Erreur lors de la validation");
     }
 }
+// FONCTION COMPLÉMENTAIRE POUR LE PAIEMENT (BOUTON 💰)
+async function validerPaiement(id) {
+    if(confirm("Confirmer le paiement pour cet élève ? (Cela remettra ses jours à zéro)")) {
+        const nouvelleDate = new Date().toISOString();
+        await database.ref(`clients/${id}/infos_client/date_inscription`).set(nouvelleDate);
+        alert("✅ Paiement enregistré !");
+        loadUsers(); // Rafraîchir la liste
+    }
+}
 // 2. WHATSAPP : Message automatique
 function envoyerRappel(tel, nom, cat) {
     const msg = `Bonjour ${nom}, votre abonnement (Catégorie ${cat}) arrive à échéance. Merci de régulariser votre situation.`;
@@ -743,15 +752,7 @@ async function loadUsers(filtre = 'TOUT') {
     }
 }
 
-// FONCTION COMPLÉMENTAIRE POUR LE PAIEMENT (BOUTON 💰)
-async function validerPaiement(id) {
-    if(confirm("Confirmer le paiement pour cet élève ? (Cela remettra ses jours à zéro)")) {
-        const nouvelleDate = new Date().toISOString();
-        await database.ref(`clients/${id}/infos_client/date_inscription`).set(nouvelleDate);
-        alert("✅ Paiement enregistré !");
-        loadUsers(); // Rafraîchir la liste
-    }
-}
+
 // Cette fonction doit être appelée dès que l'application démarre
 function activerSignalPresence() {
     const tel = localStorage.getItem('user_tel_id');
@@ -1226,7 +1227,7 @@ function deconnecterApp() {
 window.addEventListener('load', async () => {
     console.log("🚀 Initialisation Sécurisée...");
 
-    // 1. Voyant et présence
+    // 1. Voyant et présence 
     if (typeof surveillerConnexion === "function") surveillerConnexion();
     
     const telLocal = localStorage.getItem('user_tel_id');
