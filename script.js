@@ -314,6 +314,34 @@ async function launchApp() {
     }
 }
 
+async function verifierIdentite() {
+    const tel = localStorage.getItem('user_tel_id');
+    if (!tel) return "NO_PROFILE";
+
+    try {
+        const snap = await database.ref(`clients/${tel}/infos_client`).once('value');
+        if (!snap.exists()) return "DELETED";
+
+        const user = snap.val();
+
+        // 1. Priorité absolue au bannissement
+        if (user.etat_acces === "banni") return "BANNED";
+
+        // 2. Vérification de la suspension
+        if (user.etat_acces === "suspendu") return "SUSPENDED";
+
+        // 3. Vérification du paiement (La barrière financière)
+        if (user.statut_paiement !== "VALIDE") return "PENDING_PAYMENT";
+
+        // 4. Si tout est vert
+        return "AUTHORIZED";
+
+    } catch (e) {
+        console.error("Erreur sécurité identité:", e);
+        return "NO_PROFILE";
+    }
+}
+
 
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO00XXXXXXXXXXXXX
