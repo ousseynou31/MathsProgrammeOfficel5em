@@ -373,33 +373,7 @@ async function mettreAJourDashboard() {
     document.getElementById('stat-retard').innerText = nbRetards;
 }
 
-// 1. PAYER : Réinitialise la date à aujourd'hui
-// Fonction que tu appelles quand tu cliques sur "Valider Paiement"
-async function validerPaiementClient(telId, categorie) {
-    const dateJour = new Date().toLocaleDateString('fr-FR');
-    
-    try {
-        await database.ref('clients/' + telId + '/paiement').set({
-            statut: "VALIDE",
-            date: dateJour,
-            offre: categorie,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-        });
-        alert("✅ Paiement enregistré !");
-        // Optionnel : rafraîchir la liste de l'historique ici
-    } catch (e) {
-        alert("Erreur lors de la validation");
-    }
-}
-// FONCTION COMPLÉMENTAIRE POUR LE PAIEMENT (BOUTON 💰)
-async function validerPaiement(id) {
-    if(confirm("Confirmer le paiement pour cet élève ? (Cela remettra ses jours à zéro)")) {
-        const nouvelleDate = new Date().toISOString();
-        await database.ref(`clients/${id}/infos_client/date_inscription`).set(nouvelleDate);
-        alert("✅ Paiement enregistré !");
-        loadUsers(); // Rafraîchir la liste
-    }
-}
+
 // 2. WHATSAPP : Message automatique
 function envoyerRappel(tel, nom, cat) {
     const msg = `Bonjour ${nom}, votre abonnement (Catégorie ${cat}) arrive à échéance. Merci de régulariser votre situation.`;
