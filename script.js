@@ -121,10 +121,205 @@ function naviguer(id) {
         console.error("❌ Erreur : L'écran '" + id + "' n'existe pas dans le HTML.");
     }
 }
-// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
-// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
-// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
-// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXX
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO00XXXXXXXXXXXXX
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0000XXXXXXXXXXXXX
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXXX
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000XXXXXXXXXXXXX
+async function enregistrerProfil() {
+    const nom = document.getElementById('reg-nom').value.trim();
+    const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
+    
+    if(!nom || tel.length < 8) return alert("⚠️ Veuillez remplir tous les champs correctement.");
+
+    try {
+        // 🔍 VERIFICATION : Est-ce que ce numéro existe déjà ?
+        const check = await database.ref('clients/' + tel + '/infos_client').once('value');
+        
+        if (check.exists()) {
+            const data = check.val();
+            if (data.etat_acces === "banni") {
+                return alert("🚫 Ce numéro est banni. Inscription impossible.");
+            }
+            return alert("💡 Ce compte existe déjà. Cliquez sur 'Récupérer mon compte'.");
+        }
+
+        // 📝 CRÉATION : On enregistre avec les verrous de sécurité
+        await database.ref('clients/' + tel + '/infos_client').set({
+            nom: nom,
+            tel: tel,
+            categorie: document.getElementById('reg-categorie')?.value || "C",
+            etat_acces: "actif",           // Il peut ouvrir l'app...
+            statut_paiement: "EN_ATTENTE", // ...mais il tombera sur la page de paiement
+            date_inscription: new Date().toISOString(),
+            device_id: typeof getDeviceId === 'function' ? getDeviceId() : "unknown"
+        });
+
+        localStorage.setItem('user_tel_id', tel);
+        alert("✅ Inscription réussie ! En attente de validation du paiement par l'admin.");
+        
+        // On relance l'app pour qu'elle vérifie le statut
+        if (typeof launchApp === 'function') launchApp();
+
+    } catch(e) {
+        console.error(e);
+        alert("❌ Erreur de connexion au serveur.");
+    }
+}
+async function recupererCompte() {
+    // Récupération du numéro saisi dans le champ
+    const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
+    
+    if(!tel || tel.length < 8) {
+        return alert("📞 Veuillez entrer un numéro de téléphone valide.");
+    }
+
+    try {
+        // On interroge la source de vérité (Firebase)
+        const snap = await database.ref('clients/' + tel + '/infos_client').once('value');
+        
+        if (!snap.exists()) {
+            return alert("❌ Aucun compte trouvé pour ce numéro. Veuillez vous inscrire.");
+        }
+
+        const data = snap.val();
+
+        // 🛡️ VERROU 1 : Anti-Triche (Compte banni ou supprimé définitivement)
+        if (data.etat_acces === "banni") {
+            return alert("🚫 Accès refusé : Ce compte a été désactivé définitivement par l'administrateur.");
+        }
+
+        // 🛡️ VERROU 2 : Vérification du Paiement (La clé du Bilan FG)
+        if (data.statut_paiement !== "VALIDE") {
+            alert("⏳ Compte trouvé, mais votre paiement n'a pas encore été validé. Vous allez être redirigé vers la page d'attente.");
+            
+            // On enregistre l'ID pour que l'app sache qui attend la validation
+            localStorage.setItem('user_tel_id', tel);
+            if (typeof launchApp === 'function') launchApp();
+            return;
+        }
+
+        // ✅ TOUT EST OK : On restaure l'accès complet
+        localStorage.setItem('user_tel_id', tel);
+        localStorage.setItem('v32_registered', 'true'); // Marqueur de compte validé local
+        
+        alert("✅ Bon retour ! Votre accès est restauré avec succès.");
+        
+        if (typeof launchApp === 'function') launchApp();
+
+    } catch (e) {
+        console.error("Erreur récupération:", e);
+        alert("❌ Erreur réseau : Impossible de vérifier votre compte.");
+    }
+}
+async function validerPaiementFinal(id) {
+    if(confirm("✅ Confirmer le paiement ? Cet élève sera ajouté au bilan financier.")) {
+        try {
+            // On met à jour les deux verrous d'un coup
+            await database.ref(`clients/${id}/infos_client`).update({
+                statut_paiement: "VALIDE", // Débloque l'argent dans l'historique
+                etat_acces: "actif",      // Débloque la porte de l'application
+                date_inscription: new Date().toISOString() // Relance le compteur de jours
+            });
+
+            alert("💰 Paiement validé et enregistré !");
+            
+            // On rafraîchit les deux listes pour voir les changements
+            if (typeof loadUsers === "function") loadUsers('TOUT');
+            if (typeof chargerContenuHistorique === "function") chargerContenuHistorique();
+
+        } catch (e) {
+            alert("❌ Erreur de validation.");
+        }
+    }
+}
+async function toggleBan(id, filtreActuel) {
+    try {
+        const snap = await database.ref(`clients/${id}/infos_client/etat_acces`).once('value');
+        const estActuel = snap.val() === "actif";
+        const nouvelEtat = estActuel ? "suspendu" : "actif";
+
+        if(confirm(`Voulez-vous ${estActuel ? 'SUSPENDRE' : 'ACTIVER'} cet accès ?`)) {
+            await database.ref(`clients/${id}/infos_client/etat_acces`).set(nouvelEtat);
+            
+            alert(`📱 Accès ${nouvelEtat === "actif" ? "réactivé" : "coupé"}.`);
+            loadUsers(filtreActuel);
+        }
+    } catch (e) {
+        alert("❌ Erreur de modification d'accès.");
+    }
+}
+async function deleteClient(id, filtreActuel) {
+    if(confirm("⚠️ ATTENTION : Voulez-vous BANNIRE ce numéro définitivement ? Il ne pourra plus jamais se réinscrire.")) {
+        try {
+            await database.ref(`clients/${id}/infos_client`).update({
+                etat_acces: "banni",
+                statut_paiement: "EXPIRE", // Sort de l'historique financier actuel
+                date_bannissement: new Date().toISOString()
+            });
+
+            alert("🚫 Numéro placé sur liste noire définitive.");
+            loadUsers(filtreActuel);
+        } catch (e) {
+            alert("❌ Erreur lors du bannissement.");
+        }
+    }
+}
+async function launchApp() {
+    const isActive = localStorage.getItem('v32_active') === 'true';
+    
+    // verifierIdentite() doit maintenant renvoyer les nouveaux statuts 
+    // basés sur 'etat_acces' et 'statut_paiement' dans Firebase
+    const statusIdentite = await verifierIdentite(); 
+
+    if (!isActive) {
+        naviguer('license-gate');
+        return;
+    }
+
+    switch (statusIdentite) {
+        case "AUTHORIZED":
+            naviguer('hub-accueil');
+            activerSignalEnLigne(); 
+            break;
+            
+        case "BANNED":
+            // 🚫 Cas : etat_acces === "banni"
+            localStorage.clear(); // On nettoie le téléphone du tricheur
+            alert("🚫 Votre compte a été définitivement révoqué.");
+            naviguer('registration-gate'); // On le renvoie au début (bloqué)
+            break;
+
+        case "SUSPENDED":
+            // ⚠️ Cas : etat_acces === "suspendu"
+            alert("⚠️ Votre accès est temporairement suspendu.");
+            afficherEcranBloque(); // Il voit l'écran de blocage (ex: retard de paiement)
+            break;
+
+        case "PENDING_PAYMENT":
+            // ⏳ Cas : statut_paiement === "EN_ATTENTE"
+            alert("⏳ En attente de validation de votre paiement par l'administrateur.");
+            naviguer('registration-gate'); // Ou une page spécifique 'attente-paiement'
+            break;
+            
+        case "DELETED":
+        case "NO_PROFILE":
+            // Le compte n'existe pas ou a été effacé proprement
+            naviguer('registration-gate');
+            break;
+
+        default:
+            // Par sécurité, si on ne connaît pas le statut, on renvoie à l'inscription
+            naviguer('registration-gate');
+    }
+}
+
+
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXX
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO00XXXXXXXXXXXXX
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0000XXXXXXXXXXXXX
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXXX
+// --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000XXXXXXXXXXXXX
 // 1. La nouvelle fonction de récupération d'identité
 async function verifierIdentite() {
     const telLocal = localStorage.getItem('user_tel_id');
@@ -148,64 +343,8 @@ async function verifierIdentite() {
     }
 }
 
-async function launchApp() {
-    const isActive = localStorage.getItem('v32_active') === 'true';
-    const statusIdentite = await verifierIdentite();
 
-    if (!isActive) {
-        naviguer('license-gate');
-        return;
-    }
 
-    switch (statusIdentite) {
-        case "AUTHORIZED":
-            naviguer('hub-accueil');
-            // C'EST ICI QU'ON ACTIVE LE SIGNAL
-            activerSignalEnLigne(); 
-            break;
-            
-        case "BANNED":
-            alert("🚫 Accès suspendu.");
-            afficherEcranBloque();
-            break;
-            
-        case "DELETED":
-            alert("⚠️ Compte inexistant.");
-            naviguer('registration-gate');
-            break;
-
-        case "NO_PROFILE":
-            naviguer('registration-gate');
-            break;
-
-        default:
-            naviguer('hub-accueil');
-    }
-}
-// REMPLACE TON ANCIENNE FONCTION deleteClient PAR CELLE-CI :
-async function deleteClient(telId, filtreActuel) {
-    const confirmation = confirm("⚠️ ALERTE : Supprimer définitivement le compte " + telId + " ?\nL'élève ne pourra plus se reconnecter.");
-
-    if (confirmation) {
-        try {
-            // .remove() efface TOUT le dossier du numéro (Clé + Données)
-            await database.ref('clients/' + telId).remove();
-            
-            // Nettoyage optionnel de la présence
-            await database.ref('presence/' + telId).remove();
-
-            alert("✅ RÉUSSI : Le compte a été totalement éjecté du système.");
-            
-            // Rafraîchir l'affichage de l'admin
-            if (typeof loadUsers === "function") {
-                loadUsers(filtreActuel || 'TOUT');
-            }
-        } catch (e) {
-            console.error(e);
-            alert("❌ ERREUR : Impossible de joindre la base de données.");
-        }
-    }
-}
 // REMPLACE TON ANCIENNE FONCTION ouvrirRecuperation PAR CELLE-CI :
 async function ouvrirRecuperation() {
     const tel = prompt("📱 Entrez le numéro de téléphone de votre compte :");
