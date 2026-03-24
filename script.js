@@ -267,12 +267,20 @@ async function enregistrerProfil() {
     try {
         const clientRef = database.ref('clients/' + tel + '/infos_client');
         
-        // On utilise .update({}) au lieu de .set({}) pour ne pas effacer 
-        // d'autres données (comme l'historique de paiement)
+        // On récupère la catégorie choisie (Assure-toi d'avoir cet ID dans ton HTML)
+        const catChoisie = document.getElementById('reg-categorie')?.value || "C";
+
         await clientRef.update({
             nom: nom,
             tel: tel,
-            statut: "actif", // Par défaut à la création
+            categorie: catChoisie, 
+            statut: "actif", // Le compte est actif sur le téléphone
+            
+            // 🔒 SÉCURITÉ FINANCIÈRE : 
+            // On le met en attente. Il ne sera PAS dans l'historique
+            // tant que l'admin ne l'aura pas passé en "VALIDE"
+            statut_paiement: "EN_ATTENTE", 
+            
             date_inscription: new Date().toISOString(),
             device_source: getDeviceId()
         });
@@ -280,9 +288,13 @@ async function enregistrerProfil() {
         localStorage.setItem('user_tel_id', tel);
         localStorage.setItem('v32_registered', 'true');
         
-        alert("✅ Profil validé !");
-        launchApp();
+        alert("✅ Inscription réussie ! Votre accès sera activé après validation du paiement.");
+        
+        // On lance l'app (qui restera sur la page de blocage si pas encore validé)
+        launchApp(); 
+        
     } catch(e) {
+        console.error(e);
         alert("❌ Erreur Firebase : Vérifiez votre connexion.");
     }
 }
