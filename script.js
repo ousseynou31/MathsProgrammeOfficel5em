@@ -186,9 +186,12 @@ async function recupererCompte() {
 
         // 🛡️ VERROU 1 : Anti-Triche (Compte banni ou supprimé définitivement)
         if (data.etat_acces === "banni") {
-            return alert("🚫 Accès refusé : Ce compte a été désactivé définitivement par l'administrateur.");
-        }
-
+    const messageBanni = `🚫 ACCÈS RÉVOQUÉ DÉFINITIVEMENT\n\n` +
+                         `Ce numéro (${tel}) est sur liste noire.\n` +
+                         `Toute tentative de récupération est bloquée.\n\n` +
+                         `Contactez l'administrateur pour plus d'informations.`;
+    return alert(messageBanni);
+}
         // 🛡️ VERROU 2 : Vérification du Paiement (La clé du Bilan FG)
         if (data.statut_paiement !== "VALIDE") {
             alert("⏳ Compte trouvé, mais votre paiement n'a pas encore été validé. Vous allez être redirigé vers la page d'attente.");
