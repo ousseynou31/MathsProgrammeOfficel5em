@@ -249,22 +249,7 @@ async function toggleBan(id, filtreActuel) {
         alert("❌ Erreur de modification d'accès.");
     }
 }
-async function deleteClient(id, filtreActuel) {
-    if(confirm("⚠️ ATTENTION : Voulez-vous BANNIRE ce numéro définitivement ? Il ne pourra plus jamais se réinscrire.")) {
-        try {
-            await database.ref(`clients/${id}/infos_client`).update({
-                etat_acces: "banni",
-                statut_paiement: "EXPIRE", // Sort de l'historique financier actuel
-                date_bannissement: new Date().toISOString()
-            });
 
-            alert("🚫 Numéro placé sur liste noire définitive.");
-            loadUsers(filtreActuel);
-        } catch (e) {
-            alert("❌ Erreur lors du bannissement.");
-        }
-    }
-}
 async function launchApp() {
     const isActive = localStorage.getItem('v32_active') === 'true';
     
@@ -280,6 +265,8 @@ async function launchApp() {
     switch (statusIdentite) {
         case "AUTHORIZED":
             naviguer('hub-accueil');
+            // 🛡️ ON ACTIVE LA SURVEILLANCE EN DIRECT ICI
+             activerSecuriteTempsReel(localStorage.getItem('user_tel_id'));
             activerSignalEnLigne(); 
             break;
             
@@ -341,7 +328,40 @@ async function verifierIdentite() {
         return "NO_PROFILE";
     }
 }
+function activerSecuriteTempsReel(tel) {
+    if (!tel) return;
 
+    // 📡 On crée une écoute en direct sur le statut du client
+    database.ref(`clients/${tel}/infos_client/etat_acces`).on('value', (snapshot) => {
+        const etat = snapshot.val();
+
+        if (etat === "banni") {
+            // 🧨 EXPLOSION INSTANTANÉE
+            alert("⚠️ Votre compte a été définitivement supprimé par l'administrateur.");
+            localStorage.clear(); // On vide tout
+            location.reload();    // On force le retour à zéro (Inscription)
+        } 
+        else if (etat === "suspendu") {
+            // 🔒 FERMETURE IMMÉDIATE
+            alert("🚫 Votre accès est actuellement suspendu.");
+            afficherEcranBloque(); // On affiche l'écran de blocage sans tout effacer
+        }
+    });
+}
+async function deleteClient(id) {
+    if(confirm("❗ SUPPRESSION DÉFINITIVE : L'application du client sera désactivée INSTANTANÉMENT. Confirmer ?")) {
+        try {
+            // On envoie l'ordre de bannissement (Signal Instant T)
+            await database.ref(`clients/${id}/infos_client`).update({
+                etat_acces: "banni",
+                statut_paiement: "EXPIRE"
+            });
+            alert("✅ Client expulsé et supprimé.");
+        } catch (e) {
+            alert("Erreur de communication.");
+        }
+    }
+}
 
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO00XXXXXXXXXXXXX
