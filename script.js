@@ -588,8 +588,10 @@ async function toggleBan(telId, filtreActuel) {
     }
 }
 
-let adminEnCours = false; // 1. On ajoute ce verrou en haut
-
+// 1. DÉCLARATION SÉCURISÉE (On vérifie si elle existe avant de la créer)
+if (typeof adminEnCours === 'undefined') {
+    window.adminEnCours = false; 
+}
 
 // ==========================================
 // 1. STATISTIQUES GLOBALES
