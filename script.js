@@ -1176,7 +1176,7 @@ function initAdminTrigger() {
         window.minuteurAdmin = setTimeout(() => {
             const p = prompt("🔑 CODE ACCÈS ADMIN :");
             
-            if (p === "1234") { // Remplace par ton code
+            if (p === "0000") { // Remplace par ton code
                 naviguer('page-admin'); 
                 loadUsers('TOUT');
             } else if (p !== null) {
