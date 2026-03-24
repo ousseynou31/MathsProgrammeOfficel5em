@@ -167,15 +167,18 @@ async function enregistrerProfil() {
     }
 }
 async function recupererCompte() {
-    // Récupération du numéro saisi dans le champ
-    const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
+    // 1. Récupération et nettoyage du numéro
+    const champTel = document.getElementById('reg-tel');
+    if (!champTel) return alert("Erreur : Champ de saisie introuvable.");
+
+    const tel = champTel.value.trim().replace(/\D/g,'');
     
     if(!tel || tel.length < 8) {
         return alert("📞 Veuillez entrer un numéro de téléphone valide.");
     }
 
     try {
-        // On interroge la source de vérité (Firebase)
+        // 2. Interrogation de la "Source de Vérité" (Firebase)
         const snap = await database.ref('clients/' + tel + '/infos_client').once('value');
         
         if (!snap.exists()) {
@@ -186,15 +189,16 @@ async function recupererCompte() {
 
         // 🛡️ VERROU 1 : Anti-Triche (Compte banni ou supprimé définitivement)
         if (data.etat_acces === "banni") {
-    const messageBanni = `🚫 ACCÈS RÉVOQUÉ DÉFINITIVEMENT\n\n` +
-                         `Ce numéro (${tel}) est sur liste noire.\n` +
-                         `Toute tentative de récupération est bloquée.\n\n` +
-                         `Contactez l'administrateur pour plus d'informations.`;
-    return alert(messageBanni);
-}
+            const messageBanni = `🚫 ACCÈS RÉVOQUÉ DÉFINITIVEMENT\n\n` +
+                                 `Ce numéro (${tel}) est sur liste noire.\n` +
+                                 `Toute tentative de récupération est bloquée.\n\n` +
+                                 `Contactez l'administrateur pour plus d'informations.`;
+            return alert(messageBanni);
+        }
+
         // 🛡️ VERROU 2 : Vérification du Paiement (La clé du Bilan FG)
         if (data.statut_paiement !== "VALIDE") {
-            alert("⏳ Compte trouvé, mais votre paiement n'a pas encore été validé. Vous allez être redirigé vers la page d'attente.");
+            alert("⏳ Compte trouvé, mais votre paiement n'a pas encore été validé.\n\nVous allez être redirigé vers la page d'attente.");
             
             // On enregistre l'ID pour que l'app sache qui attend la validation
             localStorage.setItem('user_tel_id', tel);
@@ -202,17 +206,19 @@ async function recupererCompte() {
             return;
         }
 
-        // ✅ TOUT EST OK : On restaure l'accès complet
+        // ✅ TOUT EST OK : On restaure l'accès complet sur le téléphone
         localStorage.setItem('user_tel_id', tel);
-        localStorage.setItem('v32_registered', 'true'); // Marqueur de compte validé local
+        localStorage.setItem('v32_registered', 'true'); // Évite la redirection infinie
+        localStorage.setItem('v32_active', 'true');     // Marqueur de session active
         
-        alert("✅ Bon retour ! Votre accès est restauré avec succès.");
+        alert(`✅ Bon retour ${data.nom || ""} ! Votre accès est restauré.`);
         
+        // 🚀 Relance le moteur de l'app (Hub Accueil)
         if (typeof launchApp === 'function') launchApp();
 
     } catch (e) {
         console.error("Erreur récupération:", e);
-        alert("❌ Erreur réseau : Impossible de vérifier votre compte.");
+        alert("❌ Erreur réseau : Impossible de vérifier votre compte. Vérifiez votre connexion.");
     }
 }
 async function validerPaiementFinal(id) {
