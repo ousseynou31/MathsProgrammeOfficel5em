@@ -625,7 +625,7 @@ async function loadUsers(filtre = 'TOUT') {
     try {
         // Récupération des tarifs configurés
         const tarifsSnap = await database.ref('reglages/tarifs').once('value');
-        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
+        const tarifs = tarifsSnap.val() || { A: 10000, B: 7000, C: 4000 };
 
         // Récupération de tous les clients
         const usersSnap = await database.ref('clients').once('value');
