@@ -1189,7 +1189,7 @@ function initAdminTrigger() {
             adminEnCours = true; 
             const p = prompt("🔑 CODE ACCÈS ADMIN :");
             
-            if (p === "1234") { // REMPLACE "1234" PAR TON VRAI CODE
+            if (p === "0000") { // REMPLACE "0000" PAR TON VRAI CODE
                 naviguer('page-admin'); 
                 loadUsers('TOUT');
             } else if (p !== null) {
