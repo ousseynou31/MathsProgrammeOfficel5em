@@ -333,31 +333,6 @@ function calculerJours(dateInsc) {
     const jours = Math.floor(diff / (1000 * 60 * 60 * 24));
     return jours < 0 ? 0 : jours;
 }
-// --- 1. CHARGEMENT DE LA LISTE ---
-
-
-// Sauvegarder les prix dans Firebase
-async function sauvegarderTarifs() {
-    const tarifs = {
-        A: document.getElementById('price-A').value || 0,
-        B: document.getElementById('price-B').value || 0,
-        C: document.getElementById('price-C').value || 0
-    };
-    await database.ref('reglages/tarifs').set(tarifs);
-    alert("✅ Tarifs mis à jour !");
-    // APPEL DE LA BONNE FONCTION DE MISE À JOUR
-    loadUsers('TOUT'); 
-}
-// Charger les prix au démarrage de l'admin
-async function chargerTarifs() {
-    const snap = await database.ref('reglages/tarifs').once('value');
-    if(snap.exists()){
-        const t = snap.val();
-        document.getElementById('price-A').value = t.A;
-        document.getElementById('price-B').value = t.B;
-        document.getElementById('price-C').value = t.C;
-    }
-}
 
 async function mettreAJourDashboard() {
     const usersSnap = await database.ref('clients').once('value');
@@ -1238,6 +1213,53 @@ function calculerBilan(stats) {
     document.getElementById('montant-total').innerText = totalFinancier + " FCFA";
 }
 
+// --- 1. CHARGEMENT DE LA LISTE ---
+
+async function sauvegarderTarifs() {
+    const tarifs = {
+        A: document.getElementById('price-A').value || 0,
+        B: document.getElementById('price-B').value || 0,
+        C: document.getElementById('price-C').value || 0
+    };
+    
+    await database.ref('reglages/tarifs').set(tarifs);
+    alert("✅ Tarifs mis à jour !");
+    
+    // NOUVEAU : On recharge immédiatement les variables globales pour le bilan
+    await chargerTarifsConfig(); 
+    
+    // Met à jour le tableau et le bilan financier
+    loadUsers('TOUT'); 
+}
+// Charger les prix au démarrage de l'admin et mettre à jour le moteur de calcul
+async function chargerTarifs() {
+    const snap = await database.ref('reglages/tarifs').once('value');
+    if(snap.exists()){
+        const t = snap.val();
+        
+        // 1. MISE À JOUR VISUELLE (Pour l'administrateur dans les cases)
+        if(document.getElementById('price-A')) document.getElementById('price-A').value = t.A;
+        if(document.getElementById('price-B')) document.getElementById('price-B').value = t.B;
+        if(document.getElementById('price-C')) document.getElementById('price-C').value = t.C;
+
+        // 2. MISE À JOUR MATHÉMATIQUE (Pour le calcul du bilan financier)
+        // On transforme le texte en nombre pour éviter les erreurs de calcul
+        window.tarifA = parseFloat(t.A) || 0;
+        window.tarifB = parseFloat(t.B) || 0;
+        window.tarifC = parseFloat(t.C) || 0;
+
+        console.log("💰 Tarifs synchronisés pour le bilan :", {A: window.tarifA, B: window.tarifB, C: window.tarifC});
+    }
+}
+// EXEMPLE DE CALCUL DU BILAN
+function calculerRecettes(stats) {
+    // On multiplie le nombre d'élèves par les tarifs chargés depuis Firebase
+    const total = (stats.catA * window.tarifA) + 
+                  (stats.catB * window.tarifB) + 
+                  (stats.catC * window.tarifC);
+                  
+    document.getElementById('total-caisse').innerText = total + " FCFA";
+}
 
 // NOUVETE
 // NOUVETE
@@ -1256,39 +1278,47 @@ function deconnecterApp() {
         window.location.reload();
     }
 }
-// ==========================================
-//  LANCEMENT UNIQUE DU SYSTÈME DIOUF 2026
-// ==========================================
+// =========================================================
+//  LANCEMENT UNIQUE ET SÉCURISÉ DU SYSTÈME DIOUF 2026
+// =========================================================
 window.addEventListener('load', async () => {
-    console.log("🚀 Initialisation Sécurisée...");
+    console.log("🚀 Initialisation du moteur Maths 5em...");
 
-    // 1. Voyant et présence 
-    if (typeof surveillerConnexion === "function") surveillerConnexion();
+    // 1. GESTION DE LA CONNEXION ET PRÉSENCE
+    if (typeof surveillerConnexion === "function") {
+        surveillerConnexion();
+    }
     
     const telLocal = localStorage.getItem('user_tel_id');
     if (telLocal) {
-        // Correction : Utilisez le nom de fonction exact que vous avez défini
+        // Active le signal "En ligne" et la surveillance en temps réel
         if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
         if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
     }
 
-    // 2. ID Appareil
+    // 2. AFFICHAGE DE L'ID APPAREIL (Pour l'écran d'activation)
     const devIdDisplay = document.getElementById('display-device-id');
     if (devIdDisplay && typeof getDeviceId === "function") {
         devIdDisplay.innerText = getDeviceId();
     }
 
-    // 3. Trigger Admin
-    if (typeof initAdminTrigger === "function") initAdminTrigger();
-
-    // --- 3.5 RÉCUPÉRATION DES TARIFS RÉELS (Sénégal/Diourbel) ---
-    // Cette étape assure que le bilan financier utilise les prix de la base de données
-    if (typeof chargerTarifsConfig === "function") {
-        await chargerTarifsConfig();
+    // 3. ACTIVATION DU BOUTON CACHÉ ADMIN (Appui long)
+    if (typeof initAdminTrigger === "function") {
+        initAdminTrigger();
     }
 
-    // 4. LANCEMENT DU TUNNEL DE SÉCURITÉ V1
+    // --- 3.5 SYNCHRONISATION DES TARIFS (Crucial pour le bilan financier) ---
+    // On attend (await) que les prix arrivent de Firebase AVANT de lancer l'app
+    if (typeof chargerTarifs === "function") {
+        console.log("📊 Synchronisation des tarifs en cours...");
+        await chargerTarifs();
+    }
+
+    // 4. DÉMARRAGE DE L'INTERFACE (Tunnel de sécurité V1)
     if (typeof launchApp === "function") {
+        console.log("🔓 Vérification de la licence...");
         await launchApp();
     }
+    
+    console.log("✅ Système prêt et débloqué.");
 });
