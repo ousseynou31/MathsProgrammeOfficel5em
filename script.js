@@ -366,6 +366,28 @@ async function deleteClient(id) {
     }
 }
 
+
+async function mettreAJourAnciensClients() {
+    try {
+        const snapshot = await database.ref('clients').once('value');
+        if (!snapshot.exists()) return alert("Aucun client trouvé.");
+
+        let count = 0;
+        snapshot.forEach(child => {
+            // On cible précisément 'infos_client' pour chaque enfant
+            database.ref(`clients/${child.key}/infos_client`).update({
+                statut_paiement: "VALIDE",
+                etat_acces: "actif"
+            });
+            count++;
+        });
+
+        alert(`✅ Succès ! ${count} clients ont été mis à jour avec les nouveaux statuts.`);
+    } catch (e) {
+        alert("❌ Erreur lors de la migration : " + e.message);
+    }
+}
+
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO00XXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0000XXXXXXXXXXXXX
