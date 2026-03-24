@@ -44,23 +44,6 @@ function surveillerConnexion() {
     });
 }
 
-// ... (Ajoute ici toutes tes autres fonctions : launchApp, naviguer, etc.) ...
-
-// 3. DÉMARRAGE (Toujours à la toute fin du fichier)
-window.addEventListener('load', () => {
-    console.log("🚀 Lancement du système...");
-    surveillerConnexion(); 
-    
-    const telLocal = localStorage.getItem('user_tel_id');
-    if (telLocal) {
-        // Au lieu d'appeler activerSignalEnLigne ici, 
-        // on laisse launchApp décider si l'élève est autorisé.
-        surveillerStatutEnDirect(telLocal);
-    }
-
-    initAdminTrigger();
-    launchApp(); // C'est cette fonction qui appellera activerSignalEnLigne() si tout est OK
-});
 
 const SECRET_KEY = 7391;
 const ADMIN_PASS = "0000";
