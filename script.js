@@ -1,6 +1,8 @@
-// --- DÉCLARATIONS GLOBALES (SANS DOUBLONS) ---
-var minuteurAdmin = (typeof minuteurAdmin !== 'undefined') ? minuteurAdmin : null;
-var adminEnCours = (typeof adminEnCours !== 'undefined') ? adminEnCours : false;
+// NETTOYAGE : Une seule déclaration globale ultra-compatible
+window.adminEnCours = window.adminEnCours || false;
+window.minuteurAdmin = window.minuteurAdmin || null;
+
+console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
 
 // 1. CONFIGURATION FIREBASE
 const firebaseConfig = {
@@ -586,11 +588,6 @@ async function toggleBan(telId, filtreActuel) {
     } catch(e) {
         alert("❌ Erreur de modification du statut.");
     }
-}
-
-// 1. DÉCLARATION SÉCURISÉE (On vérifie si elle existe avant de la créer)
-if (typeof adminEnCours === 'undefined') {
-    window.adminEnCours = false; 
 }
 
 // ==========================================
