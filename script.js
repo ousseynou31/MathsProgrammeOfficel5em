@@ -811,33 +811,45 @@ async function chargerContenuHistorique() {
     const totalElt = document.getElementById('total-historique');
     if(!corps) return;
 
-    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px; color:gray;'>Calcul du bilan financier...</td></tr>";
+    // Message d'attente pendant le chargement
+    corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px; color:gray;'>Calcul du bilan financier en cours...</td></tr>";
 
     try {
+        // Récupération simultanée des tarifs et des clients
         const [tarifsSnap, usersSnap] = await Promise.all([
             database.ref('reglages/tarifs').once('value'),
             database.ref('clients').once('value')
         ]);
 
-        const tarifs = tarifsSnap.val() || { A: 5000, B: 3000, C: 1500 };
+        // On définit les tarifs de secours si Firebase est vide
+        const tarifsSecours = { A: 5000, B: 3000, C: 1500 };
+        const tarifsFirebase = tarifsSnap.val() || tarifsSecours;
+        
         let html = "";
         let totalGeneral = 0;
 
         usersSnap.forEach(client => {
             const val = client.val();
             
-            // FILTRE STRICT : On ne prend que ceux qui ont payé (statut === 'actif')
-            if (val && val.infos_client && val.infos_client.statut === "actif") {
+            // ============================================================
+            // 🔒 FILTRE DE SÉCURITÉ : LE GARDIEN DE LA CAISSE
+            // On ne laisse passer QUE ceux qui ont "VALIDE" dans statut_paiement
+            // ============================================================
+            if (val && val.infos_client && val.infos_client.statut_paiement === "VALIDE") {
                 
                 const info = val.infos_client;
                 const cat = (info.categorie || "C").trim().toUpperCase();
-                const montantReel = parseInt(tarifs[cat]) || 0;
                 
-                // On utilise la date d'inscription comme date de transaction
+                // On utilise en priorité les tarifs chargés dans window, sinon Firebase
+                const montantReel = parseInt(window['tarif' + cat]) || parseInt(tarifsFirebase[cat]) || 0;
+                
+                // Formatage de la date (YYYY-MM-DD)
                 const dateAffiche = info.date_inscription ? info.date_inscription.split('T')[0] : "---";
 
+                // On ajoute au montant total de la caisse
                 totalGeneral += montantReel;
 
+                // On génère la ligne du tableau
                 html += `
                     <tr style="border-bottom: 1px solid #222; font-size: 0.85rem;">
                         <td style="padding:12px 10px; color:#888;">${dateAffiche}</td>
@@ -853,21 +865,21 @@ async function chargerContenuHistorique() {
             }
         });
 
-        // Affichage si la liste est vide après filtrage
+        // Affichage final du tableau
         if (totalGeneral === 0) {
-            corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:40px; color:gray;'>Aucun encaissement enregistré.</td></tr>";
+            corps.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:40px; color:gray;'>Aucun encaissement validé trouvé.</td></tr>";
         } else {
             corps.innerHTML = html;
         }
         
-        // Mise à jour du montant total en bas de page
+        // Mise à jour du compteur total en bas de l'écran
         if(totalElt) {
             totalElt.innerText = totalGeneral.toLocaleString() + " FG";
         }
 
     } catch (e) {
         console.error("Erreur historique:", e);
-        corps.innerHTML = "<tr><td colspan='4' style='color:red; text-align:center;'>Erreur de connexion.</td></tr>";
+        corps.innerHTML = "<tr><td colspan='4' style='color:red; text-align:center;'>Erreur de connexion à la base de données.</td></tr>";
     }
 }
 function exporterCSV() {
