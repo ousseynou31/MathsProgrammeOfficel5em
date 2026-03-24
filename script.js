@@ -1,5 +1,4 @@
-// 🚀 On active le détecteur d'appui long au chargement
-initAdminTrigger();
+
 // NETTOYAGE : Une seule déclaration globale ultra-compatible
 window.adminEnCours = window.adminEnCours || false;
 window.minuteurAdmin = window.minuteurAdmin || null;
