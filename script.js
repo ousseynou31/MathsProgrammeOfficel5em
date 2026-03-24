@@ -1194,9 +1194,55 @@ function initAdminTrigger() {
     newTrigger.addEventListener('mouseup', stopperChrono);
     newTrigger.addEventListener('mouseleave', stopperChrono);
 }
-
 // On l'appelle UNE SEULE FOIS
 initAdminTrigger();
+
+// NOUVETE
+// NOUVETE
+// NOUVETE
+// NOUVETE
+async function chargerTarifsConfig() {
+    try {
+        // On récupère la branche 'config_tarifs' dans Firebase
+        const snap = await database.ref('admin/config_tarifs').once('value');
+        const tarifs = snap.val();
+
+        if (tarifs) {
+            // 1. Mise à jour des variables de calcul
+            window.tarifA = parseFloat(tarifs.A) || 5000;
+            window.tarifB = parseFloat(tarifs.B) || 3000;
+            window.tarifC = parseFloat(tarifs.C) || 2000;
+
+            // 2. Mise à jour visuelle des cases (inputs) dans l'interface admin
+            const inputA = document.getElementById('input-tarif-a');
+            const inputB = document.getElementById('input-tarif-b');
+            const inputC = document.getElementById('input-tarif-c');
+
+            if(inputA) inputA.value = window.tarifA;
+            if(inputB) inputB.value = window.tarifB;
+            if(inputC) inputC.value = window.tarifC;
+
+            console.log("✅ Tarifs réels chargés :", window.tarifA, window.tarifB, window.tarifC);
+        }
+    } catch (e) {
+        console.error("Erreur chargement tarifs:", e);
+    }
+}
+function calculerBilan(stats) {
+    // stats.catA, stats.catB sont les nombres d'élèves par catégorie
+    const totalFinancier = (stats.catA * window.tarifA) + 
+                           (stats.catB * window.tarifB) + 
+                           (stats.catC * window.tarifC);
+    
+    // Affichage dans le tableau de bord
+    document.getElementById('montant-total').innerText = totalFinancier + " FCFA";
+}
+
+
+// NOUVETE
+// NOUVETE
+// NOUVETE
+// NOUVETE
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
     if(confirm("⚠️ TEST DE SÉCURITÉ :\nVoulez-vous verrouiller l'accès et revenir à la page d'activation ?")) {
@@ -1221,7 +1267,8 @@ window.addEventListener('load', async () => {
     
     const telLocal = localStorage.getItem('user_tel_id');
     if (telLocal) {
-        if (typeof synchroniserPresence === "function") synchroniserPresence();
+        // Correction : Utilisez le nom de fonction exact que vous avez défini
+        if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
         if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
     }
 
@@ -1233,6 +1280,12 @@ window.addEventListener('load', async () => {
 
     // 3. Trigger Admin
     if (typeof initAdminTrigger === "function") initAdminTrigger();
+
+    // --- 3.5 RÉCUPÉRATION DES TARIFS RÉELS (Sénégal/Diourbel) ---
+    // Cette étape assure que le bilan financier utilise les prix de la base de données
+    if (typeof chargerTarifsConfig === "function") {
+        await chargerTarifsConfig();
+    }
 
     // 4. LANCEMENT DU TUNNEL DE SÉCURITÉ V1
     if (typeof launchApp === "function") {
