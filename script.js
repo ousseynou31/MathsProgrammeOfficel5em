@@ -1,7 +1,8 @@
+// 🚀 On active le détecteur d'appui long au chargement
+initAdminTrigger();
 // NETTOYAGE : Une seule déclaration globale ultra-compatible
 window.adminEnCours = window.adminEnCours || false;
 window.minuteurAdmin = window.minuteurAdmin || null;
-
 console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
 
 // 1. CONFIGURATION FIREBASE
@@ -1179,21 +1180,23 @@ function initAdminTrigger() {
     if (!trigger) return;
 
     const demarrerChrono = (e) => {
-        if (adminActif) return; // Utilise le nouveau nom
+        // On utilise 'adminEnCours' au lieu de 'adminActif' pour être cohérent
+        if (typeof adminEnCours !== 'undefined' && adminEnCours) return; 
+        
         if (e.type === 'contextmenu') e.preventDefault();
 
         minuteurAdmin = setTimeout(() => {
-            adminActif = true; // Utilise le nouveau nom
+            adminEnCours = true; 
             const p = prompt("🔑 CODE ACCÈS ADMIN :");
             
-            if (p === "TON_CODE_ICI") { // Remplace par ton mot de passe
+            if (p === "1234") { // REMPLACE "1234" PAR TON VRAI CODE
                 naviguer('page-admin'); 
                 loadUsers('TOUT');
             } else if (p !== null) {
                 alert("❌ Code incorrect");
             }
-            adminActif = false; 
-        }, 2000); 
+            adminEnCours = false; 
+        }, 3000); // 3 secondes pour éviter les erreurs
     };
 
     const stopperChrono = () => clearTimeout(minuteurAdmin);
@@ -1202,8 +1205,11 @@ function initAdminTrigger() {
     trigger.addEventListener('mousedown', demarrerChrono);
     trigger.addEventListener('touchend', stopperChrono);
     trigger.addEventListener('mouseup', stopperChrono);
+    trigger.addEventListener('mouseleave', stopperChrono);
 }
 
+// TRÈS IMPORTANT : L'appel de la fonction
+initAdminTrigger();
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
     if(confirm("⚠️ TEST DE SÉCURITÉ :\nVoulez-vous verrouiller l'accès et revenir à la page d'activation ?")) {
