@@ -166,23 +166,37 @@ async function verifierIdentite() {
 }
 
 async function launchApp() {
-    // 1. On vérifie si la clé magique est dans le téléphone
-    const estActive = localStorage.getItem('v32_active');
-    
-    // 2. On cible les VRAIS identifiants de ton HTML
-    const gate = document.getElementById('license-gate'); // L'écran d'activation
-    const hub = document.getElementById('hub-accueil');   // Ton menu principal
+    const isActive = localStorage.getItem('v32_active') === 'true';
+    const statusIdentite = await verifierIdentite();
 
-    if (estActive === 'true') {
-        // ✅ DÉBLOQUÉ
-        if (gate) gate.style.display = 'none';
-        if (hub) hub.style.display = 'block';
-        console.log("🔓 Accès autorisé. Bienvenue !");
-    } else {
-        // 🔒 TOUJOURS BLOQUÉ
-        if (gate) gate.style.display = 'flex';
-        if (hub) hub.style.display = 'none';
-        console.log("🔒 Application verrouillée.");
+    if (!isActive) {
+        naviguer('license-gate');
+        return;
+    }
+
+    switch (statusIdentite) {
+        case "AUTHORIZED":
+            naviguer('hub-accueil');
+            // C'EST ICI QU'ON ACTIVE LE SIGNAL
+            activerSignalEnLigne(); 
+            break;
+            
+        case "BANNED":
+            alert("🚫 Accès suspendu.");
+            afficherEcranBloque();
+            break;
+            
+        case "DELETED":
+            alert("⚠️ Compte inexistant.");
+            naviguer('registration-gate');
+            break;
+
+        case "NO_PROFILE":
+            naviguer('registration-gate');
+            break;
+
+        default:
+            naviguer('hub-accueil');
     }
 }
 // REMPLACE TON ANCIENNE FONCTION deleteClient PAR CELLE-CI :
