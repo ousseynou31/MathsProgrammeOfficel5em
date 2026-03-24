@@ -163,41 +163,24 @@ async function verifierIdentite() {
     }
 }
 
-// 2. Le nouveau Tunnel de Lancement
 async function launchApp() {
-    const isActive = localStorage.getItem('v32_active') === 'true';
-    const statusIdentite = await verifierIdentite();
+    // 1. On vérifie si la clé magique est dans le téléphone
+    const estActive = localStorage.getItem('v32_active');
+    
+    // 2. On cible les VRAIS identifiants de ton HTML
+    const gate = document.getElementById('license-gate'); // L'écran d'activation
+    const hub = document.getElementById('hub-accueil');   // Ton menu principal
 
-    // A. Si pas de licence (PIN)
-    if (!isActive) {
-        naviguer('license-gate');
-        return;
-    }
-
-    // B. Gestion des accès selon Firebase
-    switch (statusIdentite) {
-        case "AUTHORIZED":
-            naviguer('hub-accueil');
-            activerSignalEnLigne(); // On allume le voyant
-            break;
-            
-        case "BANNED":
-            alert("🚫 Votre accès a été suspendu par l'établissement.");
-            // On peut afficher un écran noir ici
-            break;
-            
-        case "DELETED":
-            alert("⚠️ Votre compte n'existe plus. Veuillez vous réinscrire.");
-            naviguer('registration-gate');
-            break;
-
-        case "NO_PROFILE":
-            naviguer('registration-gate');
-            break;
-
-        default:
-            // En cas d'erreur réseau, si on est déjà actif, on laisse passer
-            naviguer('hub-accueil');
+    if (estActive === 'true') {
+        // ✅ DÉBLOQUÉ
+        if (gate) gate.style.display = 'none';
+        if (hub) hub.style.display = 'block';
+        console.log("🔓 Accès autorisé. Bienvenue !");
+    } else {
+        // 🔒 TOUJOURS BLOQUÉ
+        if (gate) gate.style.display = 'flex';
+        if (hub) hub.style.display = 'none';
+        console.log("🔒 Application verrouillée.");
     }
 }
 // REMPLACE TON ANCIENNE FONCTION deleteClient PAR CELLE-CI :
