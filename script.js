@@ -1179,36 +1179,41 @@ function initAdminTrigger() {
     const trigger = document.getElementById('admin-trigger');
     if (!trigger) return;
 
-    const demarrerChrono = (e) => {
-        // On utilise 'adminEnCours' au lieu de 'adminActif' pour être cohérent
-        if (typeof adminEnCours !== 'undefined' && adminEnCours) return; 
-        
-        if (e.type === 'contextmenu') e.preventDefault();
+    // --- 1. SÉCURITÉ : ON NETTOIE LES ANCIENS ÉCOUTEURS ---
+    // On clone le bouton et on le remplace par son clone. 
+    // Cela efface instantanément tous les écouteurs en double.
+    const newTrigger = trigger.cloneNode(true);
+    trigger.parentNode.replaceChild(newTrigger, trigger);
 
-        minuteurAdmin = setTimeout(() => {
-            adminEnCours = true; 
+    const demarrerChrono = (e) => {
+        if (e.type === 'touchstart') e.preventDefault(); 
+        
+        // On s'assure qu'un seul chrono tourne
+        clearTimeout(window.minuteurAdmin); 
+
+        window.minuteurAdmin = setTimeout(() => {
             const p = prompt("🔑 CODE ACCÈS ADMIN :");
             
-            if (p === "0000") { // REMPLACE "0000" PAR TON VRAI CODE
+            if (p === "1234") { // Remplace par ton code
                 naviguer('page-admin'); 
                 loadUsers('TOUT');
             } else if (p !== null) {
                 alert("❌ Code incorrect");
             }
-            adminEnCours = false; 
-        }, 3000); // 3 secondes pour éviter les erreurs
+        }, 3000); 
     };
 
-    const stopperChrono = () => clearTimeout(minuteurAdmin);
+    const stopperChrono = () => clearTimeout(window.minuteurAdmin);
 
-    trigger.addEventListener('touchstart', demarrerChrono);
-    trigger.addEventListener('mousedown', demarrerChrono);
-    trigger.addEventListener('touchend', stopperChrono);
-    trigger.addEventListener('mouseup', stopperChrono);
-    trigger.addEventListener('mouseleave', stopperChrono);
+    // --- 2. ON REBRANCHE PROPREMENT ---
+    newTrigger.addEventListener('touchstart', demarrerChrono);
+    newTrigger.addEventListener('mousedown', demarrerChrono);
+    newTrigger.addEventListener('touchend', stopperChrono);
+    newTrigger.addEventListener('mouseup', stopperChrono);
+    newTrigger.addEventListener('mouseleave', stopperChrono);
 }
 
-// TRÈS IMPORTANT : L'appel de la fonction
+// On l'appelle UNE SEULE FOIS
 initAdminTrigger();
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
