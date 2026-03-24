@@ -166,50 +166,55 @@ async function enregistrerProfil() {
         alert("❌ Erreur de connexion au serveur.");
     }
 }
-async function recupererCompte() {
-    // 1. Récupération et nettoyage du numéro
-    const champTel = document.getElementById('reg-tel');
-    if (!champTel) return alert("Erreur : Champ de saisie introuvable.");
 
-    const tel = champTel.value.trim().replace(/\D/g,'');
+async function recupererCompte() {
+    // 1. On demande le numéro directement via une fenêtre système
+    const saisieUser = prompt("Entrez votre numéro de téléphone pour restaurer votre accès :");
     
-    if(!tel || tel.length < 8) {
-        return alert("📞 Veuillez entrer un numéro de téléphone valide.");
+    // Si l'utilisateur clique sur "Annuler" ou ne saisit rien, on arrête proprement
+    if (saisieUser === null || saisieUser.trim() === "") return;
+
+    // Nettoyage du numéro (on ne garde que les chiffres)
+    const tel = saisieUser.trim().replace(/\D/g,'');
+    
+    if(tel.length < 8) {
+        return alert("📞 Numéro invalide. Veuillez entrer un numéro complet.");
     }
 
     try {
+        // Affichage d'un petit log console pour le suivi technique
+        console.log("Tentative de restauration pour :", tel);
+
         // 2. Interrogation de la "Source de Vérité" (Firebase)
         const snap = await database.ref('clients/' + tel + '/infos_client').once('value');
         
         if (!snap.exists()) {
-            return alert("❌ Aucun compte trouvé pour ce numéro. Veuillez vous inscrire.");
+            return alert("❌ Aucun compte trouvé pour ce numéro. Vérifiez le numéro ou inscrivez-vous.");
         }
 
         const data = snap.val();
 
-        // 🛡️ VERROU 1 : Anti-Triche (Compte banni ou supprimé définitivement)
+        // 🛡️ VERROU 1 : Anti-Triche (Compte banni)
         if (data.etat_acces === "banni") {
             const messageBanni = `🚫 ACCÈS RÉVOQUÉ DÉFINITIVEMENT\n\n` +
                                  `Ce numéro (${tel}) est sur liste noire.\n` +
-                                 `Toute tentative de récupération est bloquée.\n\n` +
-                                 `Contactez l'administrateur pour plus d'informations.`;
+                                 `Toute tentative de récupération est bloquée.`;
             return alert(messageBanni);
         }
 
-        // 🛡️ VERROU 2 : Vérification du Paiement (La clé du Bilan FG)
+        // 🛡️ VERROU 2 : Vérification du Paiement
         if (data.statut_paiement !== "VALIDE") {
-            alert("⏳ Compte trouvé, mais votre paiement n'a pas encore été validé.\n\nVous allez être redirigé vers la page d'attente.");
+            alert("⏳ Compte trouvé, mais votre paiement est en attente de validation.\n\nRedirection vers la page d'attente...");
             
-            // On enregistre l'ID pour que l'app sache qui attend la validation
             localStorage.setItem('user_tel_id', tel);
             if (typeof launchApp === 'function') launchApp();
             return;
         }
 
-        // ✅ TOUT EST OK : On restaure l'accès complet sur le téléphone
+        // ✅ TOUT EST OK : On restaure l'accès complet
         localStorage.setItem('user_tel_id', tel);
-        localStorage.setItem('v32_registered', 'true'); // Évite la redirection infinie
-        localStorage.setItem('v32_active', 'true');     // Marqueur de session active
+        localStorage.setItem('v32_registered', 'true'); 
+        localStorage.setItem('v32_active', 'true');     
         
         alert(`✅ Bon retour ${data.nom || ""} ! Votre accès est restauré.`);
         
@@ -218,7 +223,7 @@ async function recupererCompte() {
 
     } catch (e) {
         console.error("Erreur récupération:", e);
-        alert("❌ Erreur réseau : Impossible de vérifier votre compte. Vérifiez votre connexion.");
+        alert("❌ Erreur réseau : Impossible de vérifier votre compte.");
     }
 }
 async function validerPaiementFinal(id) {
