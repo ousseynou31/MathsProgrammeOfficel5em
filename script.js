@@ -244,7 +244,7 @@ async function toggleBan(id, filtreActuel) {
 
         if(confirm(`Voulez-vous ${estActuel ? 'SUSPENDRE' : 'ACTIVER'} cet accès ?`)) {
             await database.ref(`clients/${id}/infos_client/etat_acces`).set(nouvelEtat);
-            
+             
             alert(`📱 Accès ${nouvelEtat === "actif" ? "réactivé" : "coupé"}.`);
             loadUsers(filtreActuel);
         }
