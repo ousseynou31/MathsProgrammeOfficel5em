@@ -348,28 +348,7 @@ async function verifierIdentite() {
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0000XXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000XXXXXXXXXXXXX
-// 1. La nouvelle fonction de récupération d'identité
-async function verifierIdentite() {
-    const telLocal = localStorage.getItem('user_tel_id');
-    
-    if (!telLocal) return "NO_PROFILE"; // L'élève doit s'inscrire
 
-    try {
-        const snap = await database.ref('clients/' + telLocal + '/infos_client').once('value');
-        if (!snap.exists()) {
-            // Le compte a été supprimé par l'admin !
-            localStorage.clear();
-            return "DELETED";
-        }
-        
-        const data = snap.val();
-        if (data.statut === "suspendu") return "BANNED";
-        
-        return "AUTHORIZED";
-    } catch (e) {
-        return "OFFLINE_MODE";
-    }
-}
 
 // REMPLACE (OU AJOUTE) CETTE FONCTION :
 function surveillerStatutEnDirect(tel) {
@@ -389,46 +368,7 @@ function surveillerStatutEnDirect(tel) {
         }
     });
 }
-async function enregistrerProfil() {
-    const nom = document.getElementById('reg-nom').value.trim();
-    const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
-    
-    if(!nom || tel.length < 8) return alert("Veuillez remplir correctement les champs.");
 
-    try {
-        const clientRef = database.ref('clients/' + tel + '/infos_client');
-        
-        // On récupère la catégorie choisie (Assure-toi d'avoir cet ID dans ton HTML)
-        const catChoisie = document.getElementById('reg-categorie')?.value || "C";
-
-        await clientRef.update({
-            nom: nom,
-            tel: tel,
-            categorie: catChoisie, 
-            statut: "actif", // Le compte est actif sur le téléphone
-            
-            // 🔒 SÉCURITÉ FINANCIÈRE : 
-            // On le met en attente. Il ne sera PAS dans l'historique
-            // tant que l'admin ne l'aura pas passé en "VALIDE"
-            statut_paiement: "EN_ATTENTE", 
-            
-            date_inscription: new Date().toISOString(),
-            device_source: getDeviceId()
-        });
-
-        localStorage.setItem('user_tel_id', tel);
-        localStorage.setItem('v32_registered', 'true');
-        
-        alert("✅ Inscription réussie ! Votre accès sera activé après validation du paiement.");
-        
-        // On lance l'app (qui restera sur la page de blocage si pas encore validé)
-        launchApp(); 
-        
-    } catch(e) {
-        console.error(e);
-        alert("❌ Erreur Firebase : Vérifiez votre connexion.");
-    }
-}
 function synchroniserPresence() {
     const tel = localStorage.getItem('user_tel_id');
     if (!tel) return;
