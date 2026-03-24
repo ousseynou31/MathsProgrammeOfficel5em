@@ -1294,7 +1294,31 @@ function calculerRecettes(stats) {
                   
     document.getElementById('total-caisse').innerText = total + " FCFA";
 }
+// C'EST CETTE FONCTION QU'IL FAUT UTILISER POUR LE BOUTON VALIDER (💰)
+async function validerPaiementFinal(id) {
+    if(confirm("Confirmer le paiement ? Cet élève sera ajouté à l'historique financier.")) {
+        try {
+            const dateJour = new Date().toISOString();
+            
+            // On met à jour TOUT d'un coup dans la bonne branche
+            await database.ref(`clients/${id}/infos_client`).update({
+                statut_paiement: "VALIDE",    // 👈 Indispensable pour l'historique
+                date_inscription: dateJour,   // 👈 Pour remettre les jours à zéro
+                derniere_maj: firebase.database.ServerValue.TIMESTAMP
+            });
 
+            alert("✅ Paiement validé et ajouté au bilan !");
+            
+            // On rafraîchit tout pour voir le nouveau montant total
+            if (typeof loadUsers === "function") loadUsers('TOUT');
+            if (typeof chargerContenuHistorique === "function") chargerContenuHistorique();
+
+        } catch (e) {
+            console.error(e);
+            alert("❌ Erreur lors de la validation du paiement.");
+        }
+    }
+}
 // NOUVETE
 // NOUVETE
 // NOUVETE
