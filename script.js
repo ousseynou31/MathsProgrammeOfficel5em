@@ -1215,41 +1215,51 @@ function calculerBilan(stats) {
 
 // --- 1. CHARGEMENT DE LA LISTE ---
 
+// 1. UNE SEULE FONCTION POUR TOUT CHARGER
+async function chargerTarifs() {
+    try {
+        const snap = await database.ref('reglages/tarifs').once('value');
+        if(snap.exists()){
+            const t = snap.val();
+            
+            // Mise à jour des variables globales pour TOUS les calculs
+            window.tarifA = parseFloat(t.A) || 0;
+            window.tarifB = parseFloat(t.B) || 0;
+            window.tarifC = parseFloat(t.C) || 0;
+
+            // Mise à jour des cases dans l'interface (on gère tous les IDs possibles)
+            const ids = ['price-A', 'input-tarif-a', 'price-B', 'input-tarif-b', 'price-C', 'input-tarif-c'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    // On cherche le tarif correspondant (A, B ou C)
+                    const letter = id.slice(-1).toUpperCase(); 
+                    el.value = t[letter];
+                }
+            });
+            console.log("💰 Tarifs synchronisés :", {A: window.tarifA, B: window.tarifB, C: window.tarifC});
+        }
+    } catch (e) {
+        console.error("Erreur synchro tarifs:", e);
+    }
+}
+
+// 2. UNE SEULE FONCTION POUR SAUVEGARDER
 async function sauvegarderTarifs() {
+    // On essaie de récupérer les valeurs soit de 'price-A' soit de 'input-tarif-a'
+    const getVal = (id1, id2) => document.getElementById(id1)?.value || document.getElementById(id2)?.value || 0;
+
     const tarifs = {
-        A: document.getElementById('price-A').value || 0,
-        B: document.getElementById('price-B').value || 0,
-        C: document.getElementById('price-C').value || 0
+        A: getVal('price-A', 'input-tarif-a'),
+        B: getVal('price-B', 'input-tarif-b'),
+        C: getVal('price-C', 'input-tarif-c')
     };
     
     await database.ref('reglages/tarifs').set(tarifs);
     alert("✅ Tarifs mis à jour !");
     
-    // NOUVEAU : On recharge immédiatement les variables globales pour le bilan
-    await chargerTarifsConfig(); 
-    
-    // Met à jour le tableau et le bilan financier
-    loadUsers('TOUT'); 
-}
-// Charger les prix au démarrage de l'admin et mettre à jour le moteur de calcul
-async function chargerTarifs() {
-    const snap = await database.ref('reglages/tarifs').once('value');
-    if(snap.exists()){
-        const t = snap.val();
-        
-        // 1. MISE À JOUR VISUELLE (Pour l'administrateur dans les cases)
-        if(document.getElementById('price-A')) document.getElementById('price-A').value = t.A;
-        if(document.getElementById('price-B')) document.getElementById('price-B').value = t.B;
-        if(document.getElementById('price-C')) document.getElementById('price-C').value = t.C;
-
-        // 2. MISE À JOUR MATHÉMATIQUE (Pour le calcul du bilan financier)
-        // On transforme le texte en nombre pour éviter les erreurs de calcul
-        window.tarifA = parseFloat(t.A) || 0;
-        window.tarifB = parseFloat(t.B) || 0;
-        window.tarifC = parseFloat(t.C) || 0;
-
-        console.log("💰 Tarifs synchronisés pour le bilan :", {A: window.tarifA, B: window.tarifB, C: window.tarifC});
-    }
+    await chargerTarifs(); // On synchronise tout
+    if (typeof loadUsers === "function") loadUsers('TOUT'); 
 }
 // EXEMPLE DE CALCUL DU BILAN
 function calculerRecettes(stats) {
