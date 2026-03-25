@@ -198,60 +198,66 @@ async function enregistrerProfil() {
 
 
 async function recupererCompte() {
-    // 1. Récupération du numéro via le prompt (plus besoin de champ HTML)
+    // 1. Récupération et nettoyage du numéro
     const saisieUser = prompt("Entrez votre numéro de téléphone pour restaurer votre accès :");
-    
     if (saisieUser === null || saisieUser.trim() === "") return;
 
     const tel = saisieUser.trim().replace(/\D/g,'');
-    
-    if(tel.length < 8) {
-        return alert("📞 Numéro invalide. Veuillez entrer un numéro complet.");
-    }
+    if(tel.length < 8) return alert("📞 Numéro invalide.");
 
     try {
         // 2. Interrogation de Firebase
         const snap = await database.ref('clients/' + tel + '/infos_client').once('value');
-        
-        if (!snap.exists()) {
-            return alert("❌ Aucun compte trouvé pour ce numéro. Vérifiez le numéro ou inscrivez-vous.");
-        }
+        if (!snap.exists()) return alert("❌ Aucun compte trouvé.");
 
         const data = snap.val();
         const aujourdhui = new Date().toLocaleDateString('fr-FR');
 
-        // --- 🛡️ SÉCURITÉ 1 : COMPTEUR DE RESTAURATIONS (Anti-Partage) ---
+        // --- 🛡️ SÉCURITÉ 1 : COMPTEUR (Anti-Partage) ---
         let nbRecup = 0;
         if (data.date_derniere_recup === aujourdhui) {
             nbRecup = data.compteur_recup || 0;
         }
-
         if (nbRecup >= 3) {
-            return alert("🚫 LIMITE ATTEINTE : Vous avez déjà récupéré votre compte 3 fois aujourd'hui.\n\nRéessayez demain ou contactez l'administrateur.");
+            return alert("🚫 LIMITE ATTEINTE : 3 récupérations maximum par jour.");
         }
 
-        // --- 🛡️ SÉCURITÉ 2 : VÉRIFICATION BANNI (Verrou 1) ---
-        if (data.etat_acces === "banni") {
-            return alert(`🚫 ACCÈS RÉVOQUÉ DÉFINITIVEMENT\n\nCe numéro (${tel}) est sur liste noire.`);
+        // --- 🛡️ SÉCURITÉ 2 : BANNI ---
+        if (data.etat_access === "banni") {
+            return alert(`🚫 ACCÈS RÉVOQUÉ.`);
         }
 
-        // --- 🛡️ SÉCURITÉ 3 : VÉRIFICATION PAIEMENT (Verrou 2) ---
+        // --- 🛡️ SÉCURITÉ 3 : PAIEMENT ---
         if (data.statut_paiement !== "VALIDE") {
-            alert("⏳ Compte trouvé, mais votre paiement est en attente de validation.\n\nRedirection vers la page d'attente...");
+            alert("⏳ Paiement en attente. Redirection...");
             localStorage.setItem('user_tel_id', tel);
             if (typeof launchApp === 'function') launchApp();
             return;
         }
 
-        // --- 🛡️ SÉCURITÉ 4 : JETON DE SESSION UNIQUE (Anti-Simultané) ---
+        // --- 🛡️ SÉCURITÉ 4 : GÉNÉRATION DU JETON ---
         const nouveauToken = "session_" + Math.random().toString(36).substr(2, 9);
         
-        // 3. Mise à jour de la "Source de Vérité" sur Firebase
+        // 3. Mise à jour Firebase
         await database.ref('clients/' + tel + '/infos_client').update({
             dernier_token: nouveauToken,
             compteur_recup: nbRecup + 1,
             date_derniere_recup: aujourdhui
         });
+
+        // ========================================================
+        // 🛡️ AMÉLIORATION CRUCIALE : LE PARE-FEU FINAL
+        // ========================================================
+        const verifFinal = await database.ref('clients/' + tel + '/infos_client/dernier_token').once('value');
+        if (verifFinal.val() !== nouveauToken) {
+            // Si le jeton sur le serveur n'est plus celui qu'on vient de créer, 
+            // c'est que quelqu'un d'autre vient de se connecter pile à ce moment.
+            alert("⚠️ ÉCHEC : Une autre connexion a été détectée simultanément.");
+            document.body.innerHTML = ""; // On blanchit l'écran par sécurité
+            location.reload(); 
+            return; // ON ARRÊTE TOUT, on ne donne pas l'accès !
+        }
+        // ========================================================
 
         // 4. Enregistrement local et activation de l'accès
         localStorage.setItem('user_tel_id', tel);
@@ -259,17 +265,16 @@ async function recupererCompte() {
         localStorage.setItem('v32_registered', 'true'); 
         localStorage.setItem('v32_active', 'true');     
         
-        alert(`✅ Accès restauré (${nbRecup + 1}/3 aujourd'hui).\nBon retour ${data.nom || ""} !`);
+        alert(`✅ Accès restauré (${nbRecup + 1}/3 aujourd'hui).`);
         
         // 5. Relance le moteur de l'app
         if (typeof launchApp === 'function') launchApp();
 
     } catch (e) {
-        console.error("Erreur récupération:", e);
-        alert("❌ Erreur réseau : Impossible de vérifier votre compte.");
+        console.error("Erreur:", e);
+        alert("❌ Erreur réseau.");
     }
 }
-
 async function validerPaiementFinal(id) {
     if(confirm("✅ Confirmer le paiement ? Cet élève sera ajouté au bilan financier.")) {
         try {
