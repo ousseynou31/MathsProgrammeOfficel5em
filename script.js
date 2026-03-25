@@ -215,6 +215,36 @@ function naviguer(id) {
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0000XXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000XXXXXXXXXXXXX
+
+async function verifierIdentite() {
+    const tel = localStorage.getItem('user_tel_id');
+    if (!tel) return "NO_PROFILE";
+
+    try {
+        // ON GARDE TON CHEMIN : clients/num_tel/infos_client
+        const snap = await db.ref(`clients/${tel}/infos_client`).once('value');
+        
+        if (!snap.exists()) return "DELETED";
+
+        const user = snap.val();
+
+        // 1. Sécurité maximale : Bannissement
+        if (user.etat_acces === "banni") return "BANNED";
+
+        // 2. Suspension temporaire
+        if (user.etat_acces === "suspendu") return "SUSPENDED";
+
+        // 3. Vérification du paiement (Accès refusé si pas VALIDE)
+        if (user.statut_paiement !== "VALIDE") return "PENDING_PAYMENT";
+
+        // 4. Si tout est OK
+        return "AUTHORIZED";
+
+    } catch (e) {
+        console.error("Erreur sécurité identité:", e);
+        return "ERROR";
+    }
+}
 // Aller vers l'inscription
 function ouvrirInscription() {
     document.getElementById('license-gate').style.display = 'none';
@@ -258,48 +288,40 @@ window.onload = verifierEtatInitial;
 
 async function enregistrerProfil() {
     const nom = document.getElementById('reg-nom').value.trim();
-    const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
-    
-    if(!nom || tel.length < 8) return alert("⚠️ Veuillez remplir tous les champs correctement.");
+    const tel = document.getElementById('reg-tel').value.trim();
+    const deviceId = getDeviceId(); 
+
+    // 1. VÉRIFICATION
+    if (nom.length < 3 || tel.length < 8) {
+        alert("⚠️ Veuillez entrer un nom complet et un numéro de téléphone valide.");
+        return;
+    }
 
     try {
-        // 🔍 VERIFICATION : On vérifie l'existence et la discipline
-        const check = await database.ref('clients/' + tel + '/infos_client').once('value');
-        
-        if (check.exists()) {
-            const data = check.val();
-            // Si le numéro est banni, on bloque TOUTE tentative de réinscription
-            if (data.etat_acces === "banni" || data.statut === "banni") {
-                return alert("🚫 Ce numéro est définitivement banni du Labo d'Analyse.");
-            }
-            return alert("💡 Ce compte existe déjà. Utilisez 'Récupérer mon compte'.");
-        }
+        // 2. SAUVEGARDE LOCALE
+        localStorage.setItem('user_nom', nom);
+        localStorage.setItem('user_tel_id', tel);
 
-        // 📝 CRÉATION : On initialise les verrous proprement
-        await database.ref('clients/' + tel + '/infos_client').set({
-            nom: nom,
-            tel: tel,
-            categorie: document.getElementById('reg-categorie')?.value || "C",
-            
-            // --- HARMONISATION DES VERROUS ---
-            etat_acces: "actif",           // Il peut entrer dans l'interface...
-            statut: "actif",                // Doublon de sécurité pour l'ancien code
-            statut_paiement: "NON",        // ...mais l'accès aux cours est bloqué
-            
+        // 3. ENVOI VERS LE CHEMIN EXACT : clients/num_tel/infos_client
+        // Note : On utilise 'database' ou 'db' selon ton initialisation Firebase
+        await database.ref(`clients/${tel}/infos_client`).set({
+            nom_complet: nom,
+            telephone: tel,
+            id_appareil: deviceId,
             date_inscription: new Date().toISOString(),
-            device_id: typeof getDeviceId === 'function' ? getDeviceId() : "unknown",
-            dernier_token: "init_" + Math.random().toString(36).substr(2, 5) // Jeton initial
+            etat_acces: "autorise",        // On peut mettre "autorise" par défaut ou "en_attente"
+            statut_paiement: "EN_ATTENTE", // Bloquera l'accès jusqu'à validation manuelle
+            version_app: "3.2"
         });
 
-        // ✅ SAUVEGARDE LOCALE ET LANCEMENT
-        localStorage.setItem('user_tel_id', tel);
-        alert("✅ Inscription réussie !\n\nVotre compte est créé. Payez vos frais pour activer vos algorithmes.");
-        
-        if (typeof launchApp === 'function') launchApp();
+        alert("✅ Profil créé ! Vous pouvez maintenant entrer votre code PIN.");
 
-    } catch(e) {
-        console.error("Erreur Inscription:", e);
-        alert("❌ Erreur de communication avec la base de données.");
+        // 4. REDIRECTION VERS LE PIN
+        naviguer('license-gate');
+
+    } catch (error) {
+        console.error("❌ Erreur d'enregistrement :", error);
+        alert("Erreur de connexion à la base de données.");
     }
 }
 async function recupererCompte() {
@@ -576,53 +598,6 @@ async function launchApp() {
 
 // Lancement au démarrage de la page
 window.onload = launchApp;
-async function verifierIdentite() {
-    const tel = localStorage.getItem('user_tel_id');
-    if (!tel) return "NO_PROFILE";
-
-    try {
-        const snap = await database.ref(`clients/${tel}/infos_client`).once('value');
-        if (!snap.exists()) return "DELETED";
-
-        const user = snap.val();
-
-        // 1. Priorité absolue au bannissement
-        if (user.etat_acces === "banni") return "BANNED";
-
-        // 2. Vérification de la suspension
-        if (user.etat_acces === "suspendu") return "SUSPENDED";
-
-        // 3. Vérification du paiement (La barrière financière)
-        if (user.statut_paiement !== "VALIDE") return "PENDING_PAYMENT";
-
-        // 4. Si tout est vert
-        return "AUTHORIZED";
-
-    } catch (e) {
-        console.error("Erreur sécurité identité:", e);
-        return "NO_PROFILE";
-    }
-}
-function activerSecuriteTempsReel(tel) {
-    if (!tel) return;
-
-    // 📡 On crée une écoute en direct sur le statut du client
-    database.ref(`clients/${tel}/infos_client/etat_acces`).on('value', (snapshot) => {
-        const etat = snapshot.val();
-
-        if (etat === "banni") {
-            // 🧨 EXPLOSION INSTANTANÉE
-            alert("⚠️ Votre compte a été définitivement supprimé par l'administrateur.");
-            localStorage.clear(); // On vide tout
-            location.reload();    // On force le retour à zéro (Inscription)
-        } 
-        else if (etat === "suspendu") {
-            // 🔒 FERMETURE IMMÉDIATE
-            alert("🚫 Votre accès est actuellement suspendu.");
-            afficherEcranBloque(); // On affiche l'écran de blocage sans tout effacer
-        }
-    });
-}
 
 async function modifierStatutAdmin(id) {
     // 1. Liste des seuls mots-clés autorisés (Notre standard)
