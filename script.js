@@ -289,40 +289,48 @@ window.onload = verifierEtatInitial;
 
 async function enregistrerProfil() {
     const nom = document.getElementById('reg-nom').value.trim();
-    const tel = document.getElementById('reg-tel').value.trim();
-    const deviceId = getDeviceId(); 
-
-    // 1. VÉRIFICATION
-    if (nom.length < 3 || tel.length < 8) {
-        alert("⚠️ Veuillez entrer un nom complet et un numéro de téléphone valide.");
-        return;
-    }
+    const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
+    
+    if(!nom || tel.length < 8) return alert("⚠️ Veuillez remplir tous les champs correctement.");
 
     try {
-        // 2. SAUVEGARDE LOCALE
-        localStorage.setItem('user_nom', nom);
-        localStorage.setItem('user_tel_id', tel);
+        // 🔍 VERIFICATION : On vérifie l'existence et la discipline
+        const check = await database.ref('clients/' + tel + '/infos_client').once('value');
+        
+        if (check.exists()) {
+            const data = check.val();
+            // Si le numéro est banni, on bloque TOUTE tentative de réinscription
+            if (data.etat_acces === "banni" || data.statut === "banni") {
+                return alert("🚫 Ce numéro est définitivement banni du Labo d'Analyse.");
+            }
+            return alert("💡 Ce compte existe déjà. Utilisez 'Récupérer mon compte'.");
+        }
 
-        // 3. ENVOI VERS LE CHEMIN EXACT : clients/num_tel/infos_client
-        // Note : On utilise 'database' ou 'db' selon ton initialisation Firebase
-        await database.ref(`clients/${tel}/infos_client`).set({
-            nom_complet: nom,
-            telephone: tel,
-            id_appareil: deviceId,
+        // 📝 CRÉATION : On initialise les verrous proprement
+        await database.ref('clients/' + tel + '/infos_client').set({
+            nom: nom,
+            tel: tel,
+            categorie: document.getElementById('reg-categorie')?.value || "C",
+            
+            // --- HARMONISATION DES VERROUS ---
+            etat_acces: "actif",           // Il peut entrer dans l'interface...
+            statut: "actif",                // Doublon de sécurité pour l'ancien code
+            statut_paiement: "NON",        // ...mais l'accès aux cours est bloqué
+            
             date_inscription: new Date().toISOString(),
-            etat_acces: "autorise",        // On peut mettre "autorise" par défaut ou "en_attente"
-            statut_paiement: "EN_ATTENTE", // Bloquera l'accès jusqu'à validation manuelle
-            version_app: "3.2"
+            device_id: typeof getDeviceId === 'function' ? getDeviceId() : "unknown",
+            dernier_token: "init_" + Math.random().toString(36).substr(2, 5) // Jeton initial
         });
 
-        alert("✅ Profil créé ! Vous pouvez maintenant entrer votre code PIN.");
+        // ✅ SAUVEGARDE LOCALE ET LANCEMENT
+        localStorage.setItem('user_tel_id', tel);
+        alert("✅ Inscription réussie !\n\nVotre compte est créé. Payez vos frais pour activer vos algorithmes.");
+        
+        if (typeof launchApp === 'function') launchApp();
 
-        // 4. REDIRECTION VERS LE PIN
-        naviguer('license-gate');
-
-    } catch (error) {
-        console.error("❌ Erreur d'enregistrement :", error);
-        alert("Erreur de connexion à la base de données.");
+    } catch(e) {
+        console.error("Erreur Inscription:", e);
+        alert("❌ Erreur de communication avec la base de données.");
     }
 }
 async function recupererCompte() {
