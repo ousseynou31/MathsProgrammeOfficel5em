@@ -546,65 +546,39 @@ function surveillerStatutEnDirect(tel) {
 
 
 async function launchApp() {
-    const isActive = localStorage.getItem('v32_active') === 'true';
     const tel = localStorage.getItem('user_tel_id');
-
-    // 1. CAS : NOUVEL ÉLÈVE (Pas de profil créé)
-    if (!tel) {
-        naviguer('registration-gate');
-        return; 
-    }
-
-    // --- Lancement de la surveillance en direct si le tel existe ---
-    if (typeof surveillerStatutEnDirect === "function") {
-        surveillerStatutEnDirect(tel);
-    }
     
-    // 2. VÉRIFICATION FIREBASE (Identité et Statut)
-    const statusIdentite = await verifierIdentite(); 
+    // 1. Si pas de tel dans le navigateur, on va à l'inscription
+    if (!tel) return naviguer('registration-gate');
 
-    // 3. CAS : PAS ENCORE ACTIVÉ (Pas de code PIN valide)
-    if (!isActive) {
-        naviguer('license-gate');
-        // On affiche l'ID appareil pour le paiement
-        const deviceIdElem = document.getElementById('display-device-id');
-        if(deviceIdElem) deviceIdElem.innerText = getDeviceId();
-        return;
-    }
+    // 2. On interroge Firebase (ton ancien compte est ici)
+    const statusIdentite = await verifierIdentite();
+    console.log("Ancien Compte - Statut Firebase :", statusIdentite);
 
-    // 4. GESTION DES STATUTS FIREBASE
+    // 3. LOGIQUE DE DÉCISION MISE À JOUR
     switch (statusIdentite) {
         case "AUTHORIZED":
+            // FORCE l'activation locale pour ne plus être embêté
+            localStorage.setItem('v32_active', 'true'); 
             naviguer('hub-accueil');
-            // Activation des sécurités temps réel
-            if (typeof activerSecuriteTempsReel === "function") {
-                activerSecuriteTempsReel(tel);
-                activerSignalEnLigne(); 
-            }
-            break;
-            
-        case "BANNED":
-            localStorage.clear(); 
-            alert("🚫 Votre compte a été définitivement révoqué.");
-            naviguer('registration-gate'); 
-            break;
-
-        case "SUSPENDED":
-            alert("⚠️ Votre accès est temporairement suspendu.");
-            naviguer('license-gate'); 
             break;
 
         case "PENDING_PAYMENT":
-            alert("⏳ En attente de validation de votre paiement par l'administrateur.");
-            naviguer('license-gate'); 
+            // Si l'ancien compte a un souci de paiement dans la base
+            naviguer('license-gate');
             break;
-            
+
+        case "BANNED":
+            alert("Accès révoqué.");
+            localStorage.clear();
+            naviguer('registration-gate');
+            break;
+
         default:
-            // Par sécurité, si statut inconnu, on renvoie à l'inscription
+            // Si Firebase ne trouve rien, on demande l'inscription
             naviguer('registration-gate');
     }
 }
-
 // Lancement au démarrage de la page
 window.onload = launchApp;
 
