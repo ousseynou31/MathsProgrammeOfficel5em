@@ -116,10 +116,12 @@ function getDeviceId() {
 // ==========================================
 // 4. LOGIQUE D'ACTIVATION (PIN)
 // ==========================================
-function verifierLicence() {
+async function verifierLicence() {
     const input = document.getElementById('input-license').value.trim();
+    const tel = localStorage.getItem('user_tel_id'); // On récupère le numéro stocké
     const device = getDeviceId();
     
+    // 1. Calcul du code attendu (Ta logique mathématique reste la même)
     let hash = 0;
     for (let i = 0; i < device.length; i++) {
         hash = ((hash << 5) - hash) + device.charCodeAt(i);
@@ -127,14 +129,42 @@ function verifierLicence() {
     }
     const codeAttendu = Math.abs(hash + SECRET_KEY).toString().substring(0, 8);
     
-    if(input === codeAttendu) {
+    // 2. Vérification du PIN
+    if(input !== codeAttendu) {
+        return alert("❌ PIN INCORRECT : Ce code ne correspond pas à cet appareil.");
+    }
+
+    // 3. VÉRIFICATION DE SÉCURITÉ SUR LE SERVEUR (Nouveauté)
+    if (!tel) return alert("❌ Erreur : Numéro de téléphone introuvable. Veuillez vous réinscrire.");
+
+    try {
+        const snap = await database.ref(`clients/${tel}/infos_client`).once('value');
+        const data = snap.val();
+
+        if (!snap.exists()) {
+            return alert("❌ Ce compte n'existe plus dans la base de données.");
+        }
+
+        // --- LE VERROU DE DISCIPLINE ---
+        if (data.etat_acces === "banni" || data.etat_acces === "suspendu" || data.statut === "suspendu") {
+            const motif = data.motif_suspension || "Violation des règles";
+            alert(`🚫 ACCÈS REFUSÉ\n\nVotre compte est suspendu.\nMotif : ${motif}`);
+            localStorage.clear();
+            location.reload();
+            return;
+        }
+
+        // ✅ PIN CORRECT + COMPTE ACTIF = OUVERTURE
         localStorage.setItem('v32_active', 'true');
-        launchApp();
-    } else { 
-        alert("❌ PIN INCORRECT"); 
+        alert("✅ Licence activée avec succès !");
+        
+        if (typeof launchApp === 'function') launchApp();
+
+    } catch (e) {
+        console.error("Erreur Licence:", e);
+        alert("❌ Erreur de connexion pour vérification du statut.");
     }
 }
-
 
 function deconnecterApp() {
     if(confirm("Voulez-vous verrouiller l'accès et retourner à l'activation ?")) {
