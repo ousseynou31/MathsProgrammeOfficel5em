@@ -43,6 +43,29 @@ function surveillerSession() {
 // À appeler au chargement de la page
 surveillerSession();
 
+// Ce code s'exécute dès que la page charge, AVANT d'afficher quoi que ce soit
+async function verificationUltime() {
+    const tel = localStorage.getItem('user_tel_id');
+    
+    if (tel) {
+        // On va vérifier le statut REEL sur Firebase, pas dans le cache
+        const snap = await database.ref('clients/' + tel + '/infos_client').once('value');
+        const data = snap.val();
+
+        if (data && (data.etat_acces === "banni" || data.etat_acces === "suspendu")) {
+            // IL EST SUSPENDU : ON DÉTRUIT TOUT
+            localStorage.clear();
+            alert("🚫 ACCÈS REFUSÉ : Votre compte est suspendu ou banni.");
+            document.body.innerHTML = "<h1 style='color:red; text-align:center;'>ACCÈS RÉVOQUÉ</h1>";
+            window.location.reload();
+            return;
+        }
+    }
+}
+// Lancement de la vérification au démarrage
+verificationUltime();
+
+
 // 2. DÉFINITION DES FONCTIONS (On les déclare toutes ici)
 function activerSignalEnLigne() {
     const monTel = localStorage.getItem('user_tel_id');
@@ -150,6 +173,8 @@ function naviguer(id) {
         console.error("❌ Erreur : L'écran '" + id + "' n'existe pas dans le HTML.");
     }
 }
+
+
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO00XXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0000XXXXXXXXXXXXX
@@ -314,6 +339,47 @@ async function toggleBan(id, filtreActuel) {
         alert("❌ Erreur de modification d'accès.");
     }
 }
+function surveillerStatutEnDirect(tel) {
+    if (!tel) {
+        // Si pas de numéro, on s'assure que l'accès est coupé
+        localStorage.removeItem('v32_active');
+        return;
+    }
+
+    // On écoute en temps réel le dossier 'infos_client'
+    database.ref('clients/' + tel + '/infos_client').on('value', (snapshot) => {
+        if (!snapshot.exists()) {
+            alert("⚠️ Compte introuvable ou supprimé.");
+            localStorage.clear();
+            location.reload();
+            return;
+        }
+
+        const data = snapshot.val();
+        const monTokenLocal = localStorage.getItem('session_token');
+
+        // 1. VÉRIFICATION DISCIPLINE (Banni ou Suspendu)
+        // On vérifie 'etat_acces' car c'est notre nouveau standard
+        if (data.etat_acces === "banni" || data.etat_acces === "suspendu") {
+            const motif = data.motif_suspension || "Violation des conditions d'utilisation";
+            alert(`🚫 ACCÈS RÉVOQUÉ\n\nMotif : ${motif}`);
+            
+            localStorage.clear(); // On vide tout pour qu'il ne puisse pas contourner
+            document.body.innerHTML = ""; // On efface l'application de l'écran
+            location.reload(); 
+            return;
+        }
+
+        // 2. VÉRIFICATION DOUBLE CONNEXION (Jeton unique)
+        if (data.dernier_token && monTokenLocal && data.dernier_token !== monTokenLocal) {
+            alert("⚠️ SESSION COUPÉE : Ce compte est utilisé sur un autre appareil.");
+            localStorage.clear();
+            location.reload();
+            return;
+        }
+    });
+}
+
 
 async function launchApp() {
     const isActive = localStorage.getItem('v32_active') === 'true';
@@ -460,26 +526,6 @@ async function mettreAJourAnciensClients() {
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0000XXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000XXXXXXXXXXXXX
-
-
-// REMPLACE (OU AJOUTE) CETTE FONCTION :
-function surveillerStatutEnDirect(tel) {
-    if (!tel) return;
-
-    // On écoute tout le dossier du client
-    database.ref('clients/' + tel).on('value', (snapshot) => {
-        const data = snapshot.val();
-        
-        // SI LE DOSSIER EST SUPPRIMÉ (null) OU SI LE STATUT EST SUSPENDU
-        if (!snapshot.exists()) {
-            alert("⚠️ Votre compte n'existe plus. Redirection...");
-            localStorage.clear();
-            location.reload(); 
-        } else if (data.infos_client && data.infos_client.statut === "suspendu") {
-            afficherEcranBloque();
-        }
-    });
-}
 
 function synchroniserPresence() {
     const tel = localStorage.getItem('user_tel_id');
@@ -707,28 +753,6 @@ function exporterPDF() {
     
     // Lance l'interface d'impression du système (Génère un PDF sur mobile)
     window.print();
-}
-
-// --- SUSPENSION UNIVERSELLE ---
-async function toggleBan(telId, filtreActuel) {
-    try {
-        const snap = await database.ref(`clients/${telId}/infos_client/statut`).once('value');
-        const statutActuel = snap.val();
-
-        if (statutActuel === "suspendu") {
-            if(confirm("Rétablir l'accès universel pour cet élève ?")) {
-                await database.ref(`clients/${telId}/infos_client`).update({ statut: "actif" });
-            }
-        } else {
-            if(confirm("⚠️ SUSPENDRE PARTOUT : L'élève sera bloqué sur tous ses supports. Continuer ?")) {
-                // On injecte le statut "suspendu" que l'appareil de l'élève surveille en temps réel
-                await database.ref(`clients/${telId}/infos_client`).update({ statut: "suspendu" });
-            }
-        }
-        loadUsers(filtreActuel);
-    } catch(e) {
-        alert("❌ Erreur de modification du statut.");
-    }
 }
 
 // ==========================================
