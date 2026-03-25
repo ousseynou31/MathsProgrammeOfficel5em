@@ -167,14 +167,13 @@ async function enregistrerProfil() {
     }
 }
 
+
 async function recupererCompte() {
-    // 1. On demande le numéro directement via une fenêtre système
+    // 1. Récupération du numéro via le prompt (plus besoin de champ HTML)
     const saisieUser = prompt("Entrez votre numéro de téléphone pour restaurer votre accès :");
     
-    // Si l'utilisateur clique sur "Annuler" ou ne saisit rien, on arrête proprement
     if (saisieUser === null || saisieUser.trim() === "") return;
 
-    // Nettoyage du numéro (on ne garde que les chiffres)
     const tel = saisieUser.trim().replace(/\D/g,'');
     
     if(tel.length < 8) {
@@ -182,10 +181,7 @@ async function recupererCompte() {
     }
 
     try {
-        // Affichage d'un petit log console pour le suivi technique
-        console.log("Tentative de restauration pour :", tel);
-
-        // 2. Interrogation de la "Source de Vérité" (Firebase)
+        // 2. Interrogation de Firebase
         const snap = await database.ref('clients/' + tel + '/infos_client').once('value');
         
         if (!snap.exists()) {
@@ -193,38 +189,50 @@ async function recupererCompte() {
         }
 
         const data = snap.val();
-    
+        const aujourdhui = new Date().toLocaleDateString('fr-FR');
 
-// --- LIGNES DE TEST À AJOUTER ---
-console.log("DONNÉES REÇUES :", data);
-alert("Numéro détecté : " + tel + "\nÉtat dans la base : [" + data.etat_acces + "]");
-// -------------------------------
-
-        // 🛡️ VERROU 1 : Anti-Triche (Compte banni)
-        if (data.etat_acces === "banni") {
-            const messageBanni = `🚫 ACCÈS RÉVOQUÉ DÉFINITIVEMENT\n\n` +
-                                 `Ce numéro (${tel}) est sur liste noire.\n` +
-                                 `Toute tentative de récupération est bloquée.`;
-            return alert(messageBanni);
+        // --- 🛡️ SÉCURITÉ 1 : COMPTEUR DE RESTAURATIONS (Anti-Partage) ---
+        let nbRecup = 0;
+        if (data.date_derniere_recup === aujourdhui) {
+            nbRecup = data.compteur_recup || 0;
         }
 
-        // 🛡️ VERROU 2 : Vérification du Paiement
+        if (nbRecup >= 3) {
+            return alert("🚫 LIMITE ATTEINTE : Vous avez déjà récupéré votre compte 3 fois aujourd'hui.\n\nRéessayez demain ou contactez l'administrateur.");
+        }
+
+        // --- 🛡️ SÉCURITÉ 2 : VÉRIFICATION BANNI (Verrou 1) ---
+        if (data.etat_acces === "banni") {
+            return alert(`🚫 ACCÈS RÉVOQUÉ DÉFINITIVEMENT\n\nCe numéro (${tel}) est sur liste noire.`);
+        }
+
+        // --- 🛡️ SÉCURITÉ 3 : VÉRIFICATION PAIEMENT (Verrou 2) ---
         if (data.statut_paiement !== "VALIDE") {
             alert("⏳ Compte trouvé, mais votre paiement est en attente de validation.\n\nRedirection vers la page d'attente...");
-            
             localStorage.setItem('user_tel_id', tel);
             if (typeof launchApp === 'function') launchApp();
             return;
         }
 
-        // ✅ TOUT EST OK : On restaure l'accès complet
+        // --- 🛡️ SÉCURITÉ 4 : JETON DE SESSION UNIQUE (Anti-Simultané) ---
+        const nouveauToken = "session_" + Math.random().toString(36).substr(2, 9);
+        
+        // 3. Mise à jour de la "Source de Vérité" sur Firebase
+        await database.ref('clients/' + tel + '/infos_client').update({
+            dernier_token: nouveauToken,
+            compteur_recup: nbRecup + 1,
+            date_derniere_recup: aujourdhui
+        });
+
+        // 4. Enregistrement local et activation de l'accès
         localStorage.setItem('user_tel_id', tel);
+        localStorage.setItem('session_token', nouveauToken);
         localStorage.setItem('v32_registered', 'true'); 
         localStorage.setItem('v32_active', 'true');     
         
-        alert(`✅ Bon retour ${data.nom || ""} ! Votre accès est restauré.`);
+        alert(`✅ Accès restauré (${nbRecup + 1}/3 aujourd'hui).\nBon retour ${data.nom || ""} !`);
         
-        // 🚀 Relance le moteur de l'app (Hub Accueil)
+        // 5. Relance le moteur de l'app
         if (typeof launchApp === 'function') launchApp();
 
     } catch (e) {
@@ -232,6 +240,7 @@ alert("Numéro détecté : " + tel + "\nÉtat dans la base : [" + data.etat_acce
         alert("❌ Erreur réseau : Impossible de vérifier votre compte.");
     }
 }
+
 async function validerPaiementFinal(id) {
     if(confirm("✅ Confirmer le paiement ? Cet élève sera ajouté au bilan financier.")) {
         try {
@@ -253,6 +262,7 @@ async function validerPaiementFinal(id) {
         }
     }
 }
+
 async function toggleBan(id, filtreActuel) {
     try {
         const snap = await database.ref(`clients/${id}/infos_client/etat_acces`).once('value');
