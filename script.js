@@ -14,6 +14,25 @@ if (!firebase.apps.length) {
 }
 const database = firebase.database();
 
+function surveillerSession() {
+    const tel = localStorage.getItem('user_tel_id');
+    const monToken = localStorage.getItem('session_token');
+
+    if (tel && monToken) {
+        // Surveille en temps réel si le jeton change sur Firebase
+        database.ref('clients/' + tel + '/infos_client/dernier_token').on('value', (snap) => {
+            const tokenServeur = snap.val();
+            if (tokenServeur && tokenServeur !== monToken) {
+                alert("⚠️ Ce compte vient d'être ouvert sur un autre appareil.");
+                localStorage.clear();
+                location.reload(); 
+            }
+        });
+    }
+}
+// À appeler au chargement de la page
+surveillerSession();
+
 // 2. DÉFINITION DES FONCTIONS (On les déclare toutes ici)
 function activerSignalEnLigne() {
     const monTel = localStorage.getItem('user_tel_id');
