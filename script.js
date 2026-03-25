@@ -193,6 +193,12 @@ async function recupererCompte() {
         }
 
         const data = snap.val();
+    
+
+// --- LIGNES DE TEST À AJOUTER ---
+console.log("DONNÉES REÇUES :", data);
+alert("Numéro détecté : " + tel + "\nÉtat dans la base : [" + data.etat_acces + "]");
+// -------------------------------
 
         // 🛡️ VERROU 1 : Anti-Triche (Compte banni)
         if (data.etat_acces === "banni") {
