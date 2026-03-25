@@ -275,21 +275,25 @@ async function recupererCompte() {
         const aujourdhui = new Date().toLocaleDateString('fr-FR');
 
         // --- ÉTAPE 2 : DISCIPLINE (Priorité absolue) ---
-        // On vérifie l'état AVANT le paiement. Si c'est banni ou suspendu, on arrête TOUT.
-        if (data.etat_acces === "banni") {
-            return alert("🚫 COMPTE BANNI : Accès révoqué définitivement pour fraude.");
+        // On vérifie les deux clés (ancienne et nouvelle) pour ne laisser aucune fuite
+        const estBanni = (data.etat_acces === "banni" || data.statut === "banni");
+        const estSuspendu = (data.etat_acces === "suspendu" || data.statut === "suspendu");
+
+        if (estBanni) {
+            return alert("🚫 COMPTE BANNI : Accès révoqué définitivement.");
         }
 
-        if (data.etat_acces === "suspendu") {
-            const motif = data.motif_suspension || "Non spécifié";
-            return alert(`⏳ COMPTE SUSPENDU\n\nMotif : ${motif}\nContactez l'administrateur pour régulariser.`);
+        if (estSuspendu) {
+            const motif = data.motif_suspension || "Violation des conditions d'utilisation";
+            return alert(`⏳ COMPTE SUSPENDU\n\nMotif : ${motif}\nContactez l'administrateur.`);
         }
 
         // --- ÉTAPE 3 : PAIEMENT ---
-        // Si le client est "Actif" mais que le paiement n'est pas "VALIDE"
         if (data.statut_paiement !== "VALIDE") {
-            alert("💳 Paiement en attente de validation. Redirection vers l'accueil...");
+            alert("💳 Paiement non validé. Redirection vers l'accueil...");
             localStorage.setItem('user_tel_id', tel);
+            // On s'assure de nettoyer les restes d'anciennes sessions
+            localStorage.removeItem('v32_active'); 
             if (typeof launchApp === 'function') launchApp();
             return; 
         }
@@ -303,17 +307,19 @@ async function recupererCompte() {
             return alert("🚫 LIMITE : 3 récupérations par jour. Revenez demain.");
         }
 
-        // --- ÉTAPE 5 : SESSION UNIQUE (Génération du jeton) ---
+        // --- ÉTAPE 5 : MISE À JOUR & HARMONISATION (Le Nettoyage) ---
         const nouveauToken = "session_" + Math.random().toString(36).substr(2, 9);
         
         await database.ref('clients/' + tel + '/infos_client').update({
             dernier_token: nouveauToken,
             compteur_recup: nbRecup + 1,
-            date_derniere_recup: aujourdhui
+            date_derniere_recup: aujourdhui,
+            // --- HARMONISATION ICI ---
+            etat_acces: "actif", // On s'assure que la nouvelle clé est 'actif'
+            statut: "actif"      // On écrase l'ancienne clé pour éviter les bugs
         });
 
         // --- ÉTAPE 6 : VÉRIFICATION DE SORTIE (Pare-Feu Final) ---
-        // On vérifie si quelqu'un d'autre n'a pas pris la place à la dernière milliseconde
         const verifFinal = await database.ref('clients/' + tel + '/infos_client/dernier_token').once('value');
         if (verifFinal.val() !== nouveauToken) {
             alert("⚠️ SESSION VOLÉE : Une autre connexion a été détectée simultanément.");
@@ -331,7 +337,7 @@ async function recupererCompte() {
         if (typeof launchApp === 'function') launchApp();
 
     } catch (e) {
-        console.error("Erreur:", e);
+        console.error("Erreur récupération:", e);
         alert("❌ Erreur de connexion au serveur.");
     }
 }
