@@ -186,9 +186,8 @@ function deconnecterApp() {
 // 7. NAVIGATION ET ÉTATS
 // ==========================================
 function naviguer(id) {
-    // 1. On récupère TOUS les écrans possibles (vérifie bien les classes dans ton HTML)
-    // On ajoute toutes les classes et IDs qui représentent des pages entières
-    const tousLesEcrans = document.querySelectorAll('.gate, .full-page, .main-app, #page-admin, #page-bilan');
+    // 1. On récupère TOUS les écrans possibles en une seule fois
+    const tousLesEcrans = document.querySelectorAll('.gate, .full-page, .main-app, #page-admin, #page-bilan, #hub-accueil, #app-content');
     
     // 2. On les cache TOUS par défaut
     tousLesEcrans.forEach(ecran => {
@@ -198,11 +197,11 @@ function naviguer(id) {
     // 3. On affiche uniquement celui qu'on veut
     const cible = document.getElementById(id);
     if (cible) {
-        // Pour le Hub et l'Admin, on utilise 'block' pour respecter le flux
-        if (id === 'hub-accueil' || id === 'page-admin') {
+        // Pour le Hub, l'Admin et le contenu principal, on utilise 'block'
+        if (id === 'hub-accueil' || id === 'page-admin' || id === 'app-content') {
             cible.style.display = 'block';
         } else {
-            // Pour les écrans de verrouillage (licence/reg), on utilise 'flex' pour centrer
+            // Pour les écrans de verrouillage (licence/reg), on utilise 'flex' pour centrer les cartes
             cible.style.display = 'flex';
         }
         console.log("📍 Navigation vers : " + id);
@@ -211,12 +210,52 @@ function naviguer(id) {
     }
 }
 
-
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO00XXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0000XXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000XXXXXXXXXXXXX
+// Aller vers l'inscription
+function ouvrirInscription() {
+    document.getElementById('license-gate').style.display = 'none';
+    document.getElementById('registration-gate').style.display = 'flex';
+}
+
+// Revenir vers la connexion (le PIN)
+function ouvrirLogin() {
+    document.getElementById('registration-gate').style.display = 'none';
+    document.getElementById('license-gate').style.display = 'flex';
+}
+
+function verifierEtatInitial() {
+    const tel = localStorage.getItem('user_tel_id');
+    const active = localStorage.getItem('v32_active');
+
+    // On cache tout au départ
+    document.getElementById('license-gate').style.display = 'none';
+    document.getElementById('registration-gate').style.display = 'none';
+    document.getElementById('hub-accueil').style.display = 'none';
+
+    if (active === 'true' && tel) {
+        // CAS 1 : Tout est OK -> Accès aux cours
+        document.getElementById('hub-accueil').style.display = 'block'; 
+    } 
+    else if (tel) {
+        // CAS 2 : Inscrit mais pas encore activé -> Demande le PIN
+        document.getElementById('license-gate').style.display = 'flex';
+        // Affiche l'ID appareil automatiquement
+        const displayElem = document.getElementById('display-device-id');
+        if(displayElem) displayElem.innerText = getDeviceId();
+    } 
+    else {
+        // CAS 3 : Premier lancement -> Formulaire de Profil
+        document.getElementById('registration-gate').style.display = 'flex';
+    }
+}
+
+// Lancement automatique au démarrage
+window.onload = verifierEtatInitial;
+
 async function enregistrerProfil() {
     const nom = document.getElementById('reg-nom').value.trim();
     const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
@@ -478,59 +517,65 @@ function surveillerStatutEnDirect(tel) {
 async function launchApp() {
     const isActive = localStorage.getItem('v32_active') === 'true';
     const tel = localStorage.getItem('user_tel_id');
-    // --- ICI : On active le radar dès que l'app se lance ---
-    if (tel) {
+
+    // 1. CAS : NOUVEL ÉLÈVE (Pas de profil créé)
+    if (!tel) {
+        naviguer('registration-gate');
+        return; 
+    }
+
+    // --- Lancement de la surveillance en direct si le tel existe ---
+    if (typeof surveillerStatutEnDirect === "function") {
         surveillerStatutEnDirect(tel);
     }
     
-    // verifierIdentite() doit maintenant renvoyer les nouveaux statuts 
-    // basés sur 'etat_acces' et 'statut_paiement' dans Firebase
+    // 2. VÉRIFICATION FIREBASE (Identité et Statut)
     const statusIdentite = await verifierIdentite(); 
 
+    // 3. CAS : PAS ENCORE ACTIVÉ (Pas de code PIN valide)
     if (!isActive) {
         naviguer('license-gate');
+        // On affiche l'ID appareil pour le paiement
+        const deviceIdElem = document.getElementById('display-device-id');
+        if(deviceIdElem) deviceIdElem.innerText = getDeviceId();
         return;
     }
 
+    // 4. GESTION DES STATUTS FIREBASE
     switch (statusIdentite) {
         case "AUTHORIZED":
             naviguer('hub-accueil');
-            // 🛡️ ON ACTIVE LA SURVEILLANCE EN DIRECT ICI
-             activerSecuriteTempsReel(localStorage.getItem('user_tel_id'));
-            activerSignalEnLigne(); 
+            // Activation des sécurités temps réel
+            if (typeof activerSecuriteTempsReel === "function") {
+                activerSecuriteTempsReel(tel);
+                activerSignalEnLigne(); 
+            }
             break;
             
         case "BANNED":
-            // 🚫 Cas : etat_acces === "banni"
-            localStorage.clear(); // On nettoie le téléphone du tricheur
+            localStorage.clear(); 
             alert("🚫 Votre compte a été définitivement révoqué.");
-            naviguer('registration-gate'); // On le renvoie au début (bloqué)
+            naviguer('registration-gate'); 
             break;
 
         case "SUSPENDED":
-            // ⚠️ Cas : etat_acces === "suspendu"
             alert("⚠️ Votre accès est temporairement suspendu.");
-            afficherEcranBloque(); // Il voit l'écran de blocage (ex: retard de paiement)
+            naviguer('license-gate'); 
             break;
 
         case "PENDING_PAYMENT":
-            // ⏳ Cas : statut_paiement === "EN_ATTENTE"
             alert("⏳ En attente de validation de votre paiement par l'administrateur.");
-            naviguer('registration-gate'); // Ou une page spécifique 'attente-paiement'
+            naviguer('license-gate'); 
             break;
             
-        case "DELETED":
-        case "NO_PROFILE":
-            // Le compte n'existe pas ou a été effacé proprement
-            naviguer('registration-gate');
-            break;
-
         default:
-            // Par sécurité, si on ne connaît pas le statut, on renvoie à l'inscription
+            // Par sécurité, si statut inconnu, on renvoie à l'inscription
             naviguer('registration-gate');
     }
 }
 
+// Lancement au démarrage de la page
+window.onload = launchApp;
 async function verifierIdentite() {
     const tel = localStorage.getItem('user_tel_id');
     if (!tel) return "NO_PROFILE";
