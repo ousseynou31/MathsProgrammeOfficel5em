@@ -196,36 +196,16 @@
         
         <button class="btn-3d btn-gold" onclick="verifierLicence()">
             <span>DÉVERROUILLER</span>
-        </button>
-        <div style="margin-top: 20px; text-align: center;">
-            <div style="margin-top: 15px; border-top: 1px dashed #444; pt-10">
-    <p style="font-size: 0.75rem; color: #ccc;">Nouveau ici ?</p>
-                <div id="registration-gate" class="gate">
-    <div class="glass-card anim-pop">
-        <h1 class="glow-text">MON PROFIL</h1>
-        
-        <div style="margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
-            <p style="font-size: 0.65rem; color: #aaa; margin-bottom: 5px;">ID DE VOTRE APPAREIL :</p>
-            <div class="id-display-mini" style="font-family: monospace; color: var(--gold); font-weight: bold;">...</div>
-        </div>
-
-        <input type="text" id="reg-nom" class="input-3d" placeholder="NOM COMPLET">
-        <input type="tel" id="reg-tel" class="input-3d" placeholder="TÉLÉPHONE">
-        
-        <button class="btn-3d btn-accent" onclick="enregistrerProfil()">
-            <span>CRÉER MON COMPTE</span>
-        </button>
-
-        <p style="margin-top: 15px; font-size: 0.75rem; color: #888;">
-            Déjà inscrit ? <span onclick="ouvrirLogin()" style="color: #3b82f6; cursor: pointer; text-decoration: underline;">Se connecter</span>
-        </p>
-    </div>
-</div>
+        </button> 
+       <div style="margin-bottom: 20px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 15px;">
+    <p style="font-size: 0.75rem; color: #ccc; margin-bottom: 5px;">Nouveau ici ?</p>
+           
     <span onclick="ouvrirInscription()" 
           style="color: var(--gold); font-size: 0.9rem; font-weight: bold; cursor: pointer; text-decoration: underline;">
         CRÉER MON COMPTE ÉLÈVE
     </span>
 </div>
+        <div style="margin-top: 20px; text-align: center;">  
     <span onclick="recupererCompte()" 
       style="color: #3b82f6; font-size: 0.8rem; font-weight: bold; cursor: pointer; text-decoration: underline;">
     Récupérer mon compte
@@ -243,6 +223,12 @@
             <input type="text" id="reg-nom" class="input-3d" placeholder="NOM COMPLET">
             <input type="tel" id="reg-tel" class="input-3d" placeholder="TÉLÉPHONE">
             <button class="btn-3d btn-accent" onclick="enregistrerProfil()"><span>CRÉER MON COMPTE</span></button>
+            <p style="margin-top: 15px; font-size: 0.75rem; color: #888; text-align: center;">
+    Déjà inscrit ? 
+    <span onclick="ouvrirLogin()" style="color: #3b82f6; cursor: pointer; text-decoration: underline;">
+        Se connecter
+    </span>
+</p>
         </div>
     </div>
 
