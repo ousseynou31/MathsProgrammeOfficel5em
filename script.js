@@ -341,6 +341,34 @@ async function recupererCompte() {
         alert("❌ Erreur de connexion au serveur.");
     }
 }
+
+async function deleteClient(id) {
+    if(confirm("❗ SUPPRESSION DÉFINITIVE : L'application du client sera désactivée INSTANTANÉMENT. Confirmer ?")) {
+        try {
+            // --- HARMONISATION TOTALE DES CLÉS ---
+            // On écrase 'etat_acces', 'statut' et 'statut_paiement' 
+            // pour ne laisser aucune faille de lecture.
+            await database.ref(`clients/${id}/infos_client`).update({
+                etat_acces: "banni",      // Notre nouveau verrou discipline
+                statut: "banni",           // On synchronise l'ancienne clé pour sécurité
+                statut_paiement: "EXPIRE", // On coupe l'accès financier
+                motif_suspension: "Compte supprimé par l'administrateur"
+            });
+
+            // Note : On ne fait pas database.ref(`clients/${id}`).remove() 
+            // pour garder le numéro en "Liste Noire" et empêcher la réinscription.
+
+            alert("✅ Client expulsé et banni définitivement.");
+            
+            // Si tu as une fonction de rafraîchissement de liste, appelle-la ici
+            if (typeof loadUsers === 'function') loadUsers();
+
+        } catch (e) {
+            console.error("Erreur deleteClient:", e);
+            alert("❌ Erreur de communication avec la base de données.");
+        }
+    }
+}
 async function toggleBan(id, filtreActuel) {
     try {
         // 1. On récupère l'état actuel pour savoir si on active ou on suspend
