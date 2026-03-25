@@ -187,41 +187,45 @@ async function enregistrerProfil() {
     if(!nom || tel.length < 8) return alert("⚠️ Veuillez remplir tous les champs correctement.");
 
     try {
-        // 🔍 VERIFICATION : Est-ce que ce numéro existe déjà ?
+        // 🔍 VERIFICATION : On vérifie l'existence et la discipline
         const check = await database.ref('clients/' + tel + '/infos_client').once('value');
         
         if (check.exists()) {
             const data = check.val();
-            if (data.etat_acces === "banni") {
-                return alert("🚫 Ce numéro est banni. Inscription impossible.");
+            // Si le numéro est banni, on bloque TOUTE tentative de réinscription
+            if (data.etat_acces === "banni" || data.statut === "banni") {
+                return alert("🚫 Ce numéro est définitivement banni du Labo d'Analyse.");
             }
-            return alert("💡 Ce compte existe déjà. Cliquez sur 'Récupérer mon compte'.");
+            return alert("💡 Ce compte existe déjà. Utilisez 'Récupérer mon compte'.");
         }
 
-        // 📝 CRÉATION : On enregistre avec les verrous de sécurité
+        // 📝 CRÉATION : On initialise les verrous proprement
         await database.ref('clients/' + tel + '/infos_client').set({
             nom: nom,
             tel: tel,
             categorie: document.getElementById('reg-categorie')?.value || "C",
-            etat_acces: "actif",           // Il peut ouvrir l'app...
-            statut_paiement: "EN_ATTENTE", // ...mais il tombera sur la page de paiement
+            
+            // --- HARMONISATION DES VERROUS ---
+            etat_acces: "actif",           // Il peut entrer dans l'interface...
+            statut: "actif",                // Doublon de sécurité pour l'ancien code
+            statut_paiement: "NON",        // ...mais l'accès aux cours est bloqué
+            
             date_inscription: new Date().toISOString(),
-            device_id: typeof getDeviceId === 'function' ? getDeviceId() : "unknown"
+            device_id: typeof getDeviceId === 'function' ? getDeviceId() : "unknown",
+            dernier_token: "init_" + Math.random().toString(36).substr(2, 5) // Jeton initial
         });
 
+        // ✅ SAUVEGARDE LOCALE ET LANCEMENT
         localStorage.setItem('user_tel_id', tel);
-        alert("✅ Inscription réussie ! En attente de validation du paiement par l'admin.");
+        alert("✅ Inscription réussie !\n\nVotre compte est créé. Payez vos frais pour activer vos algorithmes.");
         
-        // On relance l'app pour qu'elle vérifie le statut
         if (typeof launchApp === 'function') launchApp();
 
     } catch(e) {
-        console.error(e);
-        alert("❌ Erreur de connexion au serveur.");
+        console.error("Erreur Inscription:", e);
+        alert("❌ Erreur de communication avec la base de données.");
     }
 }
-
-
 async function recupererCompte() {
     const saisieUser = prompt("Entrez votre numéro de téléphone :");
     if (saisieUser === null || saisieUser.trim() === "") return;
