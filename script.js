@@ -119,6 +119,7 @@ function getDeviceId() {
 async function verifierLicence() {
     const input = document.getElementById('input-license').value.trim();
     const device = getDeviceId();
+    localStorage.setItem('v32_active', 'true'); // <--- INDISPENSABLE
     
     // 1. On essaie de récupérer le tel dans le cache, sinon on le demande
     let tel = localStorage.getItem('user_tel_id');
