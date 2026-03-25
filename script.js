@@ -118,10 +118,18 @@ function getDeviceId() {
 // ==========================================
 async function verifierLicence() {
     const input = document.getElementById('input-license').value.trim();
-    const tel = localStorage.getItem('user_tel_id'); // On récupère le numéro stocké
     const device = getDeviceId();
     
-    // 1. Calcul du code attendu (Ta logique mathématique reste la même)
+    // 1. On essaie de récupérer le tel dans le cache, sinon on le demande
+    let tel = localStorage.getItem('user_tel_id');
+    
+    if (!tel) {
+        tel = prompt("🔑 Entrez votre numéro de téléphone pour valider la licence :");
+        if (!tel) return; // L'utilisateur a annulé
+        tel = tel.trim().replace(/\D/g,'');
+    }
+
+    // 2. Calcul du code PIN (Ta logique mathématique inchangée)
     let hash = 0;
     for (let i = 0; i < device.length; i++) {
         hash = ((hash << 5) - hash) + device.charCodeAt(i);
@@ -129,43 +137,42 @@ async function verifierLicence() {
     }
     const codeAttendu = Math.abs(hash + SECRET_KEY).toString().substring(0, 8);
     
-    // 2. Vérification du PIN
+    // 3. Vérification du PIN
     if(input !== codeAttendu) {
         return alert("❌ PIN INCORRECT : Ce code ne correspond pas à cet appareil.");
     }
 
-    // 3. VÉRIFICATION DE SÉCURITÉ SUR LE SERVEUR (Nouveauté)
-    if (!tel) return alert("❌ Erreur : Numéro de téléphone introuvable. Veuillez vous réinscrire.");
-
     try {
+        // 4. VERIFICATION SERVEUR (On vérifie si le compte existe et est actif)
         const snap = await database.ref(`clients/${tel}/infos_client`).once('value');
-        const data = snap.val();
-
+        
         if (!snap.exists()) {
-            return alert("❌ Ce compte n'existe plus dans la base de données.");
+            return alert("❌ Erreur : Ce numéro n'est pas enregistré dans la base.");
         }
 
-        // --- LE VERROU DE DISCIPLINE ---
-        if (data.etat_acces === "banni" || data.etat_acces === "suspendu" || data.statut === "suspendu") {
-            const motif = data.motif_suspension || "Violation des règles";
-            alert(`🚫 ACCÈS REFUSÉ\n\nVotre compte est suspendu.\nMotif : ${motif}`);
+        const data = snap.val();
+
+        // 🛡️ VERROU DE DISCIPLINE (Même avec le bon PIN, on vérifie le ban)
+        const estBloque = (data.etat_acces === "banni" || data.etat_acces === "suspendu" || data.statut === "suspendu");
+        
+        if (estBloque) {
+            alert("🚫 ACCÈS REFUSÉ : Votre compte est suspendu ou banni.");
             localStorage.clear();
-            location.reload();
             return;
         }
 
-        // ✅ PIN CORRECT + COMPTE ACTIF = OUVERTURE
+        // ✅ TOUT EST BON : On sauve le numéro et on active
+        localStorage.setItem('user_tel_id', tel);
         localStorage.setItem('v32_active', 'true');
-        alert("✅ Licence activée avec succès !");
         
+        alert("✅ Accès réactivé !");
         if (typeof launchApp === 'function') launchApp();
 
     } catch (e) {
         console.error("Erreur Licence:", e);
-        alert("❌ Erreur de connexion pour vérification du statut.");
+        alert("❌ Erreur de connexion réseau.");
     }
 }
-
 function deconnecterApp() {
     if(confirm("Voulez-vous verrouiller l'accès et retourner à l'activation ?")) {
         // On retire uniquement le flag d'activation
