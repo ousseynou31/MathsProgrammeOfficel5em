@@ -301,44 +301,63 @@ async function recupererCompte() {
         alert("❌ Erreur de connexion au serveur.");
     }
 }
+async function toggleBan(id, filtreActuel) {
+    try {
+        // 1. On récupère l'état actuel pour savoir si on active ou on suspend
+        const snap = await database.ref(`clients/${id}/infos_client/etat_acces`).once('value');
+        const estActuelActif = snap.val() === "actif";
+        
+        const nouvelEtat = estActuelActif ? "suspendu" : "actif";
+        const messageConfirm = estActuelActif 
+            ? `Voulez-vous SUSPENDRE cet accès ?\n(L'élève sera éjecté immédiatement)` 
+            : `Voulez-vous RÉACTIVER cet accès ?`;
+
+        if(confirm(messageConfirm)) {
+            // 2. MISE À JOUR HARMONISÉE
+            await database.ref(`clients/${id}/infos_client`).update({
+                "etat_acces": nouvelEtat,
+                "statut": nouvelEtat, // On synchronise l'ancien champ pour éviter les conflits
+                "motif_suspension": nouvelEtat === "suspendu" ? "Action administrative" : ""
+            });
+             
+            alert(`📱 Accès ${nouvelEtat === "actif" ? "réactivé" : "coupé"}.`);
+            
+            // 3. Rafraîchissement de la liste (ton ancienne logique)
+            if (typeof loadUsers === 'function') loadUsers(filtreActuel);
+        }
+    } catch (e) {
+        console.error("Erreur toggleBan:", e);
+        alert("❌ Erreur de modification d'accès.");
+    }
+}
+
 async function validerPaiementFinal(id) {
     if(confirm("✅ Confirmer le paiement ? Cet élève sera ajouté au bilan financier.")) {
         try {
-            // On met à jour les deux verrous d'un coup
+            // --- HARMONISATION ET NETTOYAGE ---
+            // On force les valeurs exactes pour que le 'Radar de Sécurité' 
+            // ne voie plus de conflit entre 'statut' et 'etat_acces'.
             await database.ref(`clients/${id}/infos_client`).update({
-                statut_paiement: "VALIDE", // Débloque l'argent dans l'historique
-                etat_acces: "actif",      // Débloque la porte de l'application
-                date_inscription: new Date().toISOString() // Relance le compteur de jours
+                statut_paiement: "VALIDE",   // Débloque l'accès financier
+                etat_acces: "actif",         // Débloque la porte principale
+                statut: "actif",             // NETTOYAGE : On écrase l'ancien champ pour éviter les fuites
+                motif_suspension: "",        // On efface d'éventuels anciens motifs de blocage
+                date_inscription: new Date().toISOString() 
             });
 
-            alert("💰 Paiement validé et enregistré !");
+            alert("💰 Paiement validé ! L'élève est désormais ACTIF.");
             
-            // On rafraîchit les deux listes pour voir les changements
+            // Rafraîchissement des interfaces admin
             if (typeof loadUsers === "function") loadUsers('TOUT');
             if (typeof chargerContenuHistorique === "function") chargerContenuHistorique();
 
         } catch (e) {
-            alert("❌ Erreur de validation.");
+            console.error("Erreur validation paiement:", e);
+            alert("❌ Erreur de communication avec Firebase.");
         }
     }
 }
 
-async function toggleBan(id, filtreActuel) {
-    try {
-        const snap = await database.ref(`clients/${id}/infos_client/etat_acces`).once('value');
-        const estActuel = snap.val() === "actif";
-        const nouvelEtat = estActuel ? "suspendu" : "actif";
-
-        if(confirm(`Voulez-vous ${estActuel ? 'SUSPENDRE' : 'ACTIVER'} cet accès ?`)) {
-            await database.ref(`clients/${id}/infos_client/etat_acces`).set(nouvelEtat);
-             
-            alert(`📱 Accès ${nouvelEtat === "actif" ? "réactivé" : "coupé"}.`);
-            loadUsers(filtreActuel);
-        }
-    } catch (e) {
-        alert("❌ Erreur de modification d'accès.");
-    }
-}
 function surveillerStatutEnDirect(tel) {
     if (!tel) {
         // Si pas de numéro, on s'assure que l'accès est coupé
@@ -484,18 +503,34 @@ function activerSecuriteTempsReel(tel) {
         }
     });
 }
-async function deleteClient(id) {
-    if(confirm("❗ SUPPRESSION DÉFINITIVE : L'application du client sera désactivée INSTANTANÉMENT. Confirmer ?")) {
-        try {
-            // On envoie l'ordre de bannissement (Signal Instant T)
-            await database.ref(`clients/${id}/infos_client`).update({
-                etat_acces: "banni",
-                statut_paiement: "EXPIRE"
-            });
-            alert("✅ Client expulsé et supprimé.");
-        } catch (e) {
-            alert("Erreur de communication.");
-        }
+
+async function modifierStatutAdmin(id) {
+    // 1. Liste des seuls mots-clés autorisés (Notre standard)
+    const optionsDiscipline = ["actif", "suspendu", "banni"];
+    const optionsPaiement = ["VALIDE", "expire", "NON"];
+
+    // 2. Demande à l'admin (avec validation stricte)
+    let nouvelEtat = prompt("Choisir l'état : actif, suspendu, ou banni").toLowerCase().trim();
+    
+    // Si l'admin tape n'importe quoi, on arrête tout !
+    if (!optionsDiscipline.includes(nouvelEtat)) {
+        return alert("❌ ERREUR : Vous devez taper 'actif', 'suspendu' ou 'banni'.");
+    }
+
+    let nouveauPaiement = prompt("Choisir le paiement : VALIDE, expire, ou NON").toUpperCase().trim();
+    if (!optionsPaiement.includes(nouveauPaiement)) {
+        return alert("❌ ERREUR : Vous devez taper 'VALIDE', 'expire' ou 'NON'.");
+    }
+
+    try {
+        await database.ref(`clients/${id}/infos_client`).update({
+            etat_acces: nouvelEtat,
+            statut: nouvelEtat, // On synchronise toujours l'ancien champ
+            statut_paiement: nouveauPaiement
+        });
+        alert("✅ Base de données mise à jour proprement !");
+    } catch (e) {
+        alert("Erreur réseau.");
     }
 }
 
