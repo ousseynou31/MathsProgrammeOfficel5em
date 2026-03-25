@@ -19,13 +19,23 @@ function surveillerSession() {
     const monToken = localStorage.getItem('session_token');
 
     if (tel && monToken) {
-        // Surveille en temps réel si le jeton change sur Firebase
+        // .on('value') écoute en temps réel les changements sur Firebase
         database.ref('clients/' + tel + '/infos_client/dernier_token').on('value', (snap) => {
             const tokenServeur = snap.val();
+            
+            // Si le jeton change (quelqu'un d'autre s'est connecté)
             if (tokenServeur && tokenServeur !== monToken) {
-                alert("⚠️ Ce compte vient d'être ouvert sur un autre appareil.");
-                localStorage.clear();
-                location.reload(); 
+                
+                // 1. ON COUPE TOUT DE SUITE LES ACCÈS LOCAUX
+                localStorage.removeItem('v32_active');
+                localStorage.removeItem('session_token');
+                // On garde juste le numéro pour qu'il puisse tenter de se reconnecter plus tard
+                
+                // 2. MESSAGE D'ALERTE
+                alert("⚠️ SÉCURITÉ : Ce compte vient d'être ouvert sur un autre appareil.\n\nVotre session est interrompue immédiatement.");
+
+                // 3. REDIRECTION FORCÉE (On vide l'écran et on recharge la page d'accueil)
+                window.location.reload(); 
             }
         });
     }
