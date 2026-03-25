@@ -317,6 +317,11 @@ async function toggleBan(id, filtreActuel) {
 
 async function launchApp() {
     const isActive = localStorage.getItem('v32_active') === 'true';
+    const tel = localStorage.getItem('user_tel_id');
+    // --- ICI : On active le radar dès que l'app se lance ---
+    if (tel) {
+        surveillerStatutEnDirect(tel);
+    }
     
     // verifierIdentite() doit maintenant renvoyer les nouveaux statuts 
     // basés sur 'etat_acces' et 'statut_paiement' dans Firebase
