@@ -198,81 +198,82 @@ async function enregistrerProfil() {
 
 
 async function recupererCompte() {
-    // 1. Récupération et nettoyage du numéro
-    const saisieUser = prompt("Entrez votre numéro de téléphone pour restaurer votre accès :");
+    const saisieUser = prompt("Entrez votre numéro de téléphone :");
     if (saisieUser === null || saisieUser.trim() === "") return;
 
     const tel = saisieUser.trim().replace(/\D/g,'');
     if(tel.length < 8) return alert("📞 Numéro invalide.");
 
     try {
-        // 2. Interrogation de Firebase
         const snap = await database.ref('clients/' + tel + '/infos_client').once('value');
-        if (!snap.exists()) return alert("❌ Aucun compte trouvé.");
+        
+        // --- ÉTAPE 1 : EXISTENCE ---
+        if (!snap.exists()) {
+            return alert("❌ Aucun compte trouvé pour ce numéro.");
+        }
 
         const data = snap.val();
         const aujourdhui = new Date().toLocaleDateString('fr-FR');
 
-        // --- 🛡️ SÉCURITÉ 1 : COMPTEUR (Anti-Partage) ---
+        // --- ÉTAPE 2 : DISCIPLINE (Priorité absolue) ---
+        // On vérifie l'état AVANT le paiement. Si c'est banni ou suspendu, on arrête TOUT.
+        if (data.etat_acces === "banni") {
+            return alert("🚫 COMPTE BANNI : Accès révoqué définitivement pour fraude.");
+        }
+
+        if (data.etat_acces === "suspendu") {
+            const motif = data.motif_suspension || "Non spécifié";
+            return alert(`⏳ COMPTE SUSPENDU\n\nMotif : ${motif}\nContactez l'administrateur pour régulariser.`);
+        }
+
+        // --- ÉTAPE 3 : PAIEMENT ---
+        // Si le client est "Actif" mais que le paiement n'est pas "VALIDE"
+        if (data.statut_paiement !== "VALIDE") {
+            alert("💳 Paiement en attente de validation. Redirection vers l'accueil...");
+            localStorage.setItem('user_tel_id', tel);
+            if (typeof launchApp === 'function') launchApp();
+            return; 
+        }
+
+        // --- ÉTAPE 4 : ANTI-PARTAGE (Compteur) ---
         let nbRecup = 0;
         if (data.date_derniere_recup === aujourdhui) {
             nbRecup = data.compteur_recup || 0;
         }
         if (nbRecup >= 3) {
-            return alert("🚫 LIMITE ATTEINTE : 3 récupérations maximum par jour.");
+            return alert("🚫 LIMITE : 3 récupérations par jour. Revenez demain.");
         }
 
-        // --- 🛡️ SÉCURITÉ 2 : BANNI ---
-        if (data.etat_access === "banni") {
-            return alert(`🚫 ACCÈS RÉVOQUÉ.`);
-        }
-
-        // --- 🛡️ SÉCURITÉ 3 : PAIEMENT ---
-        if (data.statut_paiement !== "VALIDE") {
-            alert("⏳ Paiement en attente. Redirection...");
-            localStorage.setItem('user_tel_id', tel);
-            if (typeof launchApp === 'function') launchApp();
-            return;
-        }
-
-        // --- 🛡️ SÉCURITÉ 4 : GÉNÉRATION DU JETON ---
+        // --- ÉTAPE 5 : SESSION UNIQUE (Génération du jeton) ---
         const nouveauToken = "session_" + Math.random().toString(36).substr(2, 9);
         
-        // 3. Mise à jour Firebase
         await database.ref('clients/' + tel + '/infos_client').update({
             dernier_token: nouveauToken,
             compteur_recup: nbRecup + 1,
             date_derniere_recup: aujourdhui
         });
 
-        // ========================================================
-        // 🛡️ AMÉLIORATION CRUCIALE : LE PARE-FEU FINAL
-        // ========================================================
+        // --- ÉTAPE 6 : VÉRIFICATION DE SORTIE (Pare-Feu Final) ---
+        // On vérifie si quelqu'un d'autre n'a pas pris la place à la dernière milliseconde
         const verifFinal = await database.ref('clients/' + tel + '/infos_client/dernier_token').once('value');
         if (verifFinal.val() !== nouveauToken) {
-            // Si le jeton sur le serveur n'est plus celui qu'on vient de créer, 
-            // c'est que quelqu'un d'autre vient de se connecter pile à ce moment.
-            alert("⚠️ ÉCHEC : Une autre connexion a été détectée simultanément.");
-            document.body.innerHTML = ""; // On blanchit l'écran par sécurité
+            alert("⚠️ SESSION VOLÉE : Une autre connexion a été détectée simultanément.");
+            document.body.innerHTML = ""; 
             location.reload(); 
-            return; // ON ARRÊTE TOUT, on ne donne pas l'accès !
+            return;
         }
-        // ========================================================
 
-        // 4. Enregistrement local et activation de l'accès
+        // ✅ TOUS LES VERROUS SONT PASSÉS : ACTIVATION
         localStorage.setItem('user_tel_id', tel);
         localStorage.setItem('session_token', nouveauToken);
-        localStorage.setItem('v32_registered', 'true'); 
         localStorage.setItem('v32_active', 'true');     
         
-        alert(`✅ Accès restauré (${nbRecup + 1}/3 aujourd'hui).`);
-        
-        // 5. Relance le moteur de l'app
+        alert(`✅ Accès restauré (${nbRecup + 1}/3). Bon retour !`);
         if (typeof launchApp === 'function') launchApp();
 
     } catch (e) {
         console.error("Erreur:", e);
-        alert("❌ Erreur réseau.");
+        alert("❌ Erreur de connexion au serveur.");
     }
 }
 async function validerPaiementFinal(id) {
