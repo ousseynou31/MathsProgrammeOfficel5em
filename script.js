@@ -577,31 +577,42 @@ async function launchApp() {
     const tel = localStorage.getItem('user_tel_id');
     const v32 = localStorage.getItem('v32_active');
 
-    // 1. Si rien dans le cache -> Direction Inscription
+    // --- ÉTAPE 1 : LA BARRIÈRE TECHNIQUE (LE PIN) ---
+    // Si le PIN n'est pas validé localement, on bloque direct à la licence
+    if (v32 !== 'true') {
+        const displayElem = document.getElementById('display-device-id');
+        if(displayElem) displayElem.innerText = getDeviceId();
+        return naviguer('license-gate'); 
+    }
+
+    // --- ÉTAPE 2 : LA BARRIÈRE IDENTITÉ (LE PROFIL) ---
+    // Si le PIN est OK mais qu'on n'a pas de numéro de téléphone, 
+    // c'est que l'élève vient de valider son PIN mais n'a pas encore créé son profil.
     if (!tel) {
         return naviguer('registration-gate');
     }
 
-    // 2. Si inscrit mais pas de PIN validé localement
-    if (v32 !== 'true') {
-        const displayElem = document.getElementById('display-device-id');
-        if(displayElem) displayElem.innerText = getDeviceId();
-        return naviguer('license-gate');
-    }
-
-    // 3. Si tout semble OK, on vérifie quand même Firebase (le radar)
-    const status = await verifierIdentite();
-    if (status === "AUTHORIZED") {
+    // --- ÉTAPE 3 : LA VÉRIFICATION SERVEUR (SÉCURITÉ FINALE) ---
+    try {
+        const status = await verifierIdentite(); // Vérifie Firebase
+        
+        if (status === "AUTHORIZED") {
+            naviguer('hub-accueil');
+            surveillerStatutEnDirect(tel); 
+        } else if (status === "PENDING_PAYMENT") {
+            // Si tu as révoqué son accès à distance dans Firebase
+            naviguer('license-gate');
+        } else {
+            // Si le compte a été supprimé ou banni
+            localStorage.clear();
+            naviguer('license-gate');
+        }
+    } catch (e) {
+        // En cas de problème réseau, on laisse entrer si le cache est OK
+        console.warn("Mode Hors-Ligne");
         naviguer('hub-accueil');
-        surveillerStatutEnDirect(tel); // On lance la surveillance temps réel
-    } else if (status === "PENDING_PAYMENT") {
-        naviguer('license-gate');
-    } else {
-        localStorage.clear();
-        naviguer('registration-gate');
     }
 }
-
 
 function synchroniserPresence() {
     const tel = localStorage.getItem('user_tel_id');
