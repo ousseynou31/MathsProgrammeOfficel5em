@@ -1610,41 +1610,43 @@ function deconnecterApp() {
 window.addEventListener('load', async () => {
     console.log("🚀 Initialisation du moteur Maths 5em...");
 
-    // 1. GESTION DE LA CONNEXION ET PRÉSENCE
-    if (typeof surveillerConnexion === "function") {
-        surveillerConnexion();
-    }
-    
-    const telLocal = localStorage.getItem('user_tel_id');
-    if (telLocal) {
-        // Active le signal "En ligne" et la surveillance en temps réel
-        if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
-        if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
-    }
-
-    // 2. AFFICHAGE DE L'ID APPAREIL (Pour l'écran d'activation)
+    // 1. AFFICHAGE IMMÉDIAT DE L'ID (Pour éviter l'affichage "...")
     const devIdDisplay = document.getElementById('display-device-id');
     if (devIdDisplay && typeof getDeviceId === "function") {
         devIdDisplay.innerText = getDeviceId();
     }
 
-    // 3. ACTIVATION DU BOUTON CACHÉ ADMIN (Appui long)
+    // 2. PRÉPARATION DES OUTILS ADMIN
     if (typeof initAdminTrigger === "function") {
         initAdminTrigger();
     }
 
-    // --- 3.5 SYNCHRONISATION DES TARIFS (Crucial pour le bilan financier) ---
-    // On attend (await) que les prix arrivent de Firebase AVANT de lancer l'app
+    // 3. SYNCHRONISATION DES DONNÉES CRUCIALES (Tarifs)
     if (typeof chargerTarifs === "function") {
-        console.log("📊 Synchronisation des tarifs en cours...");
-        await chargerTarifs();
+        try {
+            console.log("📊 Synchronisation des tarifs...");
+            await chargerTarifs();
+        } catch(e) { console.warn("Tarifs chargés en mode local."); }
     }
 
-    // 4. DÉMARRAGE DE L'INTERFACE (Tunnel de sécurité V1)
+    // 4. LE TUNNEL DE SÉCURITÉ (DÉCISION DE LA PAGE)
+    // On lance launchApp AVANT toute surveillance en direct pour 
+    // fixer la page de destination une fois pour toutes.
     if (typeof launchApp === "function") {
         console.log("🔓 Vérification de la licence...");
         await launchApp();
     }
+
+    // 5. ACTIVATION DES SERVICES "BACKGROUND" (Seulement si déjà inscrit)
+    const telLocal = localStorage.getItem('user_tel_id');
+    const estActif = localStorage.getItem('v32_active') === 'true';
+
+    if (telLocal && estActif) {
+        // On ne surveille la connexion et le statut QUE si l'utilisateur est déjà dans le Hub
+        if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
+        if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
+        if (typeof surveillerConnexion === "function") surveillerConnexion();
+    }
     
-    console.log("✅ Système prêt et débloqué.");
+    console.log("✅ Système prêt.");
 });
