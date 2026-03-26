@@ -479,8 +479,12 @@ async function mettreAJourAnciensClients() {
 function getDeviceId() {
     let id = localStorage.getItem('diouf_device_id');
     if(!id) {
-        // On crée un ID temporaire, mais il pourra être écrasé par la récupération
-        id = "D-" + Math.random().toString(36).substr(2, 6).toUpperCase();
+        // On combine un préfixe, une partie aléatoire et l'heure actuelle en base 36
+        // Cela garantit une unicité quasi-totale
+        const randomPart = Math.random().toString(36).substr(2, 4).toUpperCase();
+        const timePart = Date.now().toString(36).substr(-4).toUpperCase();
+        
+        id = `D-${randomPart}${timePart}`; 
         localStorage.setItem('diouf_device_id', id);
     }
     return id;
@@ -538,23 +542,34 @@ async function recupererCompte() {
 
     try {
         const snap = await database.ref(`clients/${tel}/infos_client`).once('value');
-        if (!snap.exists()) return alert("❌ Aucun compte trouvé.");
+        if (!snap.exists()) return alert("❌ Aucun compte trouvé pour ce numéro.");
 
         const data = snap.val();
 
-        // 🛡️ LE SECRET : On récupère l'ID d'origine sur Firebase
         if (data.device_id) {
-            localStorage.setItem('diouf_device_id', data.device_id); // On écrase le mauvais ID
+            // 1. On restaure l'identité technique
+            localStorage.setItem('diouf_device_id', data.device_id); 
             localStorage.setItem('user_tel_id', tel);
             
-            alert("✅ Identité restaurée !\n\nL'ID " + data.device_id + " est de retour. Entrez votre PIN habituel.");
-            naviguer('license-gate');
+            // 2. Vérification du statut de paiement
+            if (data.statut_paiement === "VALIDE" || data.etat_acces === "actif") {
+                // S'il est déjà en règle, on lui évite le PIN
+                localStorage.setItem('v32_active', 'true');
+                alert(`✅ Content de vous revoir ${data.nom} !\nAccès restauré avec succès.`);
+                naviguer('hub-accueil');
+            } else {
+                // S'il n'avait pas fini son activation, on le renvoie au PIN
+                alert("✅ Identité restaurée !\nEntrez maintenant votre code PIN pour activer l'application.");
+                naviguer('license-gate');
+            }
         } else {
             alert("⚠️ Ce compte n'a pas d'ID de sécurité enregistré.");
         }
-    } catch (e) { alert("❌ Erreur serveur."); }
+    } catch (e) { 
+        console.error(e);
+        alert("❌ Erreur de connexion au serveur."); 
+    }
 }
-
 // ==========================================
 // 4. LANCEMENT (LE CHEF D'ORCHESTRE)
 // ==========================================
