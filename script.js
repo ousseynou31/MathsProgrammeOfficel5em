@@ -242,46 +242,52 @@ async function enregistrerProfil() {
     if(!nom || tel.length < 8) return alert("⚠️ Veuillez remplir tous les champs correctement.");
 
     try {
-        // 🔍 VERIFICATION : On vérifie l'existence et la discipline
+        // 🔍 VERIFICATION : On vérifie l'existence
         const check = await database.ref('clients/' + tel + '/infos_client').once('value');
         
         if (check.exists()) {
             const data = check.val();
-            // Si le numéro est banni, on bloque TOUTE tentative de réinscription
             if (data.etat_acces === "banni" || data.statut === "banni") {
-                return alert("🚫 Ce numéro est définitivement banni du Labo d'Analyse.");
+                return alert("🚫 Ce numéro est définitivement banni.");
             }
             return alert("💡 Ce compte existe déjà. Utilisez 'Récupérer mon compte'.");
         }
 
-        // 📝 CRÉATION : On initialise les verrous proprement
+        // 📝 CRÉATION : On valide tout immédiatement car le PIN a été vérifié avant
         await database.ref('clients/' + tel + '/infos_client').set({
             nom: nom,
             tel: tel,
-            categorie: document.getElementById('reg-categorie')?.value || "C",
+            // On peut laisser "C" par défaut, tu changeras sa catégorie dans ton interface Admin plus tard
+            categorie: "C", 
             
-            // --- HARMONISATION DES VERROUS ---
-            etat_acces: "actif",           // Il peut entrer dans l'interface...
-            statut: "actif",                // Doublon de sécurité pour l'ancien code
-            statut_paiement: "NON",        // ...mais l'accès aux cours est bloqué
+            // --- HARMONISATION : ACCÈS TOTAL IMMÉDIAT ---
+            etat_acces: "actif",           
+            statut: "actif",               
+            statut_paiement: "VALIDE",    // Changé de "NON" à "VALIDE"
             
             date_inscription: new Date().toISOString(),
             device_id: typeof getDeviceId === 'function' ? getDeviceId() : "unknown",
-            dernier_token: "init_" + Math.random().toString(36).substr(2, 5) // Jeton initial
+            dernier_token: "user_" + Math.random().toString(36).substr(2, 9) 
         });
 
-        // ✅ SAUVEGARDE LOCALE ET LANCEMENT
+        // ✅ SAUVEGARDE LOCALE 
         localStorage.setItem('user_tel_id', tel);
-        alert("✅ Inscription réussie !\n\nVotre compte est créé. Payez vos frais pour activer vos algorithmes.");
+        localStorage.setItem('v32_active', 'true'); // On mémorise que la licence est OK
+
+        alert("✅ Inscription réussie ! Bienvenue dans votre programme de Mathématiques.");
         
-        if (typeof launchApp === 'function') launchApp();
+        // 🚀 LANCEMENT DE L'APP
+        if (typeof launchApp === 'function') {
+            launchApp(); 
+        } else {
+            naviguer('hub-accueil'); // Redirection de secours
+        }
 
     } catch(e) {
         console.error("Erreur Inscription:", e);
         alert("❌ Erreur de communication avec la base de données.");
     }
 }
-
 async function deleteClient(id) {
     if(confirm("❗ SUPPRESSION DÉFINITIVE : L'application du client sera désactivée INSTANTANÉMENT. Confirmer ?")) {
         try {
