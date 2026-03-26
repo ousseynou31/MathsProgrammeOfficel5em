@@ -267,11 +267,9 @@ async function enregistrerProfil() {
             return alert("💡 Ce compte existe déjà. Utilisez 'Récupérer mon compte' en cas de changement de téléphone.");
         }
 
-        // 📝 PRÉPARATION DES DONNÉES DE DATE
         const maintenant = new Date();
-        const moisCle = (maintenant.getMonth() + 1) + "-" + maintenant.getFullYear();
 
-        // 📝 CRÉATION DU PROFIL (Harmonisé avec la Récupération)
+        // 📝 CRÉATION DU PROFIL (Initialisation avec le système 0/1)
         await database.ref('clients/' + tel + '/infos_client').set({
             nom: nom,
             tel: tel,
@@ -279,11 +277,13 @@ async function enregistrerProfil() {
             
             // --- ÉTATS D'ACCÈS ---
             etat_acces: "actif",           
-            statut_paiement: "VALIDE",    // Validé car le PIN a été franchi
+            statut_paiement: "VALIDE",    // Validé car le PIN a été franchi auparavant
             
-            // --- SÉCURITÉ & TRACABILITÉ ---
+            // --- SYSTÈME DE RÉCUPÉRATION (Binaire) ---
+            recup_effectuee: 0,           // 0 = Jamais récupéré (crédit disponible)
+            
+            // --- TRACABILITÉ ---
             date_inscription: maintenant.toISOString(),
-            derniere_recup_mois: "nouveau", // Marqueur pour dire qu'il n'a pas encore fait de récup
             device_id: typeof getDeviceId === 'function' ? getDeviceId() : "unknown",
             dernier_token: "init_" + Math.random().toString(36).substr(2, 9) 
         });
@@ -551,7 +551,7 @@ async function verifierLicence() {
 }
 
 // ==========================================
-// 3. RÉCUPÉRATION (RÉPARE L'ID QUI CHANGE)
+// 3. RÉCUPÉRATION (SYSTÈME DE JOKER 0/1)
 // ==========================================
 async function recupererCompte() {
     const saisie = prompt("📱 Entrez votre numéro de téléphone pour restaurer votre accès :");
@@ -564,27 +564,42 @@ async function recupererCompte() {
 
         const data = snap.val();
 
-        if (data.device_id) {
-            // 1. On restaure l'identité technique
-            localStorage.setItem('diouf_device_id', data.device_id); 
-            localStorage.setItem('user_tel_id', tel);
-            
-            // 2. Vérification du statut de paiement
-            if (data.statut_paiement === "VALIDE" || data.etat_acces === "actif") {
-                // S'il est déjà en règle, on lui évite le PIN
-                localStorage.setItem('v32_active', 'true');
-                alert(`✅ Content de vous revoir ${data.nom} !\nAccès restauré avec succès.`);
-                naviguer('hub-accueil');
-            } else {
-                // S'il n'avait pas fini son activation, on le renvoie au PIN
-                alert("✅ Identité restaurée !\nEntrez maintenant votre code PIN pour activer l'application.");
-                naviguer('license-gate');
-            }
-        } else {
-            alert("⚠️ Ce compte n'a pas d'ID de sécurité enregistré.");
+        // --- 1. SÉCURITÉ : VÉRIFICATION DU BANNISSEMENT ---
+        if (data.etat_acces === "banni") {
+            return alert("🚫 Ce compte est définitivement banni.");
         }
+
+        // --- 2. VÉRIFICATION DU CRÉDIT (SYSTÈME 0/1) ---
+        // Si recup_effectuee vaut 1, on bloque.
+        if (data.recup_effectuee === 1) {
+            return alert("⚠️ Récupération impossible.\n\nVous avez déjà utilisé votre droit de récupération. Contactez l'administrateur pour débloquer votre situation.");
+        }
+
+        // --- 3. MISE À JOUR FIREBASE (ON GRILLE LE JOKER) ---
+        const nouvelId = typeof getDeviceId === 'function' ? getDeviceId() : "ID_UNK";
+        
+        await database.ref(`clients/${tel}/infos_client`).update({
+            device_id: nouvelId,
+            recup_effectuee: 1, // On passe à 1 : le joker est utilisé !
+            derniere_recup_date: new Date().toISOString()
+        });
+
+        // --- 4. RESTAURATION LOCALE ---
+        localStorage.setItem('user_tel_id', tel);
+        localStorage.setItem('diouf_device_id', nouvelId);
+
+        // --- 5. REDIRECTION ---
+        if (data.statut_paiement === "VALIDE") {
+            localStorage.setItem('v32_active', 'true');
+            alert(`✅ Content de vous revoir ${data.nom} !\nAccès restauré (Attention : C'était votre seule récupération autorisée).`);
+            naviguer('hub-accueil');
+        } else {
+            alert("✅ Identité retrouvée !\nEntrez votre code PIN pour activer l'application.");
+            naviguer('license-gate');
+        }
+
     } catch (e) { 
-        console.error(e);
+        console.error("Erreur Récupération:", e);
         alert("❌ Erreur de connexion au serveur."); 
     }
 }
