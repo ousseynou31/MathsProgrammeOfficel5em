@@ -100,80 +100,7 @@ function surveillerConnexion() {
 const SECRET_KEY = 7391;
 const ADMIN_PASS = "0000";
 
-// ==========================================
-// 2. IDENTIFIANT APPAREIL UNIQUE
-// ==========================================
-function getDeviceId() {
-    let id = localStorage.getItem('diouf_device_id');
-    if(!id) {
-        id = "D-" + Math.random().toString(36).substr(2, 6).toUpperCase();
-        localStorage.setItem('diouf_device_id', id);
-    }
-    return id;
-}
 
-
-// ==========================================
-// 4. LOGIQUE D'ACTIVATION (PIN)
-// ==========================================
-async function verifierLicence() {
-    const input = document.getElementById('input-license').value.trim();
-    const device = getDeviceId();
-    localStorage.setItem('v32_active', 'true'); // <--- INDISPENSABLE
-    
-    // 1. On essaie de récupérer le tel dans le cache, sinon on le demande
-    let tel = localStorage.getItem('user_tel_id');
-    
-    if (!tel) {
-        tel = prompt("🔑 Entrez votre numéro de téléphone pour valider la licence :");
-        if (!tel) return; // L'utilisateur a annulé
-        tel = tel.trim().replace(/\D/g,'');
-    }
-
-    // 2. Calcul du code PIN (Ta logique mathématique inchangée)
-    let hash = 0;
-    for (let i = 0; i < device.length; i++) {
-        hash = ((hash << 5) - hash) + device.charCodeAt(i);
-        hash |= 0;
-    }
-    const codeAttendu = Math.abs(hash + SECRET_KEY).toString().substring(0, 8);
-    
-    // 3. Vérification du PIN
-    if(input !== codeAttendu) {
-        return alert("❌ PIN INCORRECT : Ce code ne correspond pas à cet appareil.");
-    }
-
-    try {
-        // 4. VERIFICATION SERVEUR (On vérifie si le compte existe et est actif)
-        const snap = await database.ref(`clients/${tel}/infos_client`).once('value');
-        
-        if (!snap.exists()) {
-            return alert("❌ Erreur : Ce numéro n'est pas enregistré dans la base.");
-        }
-
-        const data = snap.val();
-
-        // 🛡️ VERROU DE DISCIPLINE (Même avec le bon PIN, on vérifie le ban)
-        const estBloque = (data.etat_acces === "banni" || data.etat_acces === "suspendu" || data.statut === "suspendu");
-        
-        if (estBloque) {
-            alert("🚫 ACCÈS REFUSÉ : Votre compte est suspendu ou banni.");
-            localStorage.clear();
-            return;
-        }
-
-        // ✅ TOUT EST BON : On sauve le numéro et on active
-        localStorage.setItem('user_tel_id', tel);
-        localStorage.setItem('v32_active', 'true');
-        
-        alert("✅ Accès réactivé !");
-        if (typeof launchApp === 'function') launchApp();
-
-    } catch (e) {
-        console.error("Erreur Licence:", e);
-        alert("❌ Erreur de connexion réseau.");
-    }
-}
 function deconnecterApp() {
     if(confirm("Voulez-vous verrouiller l'accès et retourner à l'activation ?")) {
         // On retire uniquement le flag d'activation
@@ -333,91 +260,6 @@ async function enregistrerProfil() {
         alert("❌ Erreur de communication avec la base de données.");
     }
 }
-async function recupererCompte() {
-    const saisieUser = prompt("Entrez votre numéro de téléphone :");
-    if (saisieUser === null || saisieUser.trim() === "") return;
-
-    const tel = saisieUser.trim().replace(/\D/g,'');
-    if(tel.length < 8) return alert("📞 Numéro invalide.");
-
-    try {
-        const snap = await database.ref('clients/' + tel + '/infos_client').once('value');
-        
-        // --- ÉTAPE 1 : EXISTENCE ---
-        if (!snap.exists()) {
-            return alert("❌ Aucun compte trouvé pour ce numéro.");
-        }
-
-        const data = snap.val();
-        const aujourdhui = new Date().toLocaleDateString('fr-FR');
-
-        // --- ÉTAPE 2 : DISCIPLINE (Priorité absolue) ---
-        // On vérifie les deux clés (ancienne et nouvelle) pour ne laisser aucune fuite
-        const estBanni = (data.etat_acces === "banni" || data.statut === "banni");
-        const estSuspendu = (data.etat_acces === "suspendu" || data.statut === "suspendu");
-
-        if (estBanni) {
-            return alert("🚫 COMPTE BANNI : Accès révoqué définitivement.");
-        }
-
-        if (estSuspendu) {
-            const motif = data.motif_suspension || "Violation des conditions d'utilisation";
-            return alert(`⏳ COMPTE SUSPENDU\n\nMotif : ${motif}\nContactez l'administrateur.`);
-        }
-
-        // --- ÉTAPE 3 : PAIEMENT ---
-        if (data.statut_paiement !== "VALIDE") {
-            alert("💳 Paiement non validé. Redirection vers l'accueil...");
-            localStorage.setItem('user_tel_id', tel);
-            // On s'assure de nettoyer les restes d'anciennes sessions
-            localStorage.removeItem('v32_active'); 
-            if (typeof launchApp === 'function') launchApp();
-            return; 
-        }
-
-        // --- ÉTAPE 4 : ANTI-PARTAGE (Compteur) ---
-        let nbRecup = 0;
-        if (data.date_derniere_recup === aujourdhui) {
-            nbRecup = data.compteur_recup || 0;
-        }
-        if (nbRecup >= 3) {
-            return alert("🚫 LIMITE : 3 récupérations par jour. Revenez demain.");
-        }
-
-        // --- ÉTAPE 5 : MISE À JOUR & HARMONISATION (Le Nettoyage) ---
-        const nouveauToken = "session_" + Math.random().toString(36).substr(2, 9);
-        
-        await database.ref('clients/' + tel + '/infos_client').update({
-            dernier_token: nouveauToken,
-            compteur_recup: nbRecup + 1,
-            date_derniere_recup: aujourdhui,
-            // --- HARMONISATION ICI ---
-            etat_acces: "actif", // On s'assure que la nouvelle clé est 'actif'
-            statut: "actif"      // On écrase l'ancienne clé pour éviter les bugs
-        });
-
-        // --- ÉTAPE 6 : VÉRIFICATION DE SORTIE (Pare-Feu Final) ---
-        const verifFinal = await database.ref('clients/' + tel + '/infos_client/dernier_token').once('value');
-        if (verifFinal.val() !== nouveauToken) {
-            alert("⚠️ SESSION VOLÉE : Une autre connexion a été détectée simultanément.");
-            document.body.innerHTML = ""; 
-            location.reload(); 
-            return;
-        }
-
-        // ✅ TOUS LES VERROUS SONT PASSÉS : ACTIVATION
-        localStorage.setItem('user_tel_id', tel);
-        localStorage.setItem('session_token', nouveauToken);
-        localStorage.setItem('v32_active', 'true');     
-        
-        alert(`✅ Accès restauré (${nbRecup + 1}/3). Bon retour !`);
-        if (typeof launchApp === 'function') launchApp();
-
-    } catch (e) {
-        console.error("Erreur récupération:", e);
-        alert("❌ Erreur de connexion au serveur.");
-    }
-}
 
 async function deleteClient(id) {
     if(confirm("❗ SUPPRESSION DÉFINITIVE : L'application du client sera désactivée INSTANTANÉMENT. Confirmer ?")) {
@@ -545,42 +387,6 @@ function surveillerStatutEnDirect(tel) {
 }
 
 
-async function launchApp() {
-    const tel = localStorage.getItem('user_tel_id');
-    
-    // 1. Si pas de tel dans le navigateur, on va à l'inscription
-    if (!tel) return naviguer('registration-gate');
-
-    // 2. On interroge Firebase (ton ancien compte est ici)
-    const statusIdentite = await verifierIdentite();
-    console.log("Ancien Compte - Statut Firebase :", statusIdentite);
-
-    // 3. LOGIQUE DE DÉCISION MISE À JOUR
-    switch (statusIdentite) {
-        case "AUTHORIZED":
-            // FORCE l'activation locale pour ne plus être embêté
-            localStorage.setItem('v32_active', 'true'); 
-            naviguer('hub-accueil');
-            break;
-
-        case "PENDING_PAYMENT":
-            // Si l'ancien compte a un souci de paiement dans la base
-            naviguer('license-gate');
-            break;
-
-        case "BANNED":
-            alert("Accès révoqué.");
-            localStorage.clear();
-            naviguer('registration-gate');
-            break;
-
-        default:
-            // Si Firebase ne trouve rien, on demande l'inscription
-            naviguer('registration-gate');
-    }
-}
-// Lancement au démarrage de la page
-window.onload = launchApp;
 
 async function modifierStatutAdmin(id) {
     // 1. Liste des seuls mots-clés autorisés (Notre standard)
@@ -639,6 +445,121 @@ async function mettreAJourAnciensClients() {
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0000XXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000XXXXXXXXXXXXX
+
+// ==========================================
+// 1. IDENTIFIANT APPAREIL UNIQUE (AMÉLIORÉ)
+// ==========================================
+function getDeviceId() {
+    let id = localStorage.getItem('diouf_device_id');
+    if(!id) {
+        // On crée un ID temporaire, mais il pourra être écrasé par la récupération
+        id = "D-" + Math.random().toString(36).substr(2, 6).toUpperCase();
+        localStorage.setItem('diouf_device_id', id);
+    }
+    return id;
+}
+
+// ==========================================
+// 2. LOGIQUE D'ACTIVATION (DÉBLOQUÉE)
+// ==========================================
+async function verifierLicence() {
+    const inputSaisi = document.getElementById('input-license').value.trim();
+    const device = getDeviceId(); 
+    const tel = localStorage.getItem('user_tel_id');
+
+    if (!tel) return alert("❌ Erreur : Aucun numéro de téléphone trouvé. Veuillez vous réinscrire.");
+
+    // --- CALCUL DU PIN (Identique à ton Keygen) ---
+    let hash = 0;
+    for (let i = 0; i < device.length; i++) {
+        hash = ((hash << 5) - hash) + device.charCodeAt(i);
+        hash |= 0;
+    }
+    const codeAttendu = Math.abs(hash + SECRET_KEY).toString().substring(0, 8);
+    
+    // --- VÉRIFICATION ---
+    if(inputSaisi !== codeAttendu) {
+        return alert("❌ PIN INCORRECT.\n\nCet ID : " + device + "\nNécessite un autre code.");
+    }
+
+    try {
+        const snap = await database.ref(`clients/${tel}/infos_client`).once('value');
+        if (!snap.exists()) return alert("❌ Numéro inconnu sur le serveur.");
+
+        const data = snap.val();
+        if (data.etat_acces === "banni" || data.etat_acces === "suspendu") {
+            return alert("🚫 Accès refusé par l'administration.");
+        }
+
+        // ✅ VALIDATION FINALE
+        localStorage.setItem('v32_active', 'true');
+        alert("✅ Licence validée !");
+        naviguer('hub-accueil');
+
+    } catch (e) {
+        alert("❌ Erreur réseau.");
+    }
+}
+
+// ==========================================
+// 3. RÉCUPÉRATION (RÉPARE L'ID QUI CHANGE)
+// ==========================================
+async function recupererCompte() {
+    const saisie = prompt("📱 Entrez votre numéro de téléphone pour restaurer votre accès :");
+    if (!saisie) return;
+    const tel = saisie.trim().replace(/\D/g,'');
+
+    try {
+        const snap = await database.ref(`clients/${tel}/infos_client`).once('value');
+        if (!snap.exists()) return alert("❌ Aucun compte trouvé.");
+
+        const data = snap.val();
+
+        // 🛡️ LE SECRET : On récupère l'ID d'origine sur Firebase
+        if (data.device_id) {
+            localStorage.setItem('diouf_device_id', data.device_id); // On écrase le mauvais ID
+            localStorage.setItem('user_tel_id', tel);
+            
+            alert("✅ Identité restaurée !\n\nL'ID " + data.device_id + " est de retour. Entrez votre PIN habituel.");
+            naviguer('license-gate');
+        } else {
+            alert("⚠️ Ce compte n'a pas d'ID de sécurité enregistré.");
+        }
+    } catch (e) { alert("❌ Erreur serveur."); }
+}
+
+// ==========================================
+// 4. LANCEMENT (LE CHEF D'ORCHESTRE)
+// ==========================================
+async function launchApp() {
+    const tel = localStorage.getItem('user_tel_id');
+    const v32 = localStorage.getItem('v32_active');
+
+    // 1. Si rien dans le cache -> Direction Inscription
+    if (!tel) {
+        return naviguer('registration-gate');
+    }
+
+    // 2. Si inscrit mais pas de PIN validé localement
+    if (v32 !== 'true') {
+        const displayElem = document.getElementById('display-device-id');
+        if(displayElem) displayElem.innerText = getDeviceId();
+        return naviguer('license-gate');
+    }
+
+    // 3. Si tout semble OK, on vérifie quand même Firebase (le radar)
+    const status = await verifierIdentite();
+    if (status === "AUTHORIZED") {
+        naviguer('hub-accueil');
+        surveillerStatutEnDirect(tel); // On lance la surveillance temps réel
+    } else if (status === "PENDING_PAYMENT") {
+        naviguer('license-gate');
+    } else {
+        localStorage.clear();
+        naviguer('registration-gate');
+    }
+}
+
 
 function synchroniserPresence() {
     const tel = localStorage.getItem('user_tel_id');
