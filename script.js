@@ -335,34 +335,42 @@ async function deleteClient(id) {
 }
 async function toggleBan(id, filtreActuel) {
     try {
-        // 1. On récupère l'état actuel pour savoir si on active ou on suspend
+        // 1. On vérifie l'état actuel
         const snap = await database.ref(`clients/${id}/infos_client/etat_acces`).once('value');
-        const estActuelActif = snap.val() === "actif";
+        const estActuelActif = (snap.val() === "actif");
         
-        const nouvelEtat = estActuelActif ? "suspendu" : "actif";
+        // --- LOGIQUE DE DOUBLE VERROU ---
+        // Si on suspend : on met "banni" pour stopper la machine + "suspendu" pour la raison
+        const nouvelEtat = estActuelActif ? "banni" : "actif"; 
+        const labelAcces = estActuelActif ? "suspendu" : "actif";
+
         const messageConfirm = estActuelActif 
-            ? `Voulez-vous SUSPENDRE cet accès ?\n(L'élève sera éjecté immédiatement)` 
-            : `Voulez-vous RÉACTIVER cet accès ?`;
+            ? `🚫 BLOQUER CET ÉLÈVE ?\n(Il sera marqué comme BANNI pour stopper toute récupération)` 
+            : `✅ RÉACTIVER CET ÉLÈVE ?`;
 
         if(confirm(messageConfirm)) {
-            // 2. MISE À JOUR HARMONISÉE
+            // 2. MISE À JOUR SYNCHRONISÉE POUR TOUTES LES FONCTIONS
             await database.ref(`clients/${id}/infos_client`).update({
-                "etat_acces": nouvelEtat,
-                "statut": nouvelEtat, // On synchronise l'ancien champ pour éviter les conflits
-                "motif_suspension": nouvelEtat === "suspendu" ? "Action administrative" : ""
+                "etat_acces": nouvelEtat, // Devient "banni" -> la récupération bloquera
+                "statut": nouvelEtat,     // Devient "banni"
+                "acces": labelAcces,      // Devient "suspendu" -> pour ton affichage Admin
+                "motif_suspension": estActuelActif ? "SUSPENSION ADMINISTRATIVE" : ""
             });
              
-            alert(`📱 Accès ${nouvelEtat === "actif" ? "réactivé" : "coupé"}.`);
+            // 3. AFFICHAGE DU MESSAGE AVEC LE CERCLE (Design attractif)
+            const alerteVisuelle = estActuelActif 
+                ? "🚫 ACCÈS RÉVOQUÉ\nL'élève est maintenant banni du système."
+                : "✅ ACCÈS RÉTABLI\nL'élève peut à nouveau se connecter.";
             
-            // 3. Rafraîchissement de la liste (ton ancienne logique)
+            alert(alerteVisuelle);
+            
             if (typeof loadUsers === 'function') loadUsers(filtreActuel);
         }
     } catch (e) {
         console.error("Erreur toggleBan:", e);
-        alert("❌ Erreur de modification d'accès.");
+        alert("❌ Erreur technique lors de la modification.");
     }
 }
-
 async function validerPaiementFinal(id) {
     if(confirm("✅ Confirmer le paiement ? Cet élève sera ajouté au bilan financier.")) {
         try {
@@ -553,6 +561,9 @@ async function verifierLicence() {
 // ==========================================
 // 3. RÉCUPÉRATION (SYSTÈME DE JOKER 0/1)
 // ==========================================
+// ==========================================
+// 3. RÉCUPÉRATION (SYSTÈME BINAIRE 0/1 & VERROU TOTAL)
+// ==========================================
 async function recupererCompte() {
     const saisie = prompt("📱 Entrez votre numéro de téléphone pour restaurer votre accès :");
     if (!saisie) return;
@@ -564,43 +575,57 @@ async function recupererCompte() {
 
         const data = snap.val();
 
-        // --- 1. SÉCURITÉ : VÉRIFICATION DU BANNISSEMENT ---
+        // --- 1. SÉCURITÉ : VÉRIFICATION DU BLOCAGE (BANNI OU SUSPENDU) ---
+        // On vérifie le champ 'etat_acces' qui contient "banni" si tu as cliqué sur Suspendre en Admin
         if (data.etat_acces === "banni") {
-            return alert("🚫 Ce compte est définitivement banni.");
+            return alert(
+                "🚫  ACCÈS BLOQUÉ  🚫\n" +
+                "_______________________\n\n" +
+                "      ( X )  SUSPENDU\n" +
+                "_______________________\n\n" +
+                "Votre compte a été désactivé par l'administrateur.\n" +
+                "Contactez-nous pour régulariser votre situation."
+            );
         }
 
-        // --- 2. VÉRIFICATION DU CRÉDIT (SYSTÈME 0/1) ---
-        // Si recup_effectuee vaut 1, on bloque.
+        // --- 2. VÉRIFICATION DU CRÉDIT DE RÉCUPÉRATION (0/1) ---
+        // Si la valeur est 1, l'élève a déjà utilisé son unique chance.
         if (data.recup_effectuee === 1) {
-            return alert("⚠️ Récupération impossible.\n\nVous avez déjà utilisé votre droit de récupération. Contactez l'administrateur pour débloquer votre situation.");
+            return alert(
+                "⚠️ RÉCUPÉRATION IMPOSSIBLE\n\n" +
+                "Vous avez déjà utilisé votre droit de récupération ce mois-ci.\n\n" +
+                "Pour des raisons de sécurité, une seule restauration est autorisée. " +
+                "Veuillez contacter l'administrateur."
+            );
         }
 
-        // --- 3. MISE À JOUR FIREBASE (ON GRILLE LE JOKER) ---
+        // --- 3. MISE À JOUR FIREBASE (VALIDATION & CONSOMMATION DU JOKER) ---
         const nouvelId = typeof getDeviceId === 'function' ? getDeviceId() : "ID_UNK";
         
         await database.ref(`clients/${tel}/infos_client`).update({
             device_id: nouvelId,
-            recup_effectuee: 1, // On passe à 1 : le joker est utilisé !
+            recup_effectuee: 1, // On grille le joker immédiatement
             derniere_recup_date: new Date().toISOString()
         });
 
-        // --- 4. RESTAURATION LOCALE ---
+        // --- 4. RESTAURATION DU CACHE LOCAL ---
         localStorage.setItem('user_tel_id', tel);
         localStorage.setItem('diouf_device_id', nouvelId);
 
-        // --- 5. REDIRECTION ---
+        // --- 5. REDIRECTION ET MESSAGE DE SUCCÈS ---
         if (data.statut_paiement === "VALIDE") {
             localStorage.setItem('v32_active', 'true');
-            alert(`✅ Content de vous revoir ${data.nom} !\nAccès restauré (Attention : C'était votre seule récupération autorisée).`);
+            alert(`✅ Content de vous revoir ${data.nom} !\n\nVotre accès est restauré. Attention, c'était votre seule récupération autorisée.`);
             naviguer('hub-accueil');
         } else {
-            alert("✅ Identité retrouvée !\nEntrez votre code PIN pour activer l'application.");
+            // Cas rare où le profil existe mais le PIN n'était pas encore validé
+            alert("✅ Identité retrouvée !\n\nEntrez maintenant votre code PIN pour activer définitivement l'application.");
             naviguer('license-gate');
         }
 
     } catch (e) { 
-        console.error("Erreur Récupération:", e);
-        alert("❌ Erreur de connexion au serveur."); 
+        console.error("Erreur critique Récupération:", e);
+        alert("❌ Erreur de connexion au serveur. Vérifiez votre connexion internet."); 
     }
 }
 
