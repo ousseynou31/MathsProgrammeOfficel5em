@@ -144,6 +144,27 @@ function naviguer(id) {
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000XXXXXXXXXXXXX
 
+async function demanderCodeAvantInscription() {
+    const pinSaisi = prompt("🔑 Entrez le code PIN d'activation (8 chiffres) pour débloquer le formulaire d'inscription :");
+    
+    if (!pinSaisi) return; // L'élève a annulé
+
+    // Calcul du code attendu pour CET appareil
+    const device = getDeviceId(); 
+    let hash = 0;
+    for (let i = 0; i < device.length; i++) {
+        hash = ((hash << 5) - hash) + device.charCodeAt(i);
+        hash |= 0;
+    }
+    const codeAttendu = Math.abs(hash + SECRET_KEY).toString().substring(0, 8);
+
+    if (pinSaisi === codeAttendu) {
+        alert("✅ CODE VALIDE !\nAccès au formulaire d'inscription autorisé.");
+        naviguer('registration-gate'); // On ouvre ENFIN le formulaire
+    } else {
+        alert("❌ CODE INCORRECT.\n\nVotre ID Appareil est : " + device + "\nVeuillez envoyer cet ID à l'administrateur pour obtenir votre PIN.");
+    }
+}
 async function verifierIdentite() {
     const tel = localStorage.getItem('user_tel_id');
     if (!tel) return "NO_PROFILE";
