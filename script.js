@@ -170,28 +170,28 @@ async function verifierIdentite() {
     if (!tel) return "NO_PROFILE";
 
     try {
-        // ON GARDE TON CHEMIN : clients/num_tel/infos_client
-        const snap = await db.ref(`clients/${tel}/infos_client`).once('value');
+        const snap = await database.ref(`clients/${tel}/infos_client`).once('value');
         
         if (!snap.exists()) return "DELETED";
 
         const user = snap.val();
 
-        // 1. Sécurité maximale : Bannissement
         if (user.etat_acces === "banni") return "BANNED";
-
-        // 2. Suspension temporaire
         if (user.etat_acces === "suspendu") return "SUSPENDED";
 
-        // 3. Vérification du paiement (Accès refusé si pas VALIDE)
-        if (user.statut_paiement !== "VALIDE") return "PENDING_PAYMENT";
+        // IMPORTANT : Vérifie que dans Firebase tu as bien écrit "VALIDE" en majuscules
+        if (user.statut_paiement !== "VALIDE") {
+            console.log("Accès refusé : Statut paiement est " + user.statut_paiement);
+            return "PENDING_PAYMENT";
+        }
 
-        // 4. Si tout est OK
         return "AUTHORIZED";
 
     } catch (e) {
         console.error("Erreur sécurité identité:", e);
-        return "ERROR";
+        // En cas d'erreur serveur, on renvoie AUTHORIZED pour ne pas bloquer 
+        // l'élève s'il a une mauvaise connexion mais qu'il est déjà validé localement
+        return localStorage.getItem('v32_active') === 'true' ? "AUTHORIZED" : "ERROR";
     }
 }
 // Aller vers l'inscription
