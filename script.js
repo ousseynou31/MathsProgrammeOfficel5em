@@ -165,32 +165,45 @@ async function demanderCodeAvantInscription() {
         alert("❌ CODE INCORRECT.\n\nVotre ID Appareil est : " + device + "\nVeuillez envoyer cet ID à l'administrateur pour obtenir votre PIN.");
     }
 }
+
 async function verifierIdentite() {
     const tel = localStorage.getItem('user_tel_id');
     if (!tel) return "NO_PROFILE";
 
     try {
+        // 🔍 Récupération des données fraîches sur Firebase
         const snap = await database.ref(`clients/${tel}/infos_client`).once('value');
         
         if (!snap.exists()) return "DELETED";
 
         const user = snap.val();
 
+        // --- 1. VÉRIFICATION DES VERROUS (Banni / Suspendu) ---
         if (user.etat_acces === "banni") return "BANNED";
         if (user.etat_acces === "suspendu") return "SUSPENDED";
 
-        // IMPORTANT : Vérifie que dans Firebase tu as bien écrit "VALIDE" en majuscules
+        // --- 2. VÉRIFICATION DU PAIEMENT ---
         if (user.statut_paiement !== "VALIDE") {
-            console.log("Accès refusé : Statut paiement est " + user.statut_paiement);
+            console.log("🚫 Accès refusé : Statut paiement est " + user.statut_paiement);
             return "PENDING_PAYMENT";
         }
 
+        // --- 3. VÉRIFICATION DE L'APPAREIL (L'ID UNIQUE) ---
+        // On compare l'ID stocké en base avec l'ID actuel du téléphone
+        const idActuel = typeof getDeviceId === 'function' ? getDeviceId() : "unknown";
+        
+        if (user.device_id && user.device_id !== idActuel) {
+            console.warn("⚠️ Tentative d'accès depuis un appareil non reconnu.");
+            return "DEVICE_MISMATCH"; // Nouveau code pour forcer la récupération
+        }
+
+        // --- 4. SI TOUT EST OK ---
         return "AUTHORIZED";
 
     } catch (e) {
         console.error("Erreur sécurité identité:", e);
-        // En cas d'erreur serveur, on renvoie AUTHORIZED pour ne pas bloquer 
-        // l'élève s'il a une mauvaise connexion mais qu'il est déjà validé localement
+        // Tolérance en cas de panne réseau temporaire : 
+        // Si le cache local dit que c'est actif, on laisse passer pour ne pas frustrer l'élève.
         return localStorage.getItem('v32_active') === 'true' ? "AUTHORIZED" : "ERROR";
     }
 }
@@ -242,37 +255,42 @@ async function enregistrerProfil() {
     if(!nom || tel.length < 8) return alert("⚠️ Veuillez remplir tous les champs correctement.");
 
     try {
-        // 🔍 VERIFICATION : On vérifie l'existence
+        // 🔍 VERIFICATION : On vérifie si le numéro existe déjà
         const check = await database.ref('clients/' + tel + '/infos_client').once('value');
         
         if (check.exists()) {
             const data = check.val();
-            if (data.etat_acces === "banni" || data.statut === "banni") {
+            // Sécurité : Si banni, on bloque tout
+            if (data.etat_acces === "banni") {
                 return alert("🚫 Ce numéro est définitivement banni.");
             }
-            return alert("💡 Ce compte existe déjà. Utilisez 'Récupérer mon compte'.");
+            return alert("💡 Ce compte existe déjà. Utilisez 'Récupérer mon compte' en cas de changement de téléphone.");
         }
 
-        // 📝 CRÉATION : On valide tout immédiatement car le PIN a été vérifié avant
+        // 📝 PRÉPARATION DES DONNÉES DE DATE
+        const maintenant = new Date();
+        const moisCle = (maintenant.getMonth() + 1) + "-" + maintenant.getFullYear();
+
+        // 📝 CRÉATION DU PROFIL (Harmonisé avec la Récupération)
         await database.ref('clients/' + tel + '/infos_client').set({
             nom: nom,
             tel: tel,
-            // On peut laisser "C" par défaut, tu changeras sa catégorie dans ton interface Admin plus tard
             categorie: "C", 
             
-            // --- HARMONISATION : ACCÈS TOTAL IMMÉDIAT ---
+            // --- ÉTATS D'ACCÈS ---
             etat_acces: "actif",           
-            statut: "actif",               
-            statut_paiement: "VALIDE",    // Changé de "NON" à "VALIDE"
+            statut_paiement: "VALIDE",    // Validé car le PIN a été franchi
             
-            date_inscription: new Date().toISOString(),
+            // --- SÉCURITÉ & TRACABILITÉ ---
+            date_inscription: maintenant.toISOString(),
+            derniere_recup_mois: "nouveau", // Marqueur pour dire qu'il n'a pas encore fait de récup
             device_id: typeof getDeviceId === 'function' ? getDeviceId() : "unknown",
-            dernier_token: "user_" + Math.random().toString(36).substr(2, 9) 
+            dernier_token: "init_" + Math.random().toString(36).substr(2, 9) 
         });
 
         // ✅ SAUVEGARDE LOCALE 
         localStorage.setItem('user_tel_id', tel);
-        localStorage.setItem('v32_active', 'true'); // On mémorise que la licence est OK
+        localStorage.setItem('v32_active', 'true'); 
 
         alert("✅ Inscription réussie ! Bienvenue dans votre programme de Mathématiques.");
         
@@ -280,7 +298,7 @@ async function enregistrerProfil() {
         if (typeof launchApp === 'function') {
             launchApp(); 
         } else {
-            naviguer('hub-accueil'); // Redirection de secours
+            naviguer('hub-accueil'); 
         }
 
     } catch(e) {
@@ -570,46 +588,72 @@ async function recupererCompte() {
         alert("❌ Erreur de connexion au serveur."); 
     }
 }
+
 // ==========================================
-// 4. LANCEMENT (LE CHEF D'ORCHESTRE)
+// 4. LANCEMENT (LE CHEF D'ORCHESTRE SÉCURISÉ)
 // ==========================================
 async function launchApp() {
     const tel = localStorage.getItem('user_tel_id');
     const v32 = localStorage.getItem('v32_active');
 
     // --- ÉTAPE 1 : LA BARRIÈRE TECHNIQUE (LE PIN) ---
-    // Si le PIN n'est pas validé localement, on bloque direct à la licence
+    // Si la licence n'est pas validée localement, on affiche l'ID et on bloque
     if (v32 !== 'true') {
         const displayElem = document.getElementById('display-device-id');
-        if(displayElem) displayElem.innerText = getDeviceId();
+        if (displayElem && typeof getDeviceId === 'function') {
+            displayElem.innerText = getDeviceId();
+        }
         return naviguer('license-gate'); 
     }
 
     // --- ÉTAPE 2 : LA BARRIÈRE IDENTITÉ (LE PROFIL) ---
-    // Si le PIN est OK mais qu'on n'a pas de numéro de téléphone, 
-    // c'est que l'élève vient de valider son PIN mais n'a pas encore créé son profil.
+    // Si le PIN est OK mais pas de numéro, l'élève doit s'inscrire
     if (!tel) {
         return naviguer('registration-gate');
     }
 
-    // --- ÉTAPE 3 : LA VÉRIFICATION SERVEUR (SÉCURITÉ FINALE) ---
+    // --- ÉTAPE 3 : LA VÉRIFICATION SERVEUR (DÉCISION FINALE) ---
     try {
-        const status = await verifierIdentite(); // Vérifie Firebase
+        const status = await verifierIdentite(); 
         
-        if (status === "AUTHORIZED") {
-            naviguer('hub-accueil');
-            surveillerStatutEnDirect(tel); 
-        } else if (status === "PENDING_PAYMENT") {
-            // Si tu as révoqué son accès à distance dans Firebase
-            naviguer('license-gate');
-        } else {
-            // Si le compte a été supprimé ou banni
-            localStorage.clear();
-            naviguer('license-gate');
+        console.log("Status Sécurité :", status);
+
+        switch(status) {
+            case "AUTHORIZED":
+                // Tout est parfait, on entre dans le hub
+                naviguer('hub-accueil');
+                if (typeof surveillerStatutEnDirect === 'function') {
+                    surveillerStatutEnDirect(tel); 
+                }
+                break;
+
+            case "DEVICE_MISMATCH":
+                // L'ID a changé (changement de téléphone ou cache vidé)
+                alert("📱 Appareil non reconnu !\n\nSi vous avez changé de téléphone, veuillez utiliser l'option 'Récupérer mon compte'.");
+                naviguer('license-gate');
+                break;
+
+            case "PENDING_PAYMENT":
+                alert("⏳ Votre accès est en attente de validation.");
+                naviguer('license-gate');
+                break;
+
+            case "BANNED":
+            case "SUSPENDED":
+            case "DELETED":
+                // Cas grave : on nettoie tout et on ferme la porte
+                alert("🚫 Accès refusé : Ce compte a été désactivé par l'administrateur.");
+                localStorage.clear();
+                naviguer('license-gate');
+                break;
+
+            default:
+                // En cas d'erreur inconnue, retour à la sécurité
+                naviguer('license-gate');
         }
     } catch (e) {
-        // En cas de problème réseau, on laisse entrer si le cache est OK
-        console.warn("Mode Hors-Ligne");
+        // Mode secours : Si le serveur est injoignable mais que le client était déjà actif
+        console.warn("🌐 Serveur injoignable, mode hors-ligne activé.");
         naviguer('hub-accueil');
     }
 }
