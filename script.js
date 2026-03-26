@@ -4,7 +4,7 @@ window.adminEnCours = window.adminEnCours || false;
 window.minuteurAdmin = window.minuteurAdmin || null;
 console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
 
-// 1. CONFIGURATION FIREBASE
+// 1. CONFIGURATION FIREBASE 
 const firebaseConfig = {
     databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
 }; 
