@@ -1062,47 +1062,48 @@ async function loadUsers(filtre = 'TOUT') {
             const data = val.infos_client;
             const tel = u.key;
             const cat = (data.categorie || "C").trim().toUpperCase();
-            
-            // --- RÉCUPÉRATION DU JOKER (0 ou 1) ---
             const joker = data.recup_effectuee || 0; 
-
-            // 1. FILTRAGE
-            if (filtre !== 'TOUT' && cat !== filtre) return;
-
-            // 2. CALCULS DE LOGIQUE
             const jours = calculerJours(data.date_inscription);
             const prix = parseInt(tarifs[cat]) || 0;
 
-            const estBanniDefinitif = data.etat_acces === "banni" && data.statut === "suspendu"; 
-            const estSuspenduTemp = data.statut === "suspendu" && data.etat_acces !== "banni";
-            const estExpire = jours >= 35;
+            // --- NOUVELLE LOGIQUE DE DISTINCTION ---
+            // Un banni reste banni peu importe ses jours ou son statut de paiement
+            const estBanniDefinitif = data.etat_acces === "banni"; 
+            const estSuspenduOuExpire = (data.statut === "suspendu" || jours >= 35) && !estBanniDefinitif;
 
+            // Le dashboard ne compte que les gens "récupérables" (non-bannis)
             if (!estBanniDefinitif) {
                 nbAttendu++;
                 totalArgent += prix;
-                if (estExpire) nbRetards++;
+                if (jours >= 35) nbRetards++;
             }
 
-            // --- DESIGN DYNAMIQUE ---
-            let borderCol = "#2ecc71";
+            // --- DESIGN DYNAMIQUE (JAUNE 🔒 vs ROUGE 💀) ---
+            let borderCol = "#2ecc71"; // Vert par défaut
             let bgCard = "#111";       
             let labelStatut = "";
+            let btnBanIcon = "🚫";
+            let btnBanCol = "#333";
 
             if (estBanniDefinitif) {
-                borderCol = "#c0392b"; 
+                borderCol = "#e74c3c"; // ROUGE
                 bgCard = "#1a0505";    
-                labelStatut = '<span style="color:#c0392b; font-size:0.65rem; font-weight:900;">🚫 BANNI (DÉFINITIF)</span>';
-            } else if (estSuspenduTemp || estExpire) {
-                borderCol = "#f39c12"; 
-                bgCard = "#1a1405";    
-                labelStatut = `<span style="color:#f39c12; font-size:0.65rem; font-weight:900;">⚠️ ${estExpire ? 'ABONNEMENT EXPIRÉ' : 'SUSPENDU'}</span>`;
+                labelStatut = '<span style="color:#e74c3c; font-size:0.7rem; font-weight:900;">💀 COMPTE BANNI</span>';
+                btnBanIcon = "💀";
+                btnBanCol = "#e74c3c";
+            } else if (estSuspenduOuExpire) {
+                borderCol = "#f1c40f"; // JAUNE
+                bgCard = "#1a1805";    
+                labelStatut = `<span style="color:#f1c40f; font-size:0.7rem; font-weight:900;">🔒 ${jours >= 35 ? 'ABONNEMENT EXPIRÉ' : 'SUSPENDU'}</span>`;
+                btnBanIcon = "🔓";
+                btnBanCol = "#f1c40f";
             }
 
-            let circleCol = estExpire ? "#e74c3c" : (jours >= 26 ? "#f1c40f" : "#2ecc71");
+            let circleCol = (jours >= 35) ? "#e74c3c" : (jours >= 26 ? "#f1c40f" : "#2ecc71");
 
-            // 3. GÉNÉRATION DU HTML
+            // --- GÉNÉRATION DU HTML ---
             list.innerHTML += `
-                <div class="user-card" style="background:${bgCard}; margin-bottom:12px; padding:15px; border-radius:12px; border-left:6px solid ${borderCol}; border-bottom:1px solid #333; transition: 0.3s;">
+                <div class="user-card" style="background:${bgCard}; margin-bottom:12px; padding:15px; border-radius:12px; border-left:7px solid ${borderCol}; border-bottom:1px solid #333; transition: 0.3s;">
                     
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         
@@ -1116,8 +1117,8 @@ async function loadUsers(filtre = 'TOUT') {
                             <div style="margin-top:5px;">${labelStatut}</div>
                         </div>
 
-                        <div style="margin: 0 10px; text-align:center; min-width:50px;">
-                            <div style="font-size:0.8rem; font-weight:bold; color:${joker === 0 ? '#2ecc71' : '#e74c3c'};">
+                        <div style="margin: 0 10px; text-align:center; min-width:60px;">
+                            <div style="font-size:0.85rem; color:${joker === 0 ? '#2ecc71' : '#e74c3c'};">
                                 ${joker === 0 ? '🛡️ Libre' : '🔓 Grillé'}
                             </div>
                             <small style="font-size:0.55rem; color:gray; display:block;">JOKER: ${joker}</small>
@@ -1131,20 +1132,21 @@ async function loadUsers(filtre = 'TOUT') {
                         </div>
 
                         <div style="display:flex; gap:6px; align-items:center;">
-                            <button onclick="window.open('https://wa.me/${tel}')" title="WhatsApp" style="background:#25D366; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer;">🟢</button>
-                            <button onclick="validerPaiementFinal('${tel}')" title="Payer" style="background:#2ecc71; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer;">💰</button>
+                            <button onclick="window.open('https://wa.me/${tel}')" title="WhatsApp" style="background:#25D366; border:none; border-radius:8px; width:34px; height:34px; cursor:pointer; font-size:1.1rem;">🟢</button>
                             
-                            <select onchange="changerCategorie('${tel}', this.value)" style="background:#222; color:white; border:1px solid #444; border-radius:6px; padding:6px; font-size:0.7rem;">
+                            <button onclick="validerPaiementFinal('${tel}')" title="Payer" style="background:#2ecc71; border:none; border-radius:8px; width:34px; height:34px; cursor:pointer; font-size:1.1rem;">💰</button>
+                            
+                            <select onchange="changerCategorie('${tel}', this.value)" style="background:#222; color:white; border:1px solid #444; border-radius:6px; padding:6px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
                                 <option value="A" ${cat==='A'?'selected':''}>A</option>
                                 <option value="B" ${cat==='B'?'selected':''}>B</option>
                                 <option value="C" ${cat==='C'?'selected':''}>C</option>
                             </select>
 
-                            <button onclick="toggleBan('${tel}', '${filtre}')" title="Bloquer" style="background:${(estSuspenduTemp || estBanniDefinitif)?'#f1c40f':'#333'}; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer;">
-                                ${(estSuspenduTemp || estBanniDefinitif) ? '🔓' : '🚫'}
+                            <button onclick="toggleBan('${tel}', '${filtre}')" title="Bloquer/Débloquer" style="background:${btnBanCol}; border:none; border-radius:8px; width:34px; height:34px; cursor:pointer; font-size:1.1rem; transition:0.3s;">
+                                ${btnBanIcon}
                             </button>
 
-                            <button onclick="deleteClient('${tel}')" title="Supprimer" style="background:#e74c3c; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer;">🗑️</button>
+                            <button onclick="deleteClient('${tel}')" title="Supprimer" style="background:#444; border:none; border-radius:8px; width:34px; height:34px; cursor:pointer; font-size:1.1rem;">🗑️</button>
                         </div>
                     </div>
                 </div>`;
