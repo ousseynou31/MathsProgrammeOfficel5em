@@ -397,21 +397,36 @@ async function toggleBan(id, filtreActuel) {
         alert("❌ Erreur technique lors de la modification.");
     }
 }
+
+// ==========================================
+// VALIDATION PAIEMENT (RÉINITIALISATION TOTALE)
+// ==========================================
 async function validerPaiementFinal(id) {
-    if(confirm("✅ Confirmer le paiement ? Cet élève sera ajouté au bilan financier.")) {
+    const confirmation = confirm("✅ CONFIRMER LE PAIEMENT ?\n\n- L'élève repart pour 35 JOURS.\n- Son JOKER de récupération sera remis à 0.");
+    
+    if (confirmation) {
         try {
-            // --- HARMONISATION ET NETTOYAGE ---
-            // On force les valeurs exactes pour que le 'Radar de Sécurité' 
-            // ne voie plus de conflit entre 'statut' et 'etat_acces'.
+            // --- HARMONISATION ET RÉACTIVATION ---
             await database.ref(`clients/${id}/infos_client`).update({
-                statut_paiement: "VALIDE",   // Débloque l'accès financier
-                etat_acces: "actif",         // Débloque la porte principale
-                statut: "actif",             // NETTOYAGE : On écrase l'ancien champ pour éviter les fuites
-                motif_suspension: "",        // On efface d'éventuels anciens motifs de blocage
-                date_inscription: new Date().toISOString() 
+                // 1. Accès financier et visuel
+                statut_paiement: "VALIDE",   // Débloque le contenu
+                statut: "actif",             // Cercle VERT en Admin
+                acces: "actif",              // Synchronisation sécurité
+                
+                // 2. Porte principale technique
+                etat_acces: "actif",         // Permet la connexion
+                
+                // 3. LA RÈGLE D'OR (Le Joker)
+                recup_effectuee: 0,          // REVIENT À 0 : On redonne 1 chance de secours
+                
+                // 4. LE COMPTEUR DE TEMPS
+                date_inscription: new Date().toISOString(), // Le chronomètre des 35 jours repart à zéro
+                
+                // 5. Nettoyage
+                motif_suspension: ""         // Efface les traces d'un ancien bannissement
             });
 
-            alert("💰 Paiement validé ! L'élève est désormais ACTIF.");
+            alert("💰 PAIEMENT ENREGISTRÉ !\n\nL'élève a été réactivé avec succès pour 35 jours.");
             
             // Rafraîchissement des interfaces admin
             if (typeof loadUsers === "function") loadUsers('TOUT');
@@ -520,41 +535,46 @@ async function mettreAJourAnciensClients() {
 }
 
 // ==========================================
-// MAINTENANCE : RÉINITIALISATION DES JOKERS (MENSUEL)
+// MAINTENANCE STRICTE (AUCUN CADEAU AUX JOKERS)
 // ==========================================
-async function reinitialiserQuotasMensuels() {
-    const confirmation = confirm("⚠️ ATTENTION : Vous allez redonner 1 droit de récupération à TOUS les élèves actifs.\n\nContinuer ?");
+async function maintenanceAbonnementsEtQuotas() {
+    const confirmation = confirm("⚙️ LANCER LA PURGE DES 35 JOURS ?\n\nNote : Les jokers ne seront PAS réinitialisés pour les élèves en cours d'abonnement.");
     
     if (!confirmation) return;
 
     try {
         const usersSnap = await database.ref('clients').once('value');
-        let compteur = 0;
-
+        const maintenant = new Date();
         const updates = {};
+        let expires = 0;
 
         usersSnap.forEach(user => {
             const data = user.val().infos_client;
-            
-            // On ne réinitialise QUE les élèves qui ne sont PAS bannis
-            // Un élève banni doit rester banni avec son compteur bloqué
-            if (data && data.etat_acces === "actif") {
-                const tel = user.key;
-                updates[`clients/${tel}/infos_client/recup_effectuee`] = 0;
-                compteur++;
+            if (!data || !data.date_inscription) return;
+
+            const tel = user.key;
+            const dateInsc = new Date(data.date_inscription);
+            const differenceEnMs = maintenant - dateInsc;
+            const joursEcoules = Math.floor(differenceEnMs / (1000 * 60 * 60 * 24));
+
+            // ON NE S'OCCUPE QUE DE FERMER LES COMPTES EXPIRÉS
+            if (joursEcoules > 35 && data.statut_paiement === "VALIDE") {
+                updates[`clients/${tel}/infos_client/statut_paiement`] = "EXPIRE";
+                updates[`clients/${tel}/infos_client/statut`] = "suspendu"; 
+                expires++;
             }
+            
+            // NOTE : On ne touche PAS au champ 'recup_effectuee' ici !
+            // L'élève à 10 jours reste avec son 1.
         });
 
-        // Mise à jour groupée (plus rapide et sécurisée)
         await database.ref().update(updates);
-
-        alert(`✅ Opération réussie !\n\n${compteur} élèves ont récupéré leur droit de restauration pour ce nouveau mois.`);
+        alert(`✅ MAINTENANCE TERMINÉE :\n\n• ${expires} abonnements expiré(s) bloqué(s).\n• Aucun joker n'a été réinitialisé par erreur.`);
         
         if (typeof loadUsers === 'function') loadUsers();
 
     } catch (e) {
         console.error("Erreur Maintenance:", e);
-        alert("❌ Erreur lors de la réinitialisation des quotas.");
     }
 }
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXX
