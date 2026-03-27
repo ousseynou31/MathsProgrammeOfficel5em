@@ -1044,17 +1044,14 @@ async function loadUsers(filtre = 'TOUT') {
     
     list.innerHTML = `<p style="text-align:center; color:gray; padding:20px;">Analyse de la base en cours...</p>`;
     
-    // Variables pour le récapitulatif du dashboard
     let nbAttendu = 0;    
     let totalArgent = 0;  
     let nbRetards = 0;    
 
     try {
-        // Récupération des tarifs configurés
         const tarifsSnap = await database.ref('reglages/tarifs').once('value');
         const tarifs = tarifsSnap.val() || { A: 10000, B: 7000, C: 4000 };
 
-        // Récupération de tous les clients
         const usersSnap = await database.ref('clients').once('value');
         list.innerHTML = ""; 
 
@@ -1063,101 +1060,103 @@ async function loadUsers(filtre = 'TOUT') {
             if (!val || !val.infos_client) return;
             
             const data = val.infos_client;
-            const tel = u.key; // Le numéro sert d'identifiant
+            const tel = u.key;
             const cat = (data.categorie || "C").trim().toUpperCase();
 
             // 1. FILTRAGE
             if (filtre !== 'TOUT' && cat !== filtre) return;
 
-            // 2. CALCULS DE SUIVI
+            // 2. CALCULS DE LOGIQUE
             const jours = calculerJours(data.date_inscription);
             const prix = parseInt(tarifs[cat]) || 0;
-            const isBanned = data.statut === "suspendu";
 
-            // Mise à jour des compteurs du dashboard
-            nbAttendu++;
-            totalArgent += prix;
-            if (jours >= 35) nbRetards++;
+            // --- NOUVELLE LOGIQUE DE STATUT ---
+            const estBanniDefinitif = data.etat_acces === "banni" && data.statut === "suspendu"; 
+            const estSuspenduTemp = data.statut === "suspendu" && data.etat_acces !== "banni";
+            const estExpire = jours >= 35;
 
-            // Couleur du cercle selon l'urgence (Vert, Orange, Rouge)
-            let coul = (jours >= 35) ? "#e74c3c" : (jours >= 26 ? "#f1c40f" : "#2ecc71");
+            // Mise à jour du dashboard (on ne compte que les non-bannis dans l'argent attendu)
+            if (!estBanniDefinitif) {
+                nbAttendu++;
+                totalArgent += prix;
+                if (estExpire) nbRetards++;
+            }
 
-            // 3. GÉNÉRATION DU HTML (Les 5 fonctionnalités)
+            // --- DESIGN DYNAMIQUE ---
+            let borderCol = "#2ecc71"; // Vert par défaut
+            let bgCard = "#111";       // Noir par défaut
+            let labelStatut = "";
+
+            if (estBanniDefinitif) {
+                borderCol = "#c0392b"; // Rouge sang
+                bgCard = "#1a0505";    // Reflet rouge sombre
+                labelStatut = '<span style="color:#c0392b; font-size:0.65rem; font-weight:900;">🚫 BANNI (DÉFINITIF)</span>';
+            } else if (estSuspenduTemp || estExpire) {
+                borderCol = "#f39c12"; // Orange
+                bgCard = "#1a1405";    // Reflet orange/brun
+                labelStatut = `<span style="color:#f39c12; font-size:0.65rem; font-weight:900;">⚠️ ${estExpire ? 'ABONNEMENT EXPIRÉ' : 'SUSPENDU'}</span>`;
+            }
+
+            // Couleur du cercle des jours
+            let circleCol = estExpire ? "#e74c3c" : (jours >= 26 ? "#f1c40f" : "#2ecc71");
+
+            // 3. GÉNÉRATION DU HTML
             list.innerHTML += `
-                <div class="user-card" style="background:#111; margin-bottom:12px; padding:15px; border-radius:12px; border-left:5px solid ${isBanned ? '#e74c3c':'#2ecc71'}; border-bottom:1px solid #333;">
+                <div class="user-card" style="background:${bgCard}; margin-bottom:12px; padding:15px; border-radius:12px; border-left:6px solid ${borderCol}; border-bottom:1px solid #333; transition: 0.3s;">
                     
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         
                         <div style="flex:1;">
                             <div style="display:flex; align-items:center; gap:10px;">
-    <b style="font-size:0.9rem; color:white; white-space:nowrap;">${data.nom.toUpperCase()}</b>
-    
-    <div title="${val.status === 'en_ligne' ? 'Connecté' : 'Hors ligne'}" style="
-        width: 9px; 
-        height: 9px; 
-        border-radius: 50%; 
-        background-color: ${val.status === 'en_ligne' ? '#2ecc71' : '#555'}; 
-        box-shadow: ${val.status === 'en_ligne' ? '0 0 10px #2ecc71' : 'none'};
-        flex-shrink: 0;
-        transition: all 0.3s ease;
-    "></div>
-
-    <span style="font-size:0.6rem; background:#222; color:#f1c40f; border:1px solid #444; padding:2px 6px; border-radius:4px; font-weight:bold;">${cat}</span>
-</div>
+                                <b style="font-size:0.9rem; color:white; white-space:nowrap;">${data.nom.toUpperCase()}</b>
+                                <div style="width:9px; height:9px; border-radius:50%; background-color:${val.status === 'en_ligne' ? '#2ecc71' : '#555'}; box-shadow:${val.status === 'en_ligne' ? '0 0 10px #2ecc71' : 'none'}; flex-shrink:0;"></div>
+                                <span style="font-size:0.6rem; background:#222; color:#f1c40f; border:1px solid #444; padding:2px 6px; border-radius:4px; font-weight:bold;">${cat}</span>
+                            </div>
                             <div style="font-size:0.75rem; color:gray; margin-top:3px;">📞 ${tel}</div>
-                            ${isBanned ? '<div style="font-size:0.65rem; color:#e74c3c; font-weight:900; margin-top:5px;">⚠️ COMPTE SUSPENDU</div>' : ''}
+                            <div style="margin-top:5px;">${labelStatut}</div>
                         </div>
 
                         <div style="margin: 0 15px; text-align:center;">
-                            <div style="width:38px; height:38px; border-radius:50%; border:2px solid ${coul}; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:900; color:white;">
+                            <div style="width:38px; height:38px; border-radius:50%; border:2px solid ${circleCol}; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:900; color:white;">
                                 ${jours}
                             </div>
                             <small style="font-size:0.5rem; color:gray; display:block; margin-top:2px;">JOURS</small>
                         </div>
 
                         <div style="display:flex; gap:6px; align-items:center;">
+                            <button onclick="window.open('https://wa.me/${tel}')" title="WhatsApp" style="background:#25D366; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer;">🟢</button>
+                            <button onclick="validerPaiementFinal('${tel}')" title="Payer" style="background:#2ecc71; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer;">💰</button>
                             
-                            <button onclick="window.open('https://wa.me/${tel}')" title="WhatsApp" style="background:#25D366; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:1rem;">🟢</button>
-                            
-                            <button onclick="validerPaiementFinal('${tel}')" title="Payer" style="background:#2ecc71; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:1rem;">💰</button>
-                            
-                            <select onchange="changerCategorie('${tel}', this.value)" style="background:#222; color:white; border:1px solid #444; border-radius:6px; padding:6px; font-size:0.7rem; font-weight:bold;">
+                            <select onchange="changerCategorie('${tel}', this.value)" style="background:#222; color:white; border:1px solid #444; border-radius:6px; padding:6px; font-size:0.7rem;">
                                 <option value="A" ${cat==='A'?'selected':''}>A</option>
                                 <option value="B" ${cat==='B'?'selected':''}>B</option>
                                 <option value="C" ${cat==='C'?'selected':''}>C</option>
                             </select>
 
-                            <button onclick="toggleBan('${tel}', '${filtre}')" title="Bloquer/Débloquer" style="background:${isBanned?'#f1c40f':'#333'}; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:1rem;">
-                                ${isBanned ? '🔓' : '🚫'}
+                            <button onclick="toggleBan('${tel}', '${filtre}')" title="Bloquer" style="background:${(estSuspenduTemp || estBanniDefinitif)?'#f1c40f':'#333'}; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer;">
+                                ${(estSuspenduTemp || estBanniDefinitif) ? '🔓' : '🚫'}
                             </button>
 
-                            <button onclick="deleteClient('${tel}', '${filtre}')" title="Supprimer" style="background:#e74c3c; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:1rem;">🗑️</button>
+                            <button onclick="deleteClient('${tel}')" title="Supprimer" style="background:#e74c3c; border:none; border-radius:8px; width:32px; height:32px; cursor:pointer;">🗑️</button>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // 4. MISE À JOUR DU DASHBOARD (VOTRE BLOC DE CODE)
-        try {
-            const eltNb = document.getElementById('stat-attendu');
-            const eltPrix = document.getElementById('stat-estime');
-            const eltRetard = document.getElementById('stat-retard');
+        // 4. MISE À JOUR DU DASHBOARD
+        const eltNb = document.getElementById('stat-attendu');
+        const eltPrix = document.getElementById('stat-estime');
+        const eltRetard = document.getElementById('stat-retard');
 
-            if (eltNb) eltNb.innerText = nbAttendu;
-            if (eltPrix) eltPrix.innerText = totalArgent.toLocaleString() + " FG";
-            if (eltRetard) eltRetard.innerText = nbRetards;
-
-            console.log("✅ Dashboard synchronisé : ", nbAttendu, "élèves.");
-        } catch (e) {
-            console.error("Erreur d'affichage dashboard:", e);
-        }
+        if (eltNb) eltNb.innerText = nbAttendu;
+        if (eltPrix) eltPrix.innerText = totalArgent.toLocaleString() + " FG";
+        if (eltRetard) eltRetard.innerText = nbRetards;
 
     } catch (e) {
         console.error("Erreur critique loadUsers:", e);
-        list.innerHTML = `<p style="color:#e74c3c; text-align:center; padding:20px;">Erreur de connexion à Firebase</p>`;
+        list.innerHTML = `<p style="color:#e74c3c; text-align:center; padding:20px;">Erreur de connexion</p>`;
     }
 }
-
 
 // Cette fonction doit être appelée dès que l'application démarre
 function activerSignalPresence() {
