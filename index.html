@@ -241,39 +241,32 @@
     </div>
 
     <div id="hub-accueil" class="main-app" style="display:none;">
-        <header class="top-bar">
-          
-            <div id="admin-trigger" class="titre-pilule-premium" style="user-select: none; cursor: pointer;">
-    BIENVENU DANS MATHS 5em PROGRAMME OFFICIEL V1
-</div>
-       
-      
-        </header>
-        <main class="empty-content">
-    <div class="interface-overlay-2026">
-        <div class="menu-2026-left" onclick="console.log('Menu Chapitres')">
-            <div class="burger-lines-wrapper">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
+      <header class="top-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(0,0,0,0.2); backdrop-filter: blur(10px);">
+        
+        <div class="menu-2026-left" style="width: 40px; height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; background: rgba(255,255,255,0.1); border-radius: 50%; cursor: pointer;">
+            <span style="width: 18px; height: 2px; background: white; border-radius: 2px;"></span>
+            <span style="width: 18px; height: 2px; background: white; border-radius: 2px;"></span>
+            <span style="width: 18px; height: 2px; background: white; border-radius: 2px;"></span>
         </div>
 
-        <div class="menu-2026-right" onclick="console.log('Menu Options')">
-            <div class="vertical-dots-wrapper">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
+        <div id="admin-trigger" class="titre-pilule-premium" style="user-select: none; cursor: pointer; flex: 1; text-align: center; font-size: 0.7rem; font-weight: 800; color: #ffd700; padding: 0 10px;">
+            BIENVENU DANS MATHS 5em PROGRAMME OFFICIEL V1
         </div>
-    </div>
 
-    <div class="hero-center-2026">
-        <button class="modern-btn-3d" id="btn-decouvrir-5e">
-            <span class="btn-text-glow">DÉCOUVRIR LE PROGRAMME 5E</span>
-        </button>
-    </div>
-</main>
+        <div class="menu-2026-right" style="width: 40px; height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; background: rgba(255,255,255,0.1); border-radius: 50%; cursor: pointer;">
+            <span style="width: 4px; height: 4px; background: white; border-radius: 50%;"></span>
+            <span style="width: 4px; height: 4px; background: white; border-radius: 50%;"></span>
+            <span style="width: 4px; height: 4px; background: white; border-radius: 50%;"></span>
+        </div>
+    </header>
+
+    <main class="empty-content" style="height: 75vh; display: flex; justify-content: center; align-items: center; position: relative;">
+        <div class="hero-center-2026">
+            <button class="modern-btn-3d" id="btn-decouvrir-5e">
+                <span class="btn-text-glow">DÉCOUVRIR LE PROGRAMME 5E</span>
+            </button>
+        </div>
+    </main>
     </div>
 
     
