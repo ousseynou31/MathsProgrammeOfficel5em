@@ -166,6 +166,9 @@ async function demanderCodeAvantInscription() {
     }
 }
 
+// ==========================================
+// 2. LE GARDIEN (VÉRIFICATION EN TEMPS RÉEL)
+// ==========================================
 async function verifierIdentite() {
     const tel = localStorage.getItem('user_tel_id');
     if (!tel) return "NO_PROFILE";
@@ -178,23 +181,26 @@ async function verifierIdentite() {
 
         const user = snap.val();
 
-        // --- 1. VÉRIFICATION DES VERROUS (Banni / Suspendu) ---
-        if (user.etat_acces === "banni") return "BANNED";
-        if (user.etat_acces === "suspendu") return "SUSPENDED";
+        // --- 1. VÉRIFICATION DES VERROUS (Double Sécurité Admin) ---
+        // On bloque si l'un des deux marqueurs de bannissement est présent
+        if (user.etat_acces === "banni" || user.statut === "suspendu" || user.acces === "suspendu") {
+            console.warn("🚫 Accès révoqué par l'administrateur.");
+            return "BANNED"; 
+        }
 
         // --- 2. VÉRIFICATION DU PAIEMENT ---
         if (user.statut_paiement !== "VALIDE") {
-            console.log("🚫 Accès refusé : Statut paiement est " + user.statut_paiement);
+            console.log("💳 Accès refusé : Statut paiement est " + user.statut_paiement);
             return "PENDING_PAYMENT";
         }
 
         // --- 3. VÉRIFICATION DE L'APPAREIL (L'ID UNIQUE) ---
-        // On compare l'ID stocké en base avec l'ID actuel du téléphone
+        // Empêche le partage de compte ou le changement de téléphone sans 'Récupérer'
         const idActuel = typeof getDeviceId === 'function' ? getDeviceId() : "unknown";
         
         if (user.device_id && user.device_id !== idActuel) {
-            console.warn("⚠️ Tentative d'accès depuis un appareil non reconnu.");
-            return "DEVICE_MISMATCH"; // Nouveau code pour forcer la récupération
+            console.warn("⚠️ Appareil non reconnu. Redirection vers récupération.");
+            return "DEVICE_MISMATCH"; 
         }
 
         // --- 4. SI TOUT EST OK ---
@@ -202,8 +208,7 @@ async function verifierIdentite() {
 
     } catch (e) {
         console.error("Erreur sécurité identité:", e);
-        // Tolérance en cas de panne réseau temporaire : 
-        // Si le cache local dit que c'est actif, on laisse passer pour ne pas frustrer l'élève.
+        // Tolérance réseau : On se fie au cache local si Firebase est injoignable
         return localStorage.getItem('v32_active') === 'true' ? "AUTHORIZED" : "ERROR";
     }
 }
@@ -248,6 +253,9 @@ function verifierEtatInitial() {
 // Lancement automatique au démarrage
 window.onload = verifierEtatInitial;
 
+// ==========================================
+// 1. INSCRIPTION (INITIALISATION SÉCURISÉE)
+// ==========================================
 async function enregistrerProfil() {
     const nom = document.getElementById('reg-nom').value.trim();
     const tel = document.getElementById('reg-tel').value.trim().replace(/\D/g,'');
@@ -260,29 +268,31 @@ async function enregistrerProfil() {
         
         if (check.exists()) {
             const data = check.val();
-            // Sécurité : Si banni, on bloque tout
-            if (data.etat_acces === "banni") {
-                return alert("🚫 Ce numéro est définitivement banni.");
+            // Sécurité : Si l'un des verrous est sur 'banni' ou 'suspendu'
+            if (data.etat_acces === "banni" || data.statut === "suspendu") {
+                return alert("🚫 Ce numéro est définitivement banni de notre système.");
             }
-            return alert("💡 Ce compte existe déjà. Utilisez 'Récupérer mon compte' en cas de changement de téléphone.");
+            return alert("💡 Ce compte existe déjà. Utilisez 'Récupérer mon compte' en bas de l'écran.");
         }
 
         const maintenant = new Date();
 
-        // 📝 CRÉATION DU PROFIL (Initialisation avec le système 0/1)
+        // 📝 CRÉATION DU PROFIL HARMONISÉ
         await database.ref('clients/' + tel + '/infos_client').set({
             nom: nom,
             tel: tel,
             categorie: "C", 
             
-            // --- ÉTATS D'ACCÈS ---
+            // --- ÉTATS D'ACCÈS (Triple Verrou Actif) ---
             etat_acces: "actif",           
-            statut_paiement: "VALIDE",    // Validé car le PIN a été franchi auparavant
+            statut: "actif",      // Pour la lecture par loadUsers
+            acces: "actif",       
+            statut_paiement: "VALIDE",    
             
             // --- SYSTÈME DE RÉCUPÉRATION (Binaire) ---
-            recup_effectuee: 0,           // 0 = Jamais récupéré (crédit disponible)
+            recup_effectuee: 0,   // 0 = Crédit disponible pour le mois
             
-            // --- TRACABILITÉ ---
+            // --- TRACABILITÉ & SÉCURITÉ ---
             date_inscription: maintenant.toISOString(),
             device_id: typeof getDeviceId === 'function' ? getDeviceId() : "unknown",
             dernier_token: "init_" + Math.random().toString(36).substr(2, 9) 
@@ -292,7 +302,7 @@ async function enregistrerProfil() {
         localStorage.setItem('user_tel_id', tel);
         localStorage.setItem('v32_active', 'true'); 
 
-        alert("✅ Inscription réussie ! Bienvenue dans votre programme de Mathématiques.");
+        alert("✅ Inscription réussie ! Bienvenue dans votre programme.");
         
         // 🚀 LANCEMENT DE L'APP
         if (typeof launchApp === 'function') {
@@ -306,26 +316,34 @@ async function enregistrerProfil() {
         alert("❌ Erreur de communication avec la base de données.");
     }
 }
+// ==========================================
+// 6. SUPPRESSION & LISTE NOIRE (BAN DÉFINITIF)
+// ==========================================
 async function deleteClient(id) {
-    if(confirm("❗ SUPPRESSION DÉFINITIVE : L'application du client sera désactivée INSTANTANÉMENT. Confirmer ?")) {
+    const message = "❗ SUPPRESSION DÉFINITIVE :\n\nL'élève sera expulsé immédiatement et ne pourra plus jamais se réinscrire avec ce numéro.\n\nConfirmer l'expulsion ?";
+    
+    if(confirm(message)) {
         try {
             // --- HARMONISATION TOTALE DES CLÉS ---
-            // On écrase 'etat_acces', 'statut' et 'statut_paiement' 
-            // pour ne laisser aucune faille de lecture.
+            // On sature toutes les clés pour qu'aucune fonction ne laisse passer l'élève.
             await database.ref(`clients/${id}/infos_client`).update({
-                etat_acces: "banni",      // Notre nouveau verrou discipline
-                statut: "banni",           // On synchronise l'ancienne clé pour sécurité
-                statut_paiement: "EXPIRE", // On coupe l'accès financier
-                motif_suspension: "Compte supprimé par l'administrateur"
+                etat_acces: "banni",      // Bloque la récupération (recupererCompte)
+                statut: "suspendu",       // Affiche le cercle ROUGE (loadUsers)
+                acces: "suspendu",        // Sécurité supplémentaire
+                statut_paiement: "EXPIRE", // Coupe l'accès au contenu
+                motif_suspension: "COMPTE SUPPRIMÉ DÉFINITIVEMENT"
             });
 
-            // Note : On ne fait pas database.ref(`clients/${id}`).remove() 
-            // pour garder le numéro en "Liste Noire" et empêcher la réinscription.
+            // Note stratégique : On ne fait PAS .remove() sur le dossier complet.
+            // En gardant ces clés "banni", le numéro reste en Liste Noire.
+            // Si l'élève tente de se réinscrire, enregistrerProfil() verra qu'il est banni.
 
-            alert("✅ Client expulsé et banni définitivement.");
+            alert("✅ Client expulsé et placé en Liste Noire.");
             
-            // Si tu as une fonction de rafraîchissement de liste, appelle-la ici
-            if (typeof loadUsers === 'function') loadUsers();
+            // Rafraîchissement automatique de la liste Admin
+            if (typeof loadUsers === 'function') {
+                loadUsers();
+            }
 
         } catch (e) {
             console.error("Erreur deleteClient:", e);
@@ -333,38 +351,46 @@ async function deleteClient(id) {
         }
     }
 }
+// ==========================================
+// 5. LE VERROU ADMIN (SUSPENDRE / RÉACTIVER)
+// ==========================================
 async function toggleBan(id, filtreActuel) {
     try {
-        // 1. On vérifie l'état actuel
+        // 1. On vérifie l'état actuel de l'accès
         const snap = await database.ref(`clients/${id}/infos_client/etat_acces`).once('value');
         const estActuelActif = (snap.val() === "actif");
         
-        // --- LOGIQUE DE DOUBLE VERROU ---
-        // Si on suspend : on met "banni" pour stopper la machine + "suspendu" pour la raison
-        const nouvelEtat = estActuelActif ? "banni" : "actif"; 
-        const labelAcces = estActuelActif ? "suspendu" : "actif";
+        // --- LOGIQUE D'HARMONISATION ---
+        // Si on suspend : 
+        // - etat_acces -> "banni" (pour bloquer la récupération technique)
+        // - statut -> "suspendu" (pour que loadUsers affiche le cercle ROUGE)
+        const nouvelEtatTechnique = estActuelActif ? "banni" : "actif"; 
+        const nouvelEtatAffichage = estActuelActif ? "suspendu" : "actif";
 
         const messageConfirm = estActuelActif 
-            ? `🚫 BLOQUER CET ÉLÈVE ?\n(Il sera marqué comme BANNI pour stopper toute récupération)` 
-            : `✅ RÉACTIVER CET ÉLÈVE ?`;
+            ? `🚫 BLOQUER CET ÉLÈVE ?\n\nL'accès sera coupé immédiatement et le cercle deviendra ROUGE.` 
+            : `✅ RÉACTIVER CET ÉLÈVE ?\n\nL'accès sera rétabli et le cercle redeviendra VERT.`;
 
         if(confirm(messageConfirm)) {
-            // 2. MISE À JOUR SYNCHRONISÉE POUR TOUTES LES FONCTIONS
+            // 2. MISE À JOUR SYNCHRONISÉE DES 3 CLÉS CRITIQUES
             await database.ref(`clients/${id}/infos_client`).update({
-                "etat_acces": nouvelEtat, // Devient "banni" -> la récupération bloquera
-                "statut": nouvelEtat,     // Devient "banni"
-                "acces": labelAcces,      // Devient "suspendu" -> pour ton affichage Admin
+                "etat_acces": nouvelEtatTechnique, 
+                "statut": nouvelEtatAffichage,    // Lu par loadUsers (const isBanned = data.statut === "suspendu")
+                "acces": nouvelEtatAffichage,     // Sécurité supplémentaire
                 "motif_suspension": estActuelActif ? "SUSPENSION ADMINISTRATIVE" : ""
             });
              
-            // 3. AFFICHAGE DU MESSAGE AVEC LE CERCLE (Design attractif)
+            // 3. AFFICHAGE DU RÉSULTAT
             const alerteVisuelle = estActuelActif 
-                ? "🚫 ACCÈS RÉVOQUÉ\nL'élève est maintenant banni du système."
+                ? "🚫 ACCÈS RÉVOQUÉ\nL'élève est maintenant bloqué."
                 : "✅ ACCÈS RÉTABLI\nL'élève peut à nouveau se connecter.";
             
             alert(alerteVisuelle);
             
-            if (typeof loadUsers === 'function') loadUsers(filtreActuel);
+            // 4. RAFRAÎCHISSEMENT DE TA LISTE ADMIN
+            if (typeof loadUsers === 'function') {
+                loadUsers(filtreActuel);
+            }
         }
     } catch (e) {
         console.error("Erreur toggleBan:", e);
@@ -493,6 +519,44 @@ async function mettreAJourAnciensClients() {
     }
 }
 
+// ==========================================
+// MAINTENANCE : RÉINITIALISATION DES JOKERS (MENSUEL)
+// ==========================================
+async function reinitialiserQuotasMensuels() {
+    const confirmation = confirm("⚠️ ATTENTION : Vous allez redonner 1 droit de récupération à TOUS les élèves actifs.\n\nContinuer ?");
+    
+    if (!confirmation) return;
+
+    try {
+        const usersSnap = await database.ref('clients').once('value');
+        let compteur = 0;
+
+        const updates = {};
+
+        usersSnap.forEach(user => {
+            const data = user.val().infos_client;
+            
+            // On ne réinitialise QUE les élèves qui ne sont PAS bannis
+            // Un élève banni doit rester banni avec son compteur bloqué
+            if (data && data.etat_acces === "actif") {
+                const tel = user.key;
+                updates[`clients/${tel}/infos_client/recup_effectuee`] = 0;
+                compteur++;
+            }
+        });
+
+        // Mise à jour groupée (plus rapide et sécurisée)
+        await database.ref().update(updates);
+
+        alert(`✅ Opération réussie !\n\n${compteur} élèves ont récupéré leur droit de restauration pour ce nouveau mois.`);
+        
+        if (typeof loadUsers === 'function') loadUsers();
+
+    } catch (e) {
+        console.error("Erreur Maintenance:", e);
+        alert("❌ Erreur lors de la réinitialisation des quotas.");
+    }
+}
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO00XXXXXXXXXXXXX
 // --- SYSTÈME DE SÉCURITÉ SOLIDE V1 ---OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0000XXXXXXXXXXXXX
@@ -559,10 +623,7 @@ async function verifierLicence() {
 }
 
 // ==========================================
-// 3. RÉCUPÉRATION (SYSTÈME DE JOKER 0/1)
-// ==========================================
-// ==========================================
-// 3. RÉCUPÉRATION (SYSTÈME BINAIRE 0/1 & VERROU TOTAL)
+// 4. RÉCUPÉRATION (SYSTÈME BINAIRE 0/1 & VERROU TOTAL)
 // ==========================================
 async function recupererCompte() {
     const saisie = prompt("📱 Entrez votre numéro de téléphone pour restaurer votre accès :");
@@ -575,9 +636,9 @@ async function recupererCompte() {
 
         const data = snap.val();
 
-        // --- 1. SÉCURITÉ : VÉRIFICATION DU BLOCAGE (BANNI OU SUSPENDU) ---
-        // On vérifie le champ 'etat_acces' qui contient "banni" si tu as cliqué sur Suspendre en Admin
-        if (data.etat_acces === "banni") {
+        // --- 1. SÉCURITÉ : VÉRIFICATION DU BLOCAGE (HARMONISATION ADMIN) ---
+        // On bloque si 'banni' OU si 'suspendu' pour être en phase avec loadUsers
+        if (data.etat_acces === "banni" || data.statut === "suspendu") {
             return alert(
                 "🚫  ACCÈS BLOQUÉ  🚫\n" +
                 "_______________________\n\n" +
@@ -588,8 +649,7 @@ async function recupererCompte() {
             );
         }
 
-        // --- 2. VÉRIFICATION DU CRÉDIT DE RÉCUPÉRATION (0/1) ---
-        // Si la valeur est 1, l'élève a déjà utilisé son unique chance.
+        // --- 2. VÉRIFICATION DU CRÉDIT DE RÉCUPÉRATION (SYSTÈME 0/1) ---
         if (data.recup_effectuee === 1) {
             return alert(
                 "⚠️ RÉCUPÉRATION IMPOSSIBLE\n\n" +
@@ -599,12 +659,12 @@ async function recupererCompte() {
             );
         }
 
-        // --- 3. MISE À JOUR FIREBASE (VALIDATION & CONSOMMATION DU JOKER) ---
+        // --- 3. MISE À JOUR FIREBASE (ON GRILLE LE JOKER) ---
         const nouvelId = typeof getDeviceId === 'function' ? getDeviceId() : "ID_UNK";
         
         await database.ref(`clients/${tel}/infos_client`).update({
             device_id: nouvelId,
-            recup_effectuee: 1, // On grille le joker immédiatement
+            recup_effectuee: 1, // On passe à 1 : le joker est consommé !
             derniere_recup_date: new Date().toISOString()
         });
 
@@ -615,10 +675,9 @@ async function recupererCompte() {
         // --- 5. REDIRECTION ET MESSAGE DE SUCCÈS ---
         if (data.statut_paiement === "VALIDE") {
             localStorage.setItem('v32_active', 'true');
-            alert(`✅ Content de vous revoir ${data.nom} !\n\nVotre accès est restauré. Attention, c'était votre seule récupération autorisée.`);
+            alert(`✅ Content de vous revoir ${data.nom} !\n\nVotre accès est restauré.\n(Attention : C'était votre seule récupération autorisée).`);
             naviguer('hub-accueil');
         } else {
-            // Cas rare où le profil existe mais le PIN n'était pas encore validé
             alert("✅ Identité retrouvée !\n\nEntrez maintenant votre code PIN pour activer définitivement l'application.");
             naviguer('license-gate');
         }
@@ -628,16 +687,14 @@ async function recupererCompte() {
         alert("❌ Erreur de connexion au serveur. Vérifiez votre connexion internet."); 
     }
 }
-
 // ==========================================
-// 4. LANCEMENT (LE CHEF D'ORCHESTRE SÉCURISÉ)
+// 3. LANCEMENT (LE CHEF D'ORCHESTRE SÉCURISÉ)
 // ==========================================
 async function launchApp() {
     const tel = localStorage.getItem('user_tel_id');
     const v32 = localStorage.getItem('v32_active');
 
     // --- ÉTAPE 1 : LA BARRIÈRE TECHNIQUE (LE PIN) ---
-    // Si la licence n'est pas validée localement, on affiche l'ID et on bloque
     if (v32 !== 'true') {
         const displayElem = document.getElementById('display-device-id');
         if (displayElem && typeof getDeviceId === 'function') {
@@ -647,7 +704,6 @@ async function launchApp() {
     }
 
     // --- ÉTAPE 2 : LA BARRIÈRE IDENTITÉ (LE PROFIL) ---
-    // Si le PIN est OK mais pas de numéro, l'élève doit s'inscrire
     if (!tel) {
         return naviguer('registration-gate');
     }
@@ -656,11 +712,11 @@ async function launchApp() {
     try {
         const status = await verifierIdentite(); 
         
-        console.log("Status Sécurité :", status);
+        console.log("🛡️ Statut Sécurité Appliqué :", status);
 
         switch(status) {
             case "AUTHORIZED":
-                // Tout est parfait, on entre dans le hub
+                // Accès total
                 naviguer('hub-accueil');
                 if (typeof surveillerStatutEnDirect === 'function') {
                     surveillerStatutEnDirect(tel); 
@@ -668,33 +724,45 @@ async function launchApp() {
                 break;
 
             case "DEVICE_MISMATCH":
-                // L'ID a changé (changement de téléphone ou cache vidé)
-                alert("📱 Appareil non reconnu !\n\nSi vous avez changé de téléphone, veuillez utiliser l'option 'Récupérer mon compte'.");
+                // Sécurité ID Appareil
+                alert("📱 APPAREIL NON RECONNU !\n\nVous avez changé de téléphone ou réinstallé l'application.\n\nVeuillez utiliser l'option 'Récupérer mon compte' pour restaurer votre accès.");
                 naviguer('license-gate');
                 break;
 
             case "PENDING_PAYMENT":
-                alert("⏳ Votre accès est en attente de validation.");
+                alert("⏳ ACCÈS EN ATTENTE\n\nVotre abonnement n'est pas encore validé. Contactez l'administrateur.");
                 naviguer('license-gate');
                 break;
 
             case "BANNED":
-            case "SUSPENDED":
             case "DELETED":
-                // Cas grave : on nettoie tout et on ferme la porte
-                alert("🚫 Accès refusé : Ce compte a été désactivé par l'administrateur.");
+                // --- LE MESSAGE ATTRACTIF (CERCLE ET BARRES) ---
+                alert(
+                    "🚫  ACCÈS BLOQUÉ  🚫\n" +
+                    "_______________________\n\n" +
+                    "      ( X )  SUSPENDU\n" +
+                    "_______________________\n\n" +
+                    "Votre compte a été désactivé par l'administrateur.\n" +
+                    "Contactez-nous pour régulariser votre situation."
+                );
+                
+                // On nettoie le cache pour empêcher toute tentative de contournement
                 localStorage.clear();
                 naviguer('license-gate');
                 break;
 
             default:
-                // En cas d'erreur inconnue, retour à la sécurité
+                // Sécurité par défaut
                 naviguer('license-gate');
         }
     } catch (e) {
-        // Mode secours : Si le serveur est injoignable mais que le client était déjà actif
-        console.warn("🌐 Serveur injoignable, mode hors-ligne activé.");
-        naviguer('hub-accueil');
+        // Mode secours (Offline) : Tolérance si déjà actif auparavant
+        console.warn("🌐 Serveur injoignable, mode secours activé.");
+        if (v32 === 'true') {
+            naviguer('hub-accueil');
+        } else {
+            naviguer('license-gate');
+        }
     }
 }
 
