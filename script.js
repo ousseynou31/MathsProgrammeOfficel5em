@@ -1679,7 +1679,6 @@ function calculerBilan(stats) {
     document.getElementById('montant-total').innerText = totalFinancier + " FCFA";
 }
 
-// --- 1. CHARGEMENT DE LA LISTE ---
 
 // 1. UNE SEULE FONCTION POUR TOUT CHARGER
 async function chargerTarifs() {
@@ -1828,18 +1827,13 @@ function rafraichirListeParFiltre() {
     }
 }
 
-// --- LANCEMENT AU DÉMARRAGE ---
-// Remplacez votre ancien appel "loadUsers()" par celui-ci
-document.addEventListener("DOMContentLoaded", () => {
-    activerSurveillanceAdmin();
-});
 // =========================================================
 //  LANCEMENT UNIQUE ET SÉCURISÉ DU SYSTÈME DIOUF 2026
 // =========================================================
 window.addEventListener('load', async () => {
     console.log("🚀 Initialisation du moteur Maths 5em...");
 
-    // 1. AFFICHAGE IMMÉDIAT DE L'ID (Pour éviter l'affichage "...")
+    // 1. AFFICHAGE IMMÉDIAT DE L'ID
     const devIdDisplay = document.getElementById('display-device-id');
     if (devIdDisplay && typeof getDeviceId === "function") {
         devIdDisplay.innerText = getDeviceId();
@@ -1859,23 +1853,51 @@ window.addEventListener('load', async () => {
     }
 
     // 4. LE TUNNEL DE SÉCURITÉ (DÉCISION DE LA PAGE)
-    // On lance launchApp AVANT toute surveillance en direct pour 
-    // fixer la page de destination une fois pour toutes.
     if (typeof launchApp === "function") {
         console.log("🔓 Vérification de la licence...");
         await launchApp();
     }
 
-    // 5. ACTIVATION DES SERVICES "BACKGROUND" (Seulement si déjà inscrit)
+    // 5. ACTIVATION DES SERVICES "BACKGROUND"
     const telLocal = localStorage.getItem('user_tel_id');
     const estActif = localStorage.getItem('v32_active') === 'true';
 
     if (telLocal && estActif) {
-        // On ne surveille la connexion et le statut QUE si l'utilisateur est déjà dans le Hub
         if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
         if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
         if (typeof surveillerConnexion === "function") surveillerConnexion();
     }
+
+    // =========================================================
+    // 6. NOUVEAU : INITIALISATION DE L'INTERFACE 2026
+    // =========================================================
+    console.log("✨ Activation de l'interface visuelle 2026...");
     
-    console.log("✅ Système prêt.");
+    // Bouton Central 3D
+    const btnDecouvrir = document.getElementById('btn-decouvrir-5e');
+    if (btnDecouvrir) {
+        btnDecouvrir.addEventListener('click', () => {
+            // Ici, vous mettrez votre fonction pour ouvrir les cours
+            alert("Ouverture du programme de 5ème...");
+        });
+    }
+
+    // Menu Gauche (3 traits)
+    const menuG = document.querySelector('.menu-2026-left');
+    if (menuG) {
+        menuG.addEventListener('click', () => {
+            alert("Menu de navigation (Chapitres)");
+        });
+    }
+
+    // Menu Droite (3 points)
+    const menuD = document.querySelector('.menu-2026-right');
+    if (menuD) {
+        menuD.addEventListener('click', () => {
+            // Optionnel : Lier ce clic au déclenchement de l'admin secret
+            console.log("Options de profil cliquées");
+        });
+    }
+
+    console.log("✅ Système et Interface prêts.");
 });
