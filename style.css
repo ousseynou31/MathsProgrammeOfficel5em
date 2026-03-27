@@ -671,3 +671,23 @@ body {
     cursor: pointer;
     flex-shrink: 0;         /* Empêche les cercles de s'écraser */
 }
+/* --- AJOUTS CSS POUR LA GRILLE DE BOUTONS 2026 --- */
+
+/* On force la grille à être centrée sur mobile */
+@media (max-width: 768px) {
+    .boutons-secondaires-wrapper {
+        grid-template-columns: 1fr !important; /* Passe sur une colonne sur petit écran */
+        padding: 0 20px !important;
+    }
+}
+
+/* Style des nouveaux boutons (un peu plus petits pour l'équilibre) */
+.modern-btn-3d.second-btn {
+    border: 1px solid rgba(0, 242, 254, 0.2); /* Bordure néon plus discrète */
+    background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+}
+
+.btn-text-glow.secondary-text {
+    font-size: 0.75rem; /* Texte un peu plus petit */
+    letter-spacing: 2px;
+}
