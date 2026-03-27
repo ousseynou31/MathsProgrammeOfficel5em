@@ -634,3 +634,40 @@ body {
     font-size: 0.85rem;
     text-shadow: 0 0 10px rgba(255,255,255,0.2);
 }
+/* --- ALIGNEMENT PARFAIT DE LA BARRE HAUTE --- */
+
+.top-bar {
+    display: flex;
+    justify-content: space-between; /* Espace entre Gauche - Titre - Droite */
+    align-items: center;     /* Aligne verticalement au centre */
+    padding: 15px 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.2); /* Léger fond pour détacher du reste */
+    backdrop-filter: blur(10px);
+}
+
+/* On ajuste le titre pour qu'il ne prenne pas toute la largeur */
+.titre-pilule-premium {
+    flex: 1;                /* Prend l'espace central */
+    text-align: center;
+    margin: 0 15px;         /* Espace avec les icônes sur les côtés */
+    font-size: 0.7rem;      /* Ajusté pour tenir sur une ligne mobile */
+    white-space: nowrap;    /* Empêche le titre de passer à la ligne */
+}
+
+/* Style commun pour les boutons de menu (G et D) */
+.menu-2026-left, .menu-2026-right {
+    width: 42px;            /* Un peu plus petit pour l'alignement */
+    height: 42px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;         /* Empêche les cercles de s'écraser */
+}
