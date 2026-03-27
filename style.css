@@ -542,3 +542,27 @@ button.pay-btn:has(span:contains("🔓")),
 .btn-maintenance-strict:active {
     transform: translateY(1px);
 }
+/* --- Variables de couleurs 2026 --- */
+:root {
+    --neon-blue: #00f2fe;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --space-gradient: radial-gradient(circle at center, #1a2a4a 0%, #0d1117 100%);
+}
+
+body {
+    height: 100vh;
+    background: var(--space-gradient);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color: white;
+}
+
+/* Styles des menus Burger et Kebab (insérer ici le code précédent) */
+.menu-trigger { ... }
+.burger-lines span { ... }
+.vertical-dots span { ... }
+
+/* Style du bouton Cristal 3D (insérer ici le code précédent) */
+.modern-btn { ... }
