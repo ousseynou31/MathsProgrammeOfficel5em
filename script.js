@@ -1062,6 +1062,9 @@ async function loadUsers(filtre = 'TOUT') {
             const data = val.infos_client;
             const tel = u.key;
             const cat = (data.categorie || "C").trim().toUpperCase();
+            
+            // --- RÉCUPÉRATION DU JOKER (0 ou 1) ---
+            const joker = data.recup_effectuee || 0; 
 
             // 1. FILTRAGE
             if (filtre !== 'TOUT' && cat !== filtre) return;
@@ -1070,12 +1073,10 @@ async function loadUsers(filtre = 'TOUT') {
             const jours = calculerJours(data.date_inscription);
             const prix = parseInt(tarifs[cat]) || 0;
 
-            // --- NOUVELLE LOGIQUE DE STATUT ---
             const estBanniDefinitif = data.etat_acces === "banni" && data.statut === "suspendu"; 
             const estSuspenduTemp = data.statut === "suspendu" && data.etat_acces !== "banni";
             const estExpire = jours >= 35;
 
-            // Mise à jour du dashboard (on ne compte que les non-bannis dans l'argent attendu)
             if (!estBanniDefinitif) {
                 nbAttendu++;
                 totalArgent += prix;
@@ -1083,21 +1084,20 @@ async function loadUsers(filtre = 'TOUT') {
             }
 
             // --- DESIGN DYNAMIQUE ---
-            let borderCol = "#2ecc71"; // Vert par défaut
-            let bgCard = "#111";       // Noir par défaut
+            let borderCol = "#2ecc71";
+            let bgCard = "#111";       
             let labelStatut = "";
 
             if (estBanniDefinitif) {
-                borderCol = "#c0392b"; // Rouge sang
-                bgCard = "#1a0505";    // Reflet rouge sombre
+                borderCol = "#c0392b"; 
+                bgCard = "#1a0505";    
                 labelStatut = '<span style="color:#c0392b; font-size:0.65rem; font-weight:900;">🚫 BANNI (DÉFINITIF)</span>';
             } else if (estSuspenduTemp || estExpire) {
-                borderCol = "#f39c12"; // Orange
-                bgCard = "#1a1405";    // Reflet orange/brun
+                borderCol = "#f39c12"; 
+                bgCard = "#1a1405";    
                 labelStatut = `<span style="color:#f39c12; font-size:0.65rem; font-weight:900;">⚠️ ${estExpire ? 'ABONNEMENT EXPIRÉ' : 'SUSPENDU'}</span>`;
             }
 
-            // Couleur du cercle des jours
             let circleCol = estExpire ? "#e74c3c" : (jours >= 26 ? "#f1c40f" : "#2ecc71");
 
             // 3. GÉNÉRATION DU HTML
@@ -1114,6 +1114,13 @@ async function loadUsers(filtre = 'TOUT') {
                             </div>
                             <div style="font-size:0.75rem; color:gray; margin-top:3px;">📞 ${tel}</div>
                             <div style="margin-top:5px;">${labelStatut}</div>
+                        </div>
+
+                        <div style="margin: 0 10px; text-align:center; min-width:50px;">
+                            <div style="font-size:0.8rem; font-weight:bold; color:${joker === 0 ? '#2ecc71' : '#e74c3c'};">
+                                ${joker === 0 ? '🛡️ Libre' : '🔓 Grillé'}
+                            </div>
+                            <small style="font-size:0.55rem; color:gray; display:block;">JOKER: ${joker}</small>
                         </div>
 
                         <div style="margin: 0 15px; text-align:center;">
@@ -1143,11 +1150,10 @@ async function loadUsers(filtre = 'TOUT') {
                 </div>`;
         });
 
-        // 4. MISE À JOUR DU DASHBOARD
+        // Mise à jour Dashboard
         const eltNb = document.getElementById('stat-attendu');
         const eltPrix = document.getElementById('stat-estime');
         const eltRetard = document.getElementById('stat-retard');
-
         if (eltNb) eltNb.innerText = nbAttendu;
         if (eltPrix) eltPrix.innerText = totalArgent.toLocaleString() + " FG";
         if (eltRetard) eltRetard.innerText = nbRetards;
@@ -1157,7 +1163,6 @@ async function loadUsers(filtre = 'TOUT') {
         list.innerHTML = `<p style="color:#e74c3c; text-align:center; padding:20px;">Erreur de connexion</p>`;
     }
 }
-
 // Cette fonction doit être appelée dès que l'application démarre
 function activerSignalPresence() {
     const tel = localStorage.getItem('user_tel_id');
