@@ -1062,37 +1062,41 @@ async function loadUsers(filtre = 'TOUT') {
             const data = val.infos_client;
             const tel = u.key;
             const cat = (data.categorie || "C").trim().toUpperCase();
+
+            // --- 1. GESTION DU FILTRE ---
+            // Si le filtre n'est pas "TOUT" et qu'il ne correspond pas à la catégorie, on passe au suivant
+            if (filtre !== 'TOUT' && cat !== filtre) return;
+
             const joker = data.recup_effectuee || 0; 
             const jours = calculerJours(data.date_inscription);
             const prix = parseInt(tarifs[cat]) || 0;
 
-            // --- NOUVELLE LOGIQUE DE DISTINCTION ---
-            // Un banni reste banni peu importe ses jours ou son statut de paiement
+            // --- 2. LOGIQUE DE STATUT ---
             const estBanniDefinitif = data.etat_acces === "banni"; 
             const estSuspenduOuExpire = (data.statut === "suspendu" || jours >= 35) && !estBanniDefinitif;
 
-            // Le dashboard ne compte que les gens "récupérables" (non-bannis)
+            // Le dashboard ne compte que les gens non-bannis affichés par le filtre
             if (!estBanniDefinitif) {
                 nbAttendu++;
                 totalArgent += prix;
                 if (jours >= 35) nbRetards++;
             }
 
-            // --- DESIGN DYNAMIQUE (JAUNE 🔒 vs ROUGE 💀) ---
-            let borderCol = "#2ecc71"; // Vert par défaut
+            // --- 3. DESIGN DYNAMIQUE ---
+            let borderCol = "#2ecc71"; // Vert
             let bgCard = "#111";       
             let labelStatut = "";
             let btnBanIcon = "🚫";
             let btnBanCol = "#333";
 
             if (estBanniDefinitif) {
-                borderCol = "#e74c3c"; // ROUGE
+                borderCol = "#e74c3c"; // Rouge
                 bgCard = "#1a0505";    
                 labelStatut = '<span style="color:#e74c3c; font-size:0.7rem; font-weight:900;">💀 COMPTE BANNI</span>';
                 btnBanIcon = "💀";
                 btnBanCol = "#e74c3c";
             } else if (estSuspenduOuExpire) {
-                borderCol = "#f1c40f"; // JAUNE
+                borderCol = "#f1c40f"; // Jaune
                 bgCard = "#1a1805";    
                 labelStatut = `<span style="color:#f1c40f; font-size:0.7rem; font-weight:900;">🔒 ${jours >= 35 ? 'ABONNEMENT EXPIRÉ' : 'SUSPENDU'}</span>`;
                 btnBanIcon = "🔓";
@@ -1101,10 +1105,9 @@ async function loadUsers(filtre = 'TOUT') {
 
             let circleCol = (jours >= 35) ? "#e74c3c" : (jours >= 26 ? "#f1c40f" : "#2ecc71");
 
-            // --- GÉNÉRATION DU HTML ---
+            // --- 4. GÉNÉRATION DU HTML ---
             list.innerHTML += `
                 <div class="user-card" style="background:${bgCard}; margin-bottom:12px; padding:15px; border-radius:12px; border-left:7px solid ${borderCol}; border-bottom:1px solid #333; transition: 0.3s;">
-                    
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         
                         <div style="flex:1;">
@@ -1133,7 +1136,6 @@ async function loadUsers(filtre = 'TOUT') {
 
                         <div style="display:flex; gap:6px; align-items:center;">
                             <button onclick="window.open('https://wa.me/${tel}')" title="WhatsApp" style="background:#25D366; border:none; border-radius:8px; width:34px; height:34px; cursor:pointer; font-size:1.1rem;">🟢</button>
-                            
                             <button onclick="validerPaiementFinal('${tel}')" title="Payer" style="background:#2ecc71; border:none; border-radius:8px; width:34px; height:34px; cursor:pointer; font-size:1.1rem;">💰</button>
                             
                             <select onchange="changerCategorie('${tel}', this.value)" style="background:#222; color:white; border:1px solid #444; border-radius:6px; padding:6px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
@@ -1152,7 +1154,7 @@ async function loadUsers(filtre = 'TOUT') {
                 </div>`;
         });
 
-        // Mise à jour Dashboard
+        // Mise à jour finale du Dashboard
         const eltNb = document.getElementById('stat-attendu');
         const eltPrix = document.getElementById('stat-estime');
         const eltRetard = document.getElementById('stat-retard');
@@ -1165,6 +1167,7 @@ async function loadUsers(filtre = 'TOUT') {
         list.innerHTML = `<p style="color:#e74c3c; text-align:center; padding:20px;">Erreur de connexion</p>`;
     }
 }
+
 // Cette fonction doit être appelée dès que l'application démarre
 function activerSignalPresence() {
     const tel = localStorage.getItem('user_tel_id');
@@ -1782,6 +1785,61 @@ function deconnecterApp() {
         window.location.reload();
     }
 }
+
+
+// Cette variable permettra de garder les données en mémoire pour le filtrage rapide
+let snapshotClientsActuel = null;
+
+/**
+ * ACTIVE LA SURVEILLANCE TEMPS RÉEL
+ * À appeler une seule fois au chargement de la page admin
+ */
+function activerSurveillanceAdmin() {
+    console.log("🚀 Initialisation de la surveillance en direct...");
+
+    // 1. On récupère d'abord les tarifs pour les calculs d'argent
+    database.ref('reglages/tarifs').once('value').then(tarifsSnap => {
+        window.mesTarifs = tarifsSnap.val(); // On les stocke globalement
+
+        // 2. On écoute la branche 'clients' en continu (.on)
+        database.ref('clients').on('value', (snapshot) => {
+            console.log("⚡ Mise à jour détectée : Un client a changé ou s'est inscrit !");
+            
+            // On sauvegarde le snapshot pour le réutiliser si on change de filtre
+            snapshotClientsActuel = snapshot;
+
+            // On récupère le filtre actuellement sélectionné dans votre menu <select>
+            // Assurez-vous que votre menu de filtre a l'id "filtre-categorie"
+            const selectElt = document.getElementById('filtre-categorie');
+            const filtreChoisi = selectElt ? selectElt.value : 'TOUT';
+
+            // On appelle votre fonction de l'étape 1 pour dessiner la liste
+            loadUsers(filtreChoisi); 
+        });
+    });
+}
+
+/**
+ * CETTE FONCTION EST POUR VOS FILTRES (A, B, C)
+ * À appeler dans le 'onchange' de votre menu de sélection
+ */
+function rafraichirListeParFiltre() {
+    const filtre = document.getElementById('filtre-categorie').value;
+    
+    // Si on a déjà des données en mémoire, on redessine sans interroger le réseau
+    if (snapshotClientsActuel) {
+        loadUsers(filtre);
+    } else {
+        // Sinon on force un rechargement classique
+        loadUsers(filtre);
+    }
+}
+
+// --- LANCEMENT AU DÉMARRAGE ---
+// Remplacez votre ancien appel "loadUsers()" par celui-ci
+document.addEventListener("DOMContentLoaded", () => {
+    activerSurveillanceAdmin();
+});
 // =========================================================
 //  LANCEMENT UNIQUE ET SÉCURISÉ DU SYSTÈME DIOUF 2026
 // =========================================================
