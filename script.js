@@ -1137,12 +1137,12 @@ async function loadUsers(filtre = 'TOUT') {
                         <div style="display:flex; gap:6px; align-items:center;">
                             <button onclick="window.open('https://wa.me/${tel}')" title="WhatsApp" style="background:#25D366; border:none; border-radius:8px; width:34px; height:34px; cursor:pointer; font-size:1.1rem;">🟢</button>
                             <button onclick="validerPaiementFinal('${tel}')" title="Payer" style="background:#2ecc71; border:none; border-radius:8px; width:34px; height:34px; cursor:pointer; font-size:1.1rem;">💰</button>
-                            
-                            <select onchange="changerCategorie('${tel}', this.value)" style="background:#222; color:white; border:1px solid #444; border-radius:6px; padding:6px; font-size:0.75rem; font-weight:bold; cursor:pointer;">
-                                <option value="A" ${cat==='A'?'selected':''}>A</option>
-                                <option value="B" ${cat==='B'?'selected':''}>B</option>
-                                <option value="C" ${cat==='C'?'selected':''}>C</option>
-                            </select>
+                          <select id="filtre-categorie" onchange="rafraichirListeParFiltre()" style="...">
+    <option value="TOUT">Tous les élèves</option>
+    <option value="A">Catégorie A</option>
+    <option value="B">Catégorie B</option>
+    <option value="C">Catégorie C</option>
+</select>
 
                             <button onclick="toggleBan('${tel}', '${filtre}')" title="Bloquer/Débloquer" style="background:${btnBanCol}; border:none; border-radius:8px; width:34px; height:34px; cursor:pointer; font-size:1.1rem; transition:0.3s;">
                                 ${btnBanIcon}
