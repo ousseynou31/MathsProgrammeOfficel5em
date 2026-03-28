@@ -2177,8 +2177,9 @@ window.addEventListener('load', async () => {
             if (overlay) {
                 overlay.style.display = "flex";
                 overlay.style.flexDirection = "column";
-                setTimeout(resize, 150);
-                parler("Module de géométrie activé");
+                // On force le redimensionnement du canvas après l'affichage
+                setTimeout(() => { if (typeof resize === "function") resize(); }, 150);
+                if (typeof parler === "function") parler("Module de géométrie activé");
             }
         };
     }
@@ -2194,7 +2195,7 @@ window.addEventListener('load', async () => {
         if (el) el.onclick = () => alert(bouton.msg);
     });
 
-    // 7. MENU SOMMAIRE
+    // 7. MENU SOMMAIRE (Configuration du clic)
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
         menuG.onclick = () => {
@@ -2216,14 +2217,20 @@ window.addEventListener('load', async () => {
     const themeSauve = localStorage.getItem('theme_prefere');
     if (themeSauve && typeof changerTheme === "function") changerTheme(themeSauve);
 
-    // 10. ÉCOUTEUR DU CANVAS (Intégré au cycle de vie)
+    // 10. ÉCOUTEUR DU CANVAS (Calcul des coordonnées)
     document.addEventListener('pointerdown', (e) => {
         if (e.target.id !== 'geoCanvas') return;
-        const r = canvas.getBoundingClientRect();
+        const r = e.target.getBoundingClientRect(); // Utilisation de e.target pour plus de sécurité
         if (typeof handleInput === "function") {
             handleInput(e.clientX - r.left, e.clientY - r.top);
         }
     });
+
+    // 11. ACTIVATION DU SOMMAIRE (L'étape cruciale pour l'affichage)
+    if (typeof chargerSommaire === "function") {
+        console.log("📚 Remplissage automatique du sommaire...");
+        chargerSommaire();
+    }
 
     console.log("✅ Système Maths 5ème prêt.");
 }); 
