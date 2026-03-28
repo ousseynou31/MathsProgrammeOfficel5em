@@ -818,3 +818,41 @@ body {
     padding-top: 60px;
     border-left: 1px solid #333;
 }
+body, .btn-modern-2026 {
+    transition: background 0.4s ease, color 0.4s ease;
+}
+#side-menu a {
+    white-space: nowrap; /* Empêche le texte de revenir à la ligne pendant l'ouverture */
+}
+/* --- FLUIDITÉ GÉNÉRALE (SYSTÈME 2026) --- */
+
+/* Applique une transition douce sur tout le corps de page */
+body {
+    transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* Fluidité pour les menus latéraux (Gauche et Droite) */
+#side-menu, #right-menu {
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Ouverture élégante */
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* Fluidité pour les boutons au survol et au changement de couleur */
+.btn-modern-2026 {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Effet de léger zoom quand on clique sur un bouton */
+.btn-modern-2026:active {
+    transform: scale(0.95);
+}
+
+/* Animation douce pour les pastilles de couleur */
+[onclick^="changerCouleurTexte"] {
+    transition: transform 0.2s ease, border 0.2s ease;
+}
+
+[onclick^="changerCouleurTexte"]:hover {
+    transform: scale(1.1); /* La couleur grossit un peu quand on la survole */
+}
