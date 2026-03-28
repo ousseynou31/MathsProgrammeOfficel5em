@@ -758,3 +758,45 @@ body {
     from { opacity: 0; transform: translateY(40px); }
     to { opacity: 1; transform: translateY(0); }
 }
+/* LE MENU LATÉRAL */
+.side-nav {
+    height: 100%;
+    width: 0; /* Caché par défaut */
+    position: fixed;
+    z-index: 10000; /* Passe au-dessus de tout */
+    top: 0;
+    left: 0;
+    background-color: #0f172a; /* Bleu très sombre pro */
+    overflow-x: hidden;
+    transition: 0.4s; /* Animation de glissement */
+    padding-top: 20px;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+}
+
+.side-nav-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* L'OVERLAY DE TRAVAIL (LA CLASSE) */
+.overlay-2026 {
+    position: fixed;
+    display: none; /* Invisible au départ */
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: #000;
+    z-index: 10001;
+    overflow-y: auto;
+}
+
+.overlay-content {
+    width: 100%;
+    min-height: 100%;
+    padding: 20px;
+    color: white;
+}
