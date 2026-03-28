@@ -4,6 +4,11 @@ window.adminEnCours = window.adminEnCours || false;
 window.minuteurAdmin = window.minuteurAdmin || null;
 console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
 
+// --- VARIABLES GLOBALES GÉO-MAGIE ---
+let canvas, ctx;
+let mode = 'point', points = [], shapes = [], selected = [], history = [], redoList = [];
+let voiceEnabled = true;
+
 // 1. CONFIGURATION FIREBASE 
 const firebaseConfig = {
     databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
@@ -1979,12 +1984,17 @@ function closeWorkOverlay() {
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
-// --- VARIABLES GLOBALES GÉO-MAGIE ---
-let canvas, ctx;
-let mode = 'point', points = [], shapes = [], selected = [], history = [], redoList = [];
-let voiceEnabled = true;
+// =========================================================
+//  FONCTIONS DE SERVICES (Vocal, Menus, Fermeture)
+// =========================================================
+function parler(message) {
+    if (!voiceEnabled) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = 'fr-FR';
+    window.speechSynthesis.speak(utterance);
+}
 
-// --- FONCTION DE FERMETURE ---
 function closeWorkOverlay() {
     const overlay = document.getElementById("work-overlay");
     if (overlay) {
@@ -1993,15 +2003,16 @@ function closeWorkOverlay() {
     }
 }
 
-// --- FONCTIONS DE DESSIN (MOTEUR DIOUF) ---
 function resize() {
     canvas = document.getElementById('geoCanvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-    draw();
+    const area = canvas.parentElement;
+    canvas.width = area.clientWidth;
+    canvas.height = area.clientHeight;
+    if (typeof draw === "function") draw(); 
 }
+
 
 
 
@@ -2018,7 +2029,7 @@ function resize() {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 // =========================================================
-//  LANCEMENT UNIQUE ET SÉCURISÉ DU SYSTÈME DIOUF 2026
+// 3. LANCEMENT UNIQUE ET SÉCURISÉ DU SYSTÈME DIOUF 2026
 // =========================================================
 window.addEventListener('load', async () => {
     console.log("🚀 Initialisation du moteur Maths 5em...");
@@ -2034,34 +2045,27 @@ window.addEventListener('load', async () => {
         initAdminTrigger();
     }
 
-    // 3. SYNCHRONISATION DES DONNÉES (Tarifs)
+    // 3. SYNCHRONISATION DES DONNÉES
     if (typeof chargerTarifs === "function") {
         try {
-            console.log("📊 Synchronisation des tarifs...");
             await chargerTarifs();
-        } catch(e) { console.warn("Tarifs chargés en mode local."); }
+        } catch(e) { console.warn("Tarifs en mode local."); }
     }
 
-    // 4. LE TUNNEL DE SÉCURITÉ (Licence Diouf)
+    // 4. LE TUNNEL DE SÉCURITÉ
     if (typeof launchApp === "function") {
-        console.log("🔓 Vérification de la licence...");
         await launchApp();
     }
 
-    // 5. ACTIVATION DES SERVICES "BACKGROUND"
+    // 5. SERVICES BACKGROUND
     const telLocal = localStorage.getItem('user_tel_id');
     const estActif = localStorage.getItem('v32_active') === 'true';
-
     if (telLocal && estActif) {
         if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
         if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
-        if (typeof surveillerConnexion === "function") surveillerConnexion();
     }
 
-    // 6. INITIALISATION INTERFACE MATHS 5ème
-    console.log("✨ Activation de l'interface dynamique...");
-    
-    // --- GESTION SPÉCIFIQUE DU BOUTON GÉOMÉTRIE ---
+    // 6. INTERFACE DYNAMIQUE & GÉOMÉTRIE
     const btnGeom = document.getElementById('btn-geom');
     if (btnGeom) {
         btnGeom.onclick = () => {
@@ -2069,26 +2073,24 @@ window.addEventListener('load', async () => {
             if (overlay) {
                 overlay.style.display = "flex";
                 overlay.style.flexDirection = "column";
-                // Ajustement du canvas de M. DIOUF
-                setTimeout(() => { if (typeof resize === "function") resize(); }, 150);
-                if (typeof parler === "function") parler("Module de géométrie activé");
+                setTimeout(resize, 150);
+                parler("Module de géométrie activé");
             }
         };
     }
 
-    // --- AUTRES BOUTONS ---
     const configAutres = [
-        { id: 'btn-devoirs', msg: "Chargement de la liste de vos devoirs..." },
-        { id: 'btn-parents', msg: "Accès sécurisé à l'Espace Parents (Code requis)..." },
-        { id: 'btn-apropos', msg: "Système Diouf Maths 5em - Version 2026.1" }
+        { id: 'btn-devoirs', msg: "Chargement de vos devoirs..." },
+        { id: 'btn-parents', msg: "Accès Espace Parents sécurisé..." },
+        { id: 'btn-apropos', msg: "Système Diouf Maths 5em - V 2026.1" }
     ];
 
     configAutres.forEach(bouton => {
         const el = document.getElementById(bouton.id);
-        if (el) { el.onclick = () => alert(bouton.msg); }
+        if (el) el.onclick = () => alert(bouton.msg);
     });
 
-    // 7. GESTION DU MENU SOMMAIRE (Ouverture GAUCHE)
+    // 7. MENU SOMMAIRE
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
         menuG.onclick = () => {
@@ -2097,37 +2099,28 @@ window.addEventListener('load', async () => {
         };
     }
 
-    // 8. GESTION DU MENU RÉGLAGES (Ouverture DROITE)
+    // 8. MENU RÉGLAGES
     const menuD = document.querySelector('.menu-2026-right');
     if (menuD) {
-        menuD.onclick = () => {
-            if (typeof openRightMenu === "function") openRightMenu();
-        };
+        menuD.onclick = () => { if (typeof openRightMenu === "function") openRightMenu(); };
     }
 
-    // 9. REMPLISSAGE DU SOMMAIRE
-    if (typeof chargerSommaire === "function") {
-        chargerSommaire();
-    }
-
-    // --- COULEURS ET THÈMES ---
+    // 9. COULEURS ET THÈMES
     const texteSauve = localStorage.getItem('couleur_texte_boutons');
-    if (texteSauve && typeof changerCouleurTexte === "function") {
-        changerCouleurTexte(texteSauve);
-    }
+    if (texteSauve && typeof changerCouleurTexte === "function") changerCouleurTexte(texteSauve);
     
-    // 10. APPLIQUER LE THÈME SAUVEGARDÉ
     const themeSauve = localStorage.getItem('theme_prefere');
-    if (themeSauve && typeof changerTheme === "function") {
-        changerTheme(themeSauve);
-    }
-// Gestion des clics sur le canvas
-document.addEventListener('pointerdown', (e) => {
-    if (e.target.id !== 'geoCanvas') return;
-    const r = canvas.getBoundingClientRect();
-    handleInput(e.clientX - r.left, e.clientY - r.top);
+    if (themeSauve && typeof changerTheme === "function") changerTheme(themeSauve);
 
+    // 10. ÉCOUTEUR DU CANVAS (Intégré au cycle de vie)
+    document.addEventListener('pointerdown', (e) => {
+        if (e.target.id !== 'geoCanvas') return;
+        const r = canvas.getBoundingClientRect();
+        if (typeof handleInput === "function") {
+            handleInput(e.clientX - r.left, e.clientY - r.top);
+        }
+    });
 
-    
     console.log("✅ Système Maths 5ème prêt.");
-});
+}); 
+// FIN DU BLOC LOAD
