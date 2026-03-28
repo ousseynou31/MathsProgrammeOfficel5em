@@ -1869,35 +1869,48 @@ window.addEventListener('load', async () => {
     }
 
     // =========================================================
-    // 6. NOUVEAU : INITIALISATION DE L'INTERFACE 2026
+    // 6. NOUVEAU : INITIALISATION DE L'INTERFACE 2026 (3 BOUTONS)
     // =========================================================
     console.log("✨ Activation de l'interface visuelle 2026...");
     
-    // Bouton Central 3D
+    // BOUTON 1 : Découvrir le Programme (Central)
     const btnDecouvrir = document.getElementById('btn-decouvrir-5e');
     if (btnDecouvrir) {
         btnDecouvrir.addEventListener('click', () => {
-            // Ici, vous mettrez votre fonction pour ouvrir les cours
-            alert("Ouverture du programme de 5ème...");
+            alert("Accès au programme officiel de 5ème...");
         });
     }
 
-    // Menu Gauche (3 traits)
+    // BOUTON 2 : Construction Géométrique (Nouveau)
+    const btnGeom = document.getElementById('btn-construction-geom');
+    if (btnGeom) {
+        btnGeom.addEventListener('click', () => {
+            alert("Ouverture du module : Construction Géométrique...");
+        });
+    }
+
+    // BOUTON 3 : Mes Devoirs (Nouveau)
+    const btnDevoirs = document.getElementById('btn-mes-devoirs');
+    if (btnDevoirs) {
+        btnDevoirs.addEventListener('click', () => {
+            alert("Chargement de vos devoirs et exercices...");
+        });
+    }
+
+    // GESTION DES MENUS LATÉRAUX (Traits et Points)
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
         menuG.addEventListener('click', () => {
-            alert("Menu de navigation (Chapitres)");
+            alert("Ouverture du sommaire des chapitres");
         });
     }
 
-    // Menu Droite (3 points)
     const menuD = document.querySelector('.menu-2026-right');
     if (menuD) {
         menuD.addEventListener('click', () => {
-            // Optionnel : Lier ce clic au déclenchement de l'admin secret
-            console.log("Options de profil cliquées");
+            console.log("Options utilisateur");
         });
     }
 
-    console.log("✅ Système et Interface prêts.");
+    console.log("✅ Système et Interface 2026 prêts.");
 });
