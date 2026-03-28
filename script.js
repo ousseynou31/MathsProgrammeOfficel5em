@@ -1936,6 +1936,21 @@ function openRightMenu() {
     document.getElementById("right-menu").style.width = "280px";
 }
 
+// --- CHANGEMENT DE LA COULEUR DU TEXTE DES BOUTONS ---
+
+function changerCouleurTexte(couleur) {
+    // On récupère tous les boutons de la page d'accueil
+    const boutons = document.querySelectorAll('.btn-modern-2026');
+    
+    boutons.forEach(btn => {
+        btn.style.color = couleur; // Applique la couleur choisie
+    });
+
+    // On sauvegarde ce choix pour le prochain démarrage
+    localStorage.setItem('couleur_texte_boutons', couleur);
+    console.log("🎨 Couleur du texte mise à jour : " + couleur);
+}
+
 function closeRightMenu() {
     document.getElementById("right-menu").style.width = "0";
 }
@@ -2038,6 +2053,10 @@ window.addEventListener('load', async () => {
         chargerSommaire();
     }
 
+    // Appliquer la couleur de texte sauvegardée
+    const texteSauve = localStorage.getItem('couleur_texte_boutons');
+    if (texteSauve) changerCouleurTexte(texteSauve);
+    
     // 10. APPLIQUER LE THÈME SAUVEGARDÉ AU DÉMARRAGE
     const themeSauve = localStorage.getItem('theme_prefere');
     if (themeSauve && typeof changerTheme === "function") {
