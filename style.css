@@ -985,3 +985,24 @@ body {
     cursor: pointer;
     background: none;
 }
+.home-btn { display: none !important; }
+
+/* Empêcher le bouton fermer de prendre toute la largeur */
+.home-btn {
+    background-color: #ff7675 !important; /* Rouge pour le repérer */
+    color: white !important;
+    min-width: 60px !important; /* Taille fixe */
+    width: auto !important;     /* Ne doit PAS faire 100% */
+    flex: 0 1 auto;             /* Ne s'étire pas */
+}
+
+/* On s'assure que le conteneur aligne tout le monde sur une ligne */
+.toolbar-geo {
+    display: flex !important;
+    flex-direction: row !important; /* Force l'alignement horizontal */
+    flex-wrap: nowrap;              /* Empêche de passer à la ligne si l'écran est petit */
+    overflow-x: auto;               /* Permet de défiler horizontalement sur petit téléphone */
+    justify-content: space-around;  /* Répartit les boutons proprement */
+    align-items: center;
+    width: 100%;
+}
