@@ -1770,14 +1770,15 @@ async function validerPaiementFinal(id) {
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // BASE DE DONNÉES DU PROGRAMME 5ème°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // 1. Tes données (Parfait pour la gestion)
+// 1. Tes données (Tu peux ajouter du HTML dans 'rappel')
 const programmeMaths = [
-    { id: 1, titre: "Nombres décimaux et opérations", rappel: "Cours sur les additions...", exo: "Quiz décimaux" },
-    { id: 2, titre: "Symétrie centrale", rappel: "Propriétés de la symétrie...", exo: "Quiz symétrie" },
-    { id: 3, titre: "Fractions : Comparaison et somme", rappel: "Règles pour les fractions...", exo: "Quiz fractions" },
-    { id: 4, titre: "Angles et parallélisme", rappel: "Angles alternes-internes...", exo: "Quiz angles" }
+    { id: 1, titre: "Nombres décimaux et opérations", rappel: "Les nombres décimaux s'écrivent avec une virgule. Exemple : 12,5 + 3,7 = 16,2.", exo: "Quiz décimaux" },
+    { id: 2, titre: "Symétrie centrale", rappel: "Faire le symétrique d'un point O, c'est faire un demi-tour autour de ce point.", exo: "Quiz symétrie" },
+    { id: 3, titre: "Fractions : Comparaison et somme", rappel: "Pour additionner deux fractions de même dénominateur, on additionne les numérateurs.", exo: "Quiz fractions" },
+    { id: 4, titre: "Angles et parallélisme", rappel: "Si deux droites sont parallèles, alors les angles alternes-internes sont égaux.", exo: "Quiz angles" }
 ];
 
-// 2. Ta fonction de chargement (On ajoute juste un peu de style aux <li>)
+// 2. Fonction de chargement du sommaire (Menu latéral)
 function chargerSommaire() {
     const listContainer = document.getElementById("chapters-list");
     if (!listContainer) return;
@@ -1785,11 +1786,11 @@ function chargerSommaire() {
     listContainer.innerHTML = ""; 
     programmeMaths.forEach(chapitre => {
         const li = document.createElement("li");
-        li.style = "padding: 15px; border-bottom: 1px solid #222; cursor: pointer; color: white; transition: 0.3s;";
-        li.innerHTML = `<strong style="color:var(--p);">${chapitre.id}.</strong> ${chapitre.titre}`;
+        li.style = "padding: 15px; border-bottom: 1px solid #222; cursor: pointer; color: white; transition: 0.3s; list-style:none;";
+        li.innerHTML = `<strong style="color:#ffd700;">${chapitre.id}.</strong> ${chapitre.titre}`;
+        
         li.onclick = () => ouvrirChapitre(chapitre.id);
         
-        // Petit effet au survol
         li.onmouseover = () => li.style.background = "rgba(255,215,0,0.1)";
         li.onmouseout = () => li.style.background = "transparent";
         
@@ -1797,7 +1798,7 @@ function chargerSommaire() {
     });
 }
 
-// 3. Ta fonction d'ouverture (On utilise 'flex' pour le centrage)
+// 3. Fonction d'ouverture d'un chapitre (Menu de choix)
 function ouvrirChapitre(id) {
     const chapitre = programmeMaths.find(c => c.id === id);
     const overlay = document.getElementById("work-overlay");
@@ -1805,41 +1806,45 @@ function ouvrirChapitre(id) {
 
     if (chapitre && overlay && body) {
         closeMenu(); 
-        overlay.style.display = "flex"; // 'flex' permet de mieux centrer le contenu
+        overlay.style.display = "flex"; 
         
+        // CORRECTION ICI : On lie les boutons aux fonctions afficherRappel et lancerExercice
         body.innerHTML = `
             <h2 style="color:#ffd700; margin-bottom:30px; text-align:center;">${chapitre.titre}</h2>
             <div style="display:flex; flex-direction:column; gap:20px; max-width:400px; margin: 0 auto;">
-                <button class="btn-modern-2026" onclick="alert('Cours à venir...')">📖 RAPPELS DU CHAPITRE</button>
-                <button class="btn-modern-2026 primary-glow" onclick="alert('Quiz à venir...')">✍️ S'EXERCER</button>
+                <button class="btn-modern-2026" onclick="afficherRappel(${id})">📖 RAPPELS DU CHAPITRE</button>
+                <button class="btn-modern-2026 primary-glow" onclick="lancerExercice(${id})">✍️ S'EXERCER</button>
             </div>
         `;
     }
 }
 
+// 4. Fonction d'affichage du cours
 function afficherRappel(id) {
     const chapitre = programmeMaths.find(c => c.id === id);
     const body = document.getElementById("overlay-body");
     
     body.innerHTML = `
-        <button onclick="ouvrirChapitre(${id})" style="background:none; border:none; color:gray; cursor:pointer;">⬅ Retour</button>
-        <h2 style="color:#ffd700;">📖 Rappel : ${chapitre.titre}</h2>
-        <div style="background:#1a1a1a; padding:15px; border-radius:10px; line-height:1.6;">
+        <button onclick="ouvrirChapitre(${id})" style="background:#333; border:none; color:white; padding:8px 15px; border-radius:5px; cursor:pointer; margin-bottom:15px;">⬅ Retour</button>
+        <h2 style="color:#ffd700; margin-bottom:15px;">📖 Rappel : ${chapitre.titre}</h2>
+        <div style="background:#1a1a1a; padding:20px; border-radius:12px; line-height:1.6; border: 1px solid #333; color:#eee;">
             ${chapitre.rappel}
         </div>
     `;
 }
 
+// 5. Fonction de lancement des exercices
 function lancerExercice(id) {
     const chapitre = programmeMaths.find(c => c.id === id);
     const body = document.getElementById("overlay-body");
     
     body.innerHTML = `
-        <button onclick="ouvrirChapitre(${id})" style="background:none; border:none; color:gray; cursor:pointer;">⬅ Retour</button>
-        <h2 style="color:#ffd700;">✍️ Exercice : ${chapitre.exo}</h2>
-        <div style="text-align:center; padding:20px;">
-            <p>Le quiz pour <strong>${chapitre.titre}</strong> va démarrer...</p>
-            </div>
+        <button onclick="ouvrirChapitre(${id})" style="background:#333; border:none; color:white; padding:8px 15px; border-radius:5px; cursor:pointer; margin-bottom:15px;">⬅ Retour</button>
+        <h2 style="color:#ffd700; margin-bottom:15px;">✍️ Exercice : ${chapitre.exo}</h2>
+        <div style="text-align:center; padding:30px; background:#111; border-radius:12px;">
+            <p style="font-size:1.1rem;">Prêt pour le quiz sur <strong>${chapitre.titre}</strong> ?</p>
+            <button class="btn-modern-2026 primary-glow" style="margin-top:20px; width:auto; padding:12px 40px;">COMMENCER</button>
+        </div>
     `;
 }
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -1950,11 +1955,15 @@ window.addEventListener('load', async () => {
         if (typeof surveillerConnexion === "function") surveillerConnexion();
     }
 
-   // =========================================================
-    // 6. INITIALISATION FENÊTRE DYNAMIQUE 2026 (4 BOUTONS)
-    // =========================================================
-    console.log("✨ Activation de la fenêtre dynamique 2026...");
+  // =========================================================
+// 6. INITIALISATION SYSTÈME MATHS 5ème (Boutons & Sommaire)
+// =========================================================
+
+// On attend que la page soit totalement chargée
+window.addEventListener('load', () => {
+    console.log("✨ Activation du système dynamique 2026...");
     
+    // --- GESTION DES 4 BOUTONS CENTRAUX ---
     const configBoutons = [
         { id: 'btn-geom', msg: "Ouverture du module : Construction Géométrique..." },
         { id: 'btn-devoirs', msg: "Chargement de la liste de vos devoirs..." },
@@ -1965,36 +1974,27 @@ window.addEventListener('load', async () => {
     configBoutons.forEach(bouton => {
         const el = document.getElementById(bouton.id);
         if (el) {
-            el.addEventListener('click', () => {
-                alert(bouton.msg);
-            });
+            el.onclick = () => alert(bouton.msg);
         }
     });
 
-    // MODIFICATION DE LA GESTION DU MENU GAUCHE (Ouverture)
+    // --- GESTION DU MENU GAUCHE (Ouverture) ---
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
-        menuG.addEventListener('click', () => {
+        menuG.onclick = () => {
             const sideMenu = document.getElementById("side-menu");
             if (sideMenu) {
-                sideMenu.style.width = "280px"; // Déclenche l'animation de glissement
+                sideMenu.style.width = "280px";
                 console.log("📂 Menu Sommaire ouvert");
             }
-        });
+        };
     }
 
-    const menuD = document.querySelector('.menu-2026-right');
-    if (menuD) {
-        menuD.addEventListener('click', () => {
-            console.log("Ouverture des réglages profil");
-        });
-    }
+    // --- DÉCLENCHEMENT DU SOMMAIRE ---
+    chargerSommaire();
 
     console.log("✅ Système et Fenêtre Dynamique prêts.");
-
-    // Cette ligne "tourne la clé" au chargement de la page
-window.addEventListener('load', chargerSommaire);
-}); // Fin de l'écouteur 'load'
+});
 
 // =========================================================
 // FONCTIONS GLOBALES (Accessibles partout)
