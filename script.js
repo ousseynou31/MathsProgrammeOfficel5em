@@ -1910,7 +1910,35 @@ function ouvrirChapitre(id) {
         `;
     }
 }
+// --- GESTION DU THÈME (COULEURS) ---
 
+function changerTheme(couleur) {
+    const body = document.body;
+    
+    if (couleur === 'noir') {
+        body.style.background = "#000000";
+        body.style.color = "#ffffff";
+    } else if (couleur === 'blanc') {
+        body.style.background = "#ffffff";
+        body.style.color = "#111111";
+    } else if (couleur === 'bleu') {
+        body.style.background = "#0f172a"; // Un beau bleu nuit pro
+        body.style.color = "#ffffff";
+    }
+    
+    // On sauvegarde le choix
+    localStorage.setItem('theme_prefere', couleur);
+    console.log("🎨 Thème modifié : " + couleur);
+}
+
+// Fonctions pour ouvrir/fermer le menu de droite
+function openRightMenu() {
+    document.getElementById("right-menu").style.width = "280px";
+}
+
+function closeRightMenu() {
+    document.getElementById("right-menu").style.width = "0";
+}
 // =========================================================
 //  FONCTIONS DE FERMETURE (Indispensables)
 // =========================================================
@@ -1983,26 +2011,39 @@ window.addEventListener('load', async () => {
         }
     });
 
-    // 7. GESTION DU MENU SOMMAIRE (Ouverture)
+    // 7. GESTION DU MENU SOMMAIRE (Ouverture GAUCHE)
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
         menuG.onclick = () => {
             const sideMenu = document.getElementById("side-menu");
             if (sideMenu) sideMenu.style.width = "280px";
+            console.log("📂 Menu Sommaire ouvert");
         };
     }
 
-    // 8. REMPLISSAGE DU SOMMAIRE
+    // 8. MODIFICATION DE LA GESTION DU MENU DROIT (Trois points)
+    const menuD = document.querySelector('.menu-2026-right');
+    if (menuD) {
+        menuD.onclick = () => {
+            const rightMenu = document.getElementById("right-menu");
+            if (rightMenu) {
+                rightMenu.style.width = "280px"; // Ouvre le menu des réglages
+                console.log("⚙️ Menu Réglages ouvert");
+            }
+        };
+    }
+
+    // 9. REMPLISSAGE DU SOMMAIRE
     if (typeof chargerSommaire === "function") {
         chargerSommaire();
     }
 
+    // 10. APPLIQUER LE THÈME SAUVEGARDÉ AU DÉMARRAGE
+    const themeSauve = localStorage.getItem('theme_prefere');
+    if (themeSauve && typeof changerTheme === "function") {
+        changerTheme(themeSauve);
+    }
+
     console.log("✅ Système Maths 5ème prêt.");
 
-}); // <--- FIN UNIQUE ET CORRECTE DE L'INITIALISATION
-
-
-
-
-
-
+}); // FIN DE L'INITIALISATION
