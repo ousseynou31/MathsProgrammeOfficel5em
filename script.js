@@ -1968,6 +1968,14 @@ function closeWorkOverlay() {
     if (overlay) overlay.style.display = "none";
 }
 
+// Fonction pour quitter le module de géométrie
+function closeWorkOverlay() {
+    const overlay = document.getElementById("work-overlay");
+    if (overlay) {
+        overlay.style.display = "none";
+        parler("Retour à l'accueil");
+    }
+}
 // =========================================================
 //  LANCEMENT UNIQUE ET SÉCURISÉ DU SYSTÈME DIOUF 2026
 // =========================================================
@@ -1993,7 +2001,7 @@ window.addEventListener('load', async () => {
         } catch(e) { console.warn("Tarifs chargés en mode local."); }
     }
 
-    // 4. LE TUNNEL DE SÉCURITÉ
+    // 4. LE TUNNEL DE SÉCURITÉ (Licence Diouf)
     if (typeof launchApp === "function") {
         console.log("🔓 Vérification de la licence...");
         await launchApp();
@@ -2012,18 +2020,31 @@ window.addEventListener('load', async () => {
     // 6. INITIALISATION INTERFACE MATHS 5ème
     console.log("✨ Activation de l'interface dynamique...");
     
-    const configBoutons = [
-        { id: 'btn-geom', msg: "Ouverture du module : Construction Géométrique..." },
+    // --- GESTION SPÉCIFIQUE DU BOUTON GÉOMÉTRIE ---
+    const btnGeom = document.getElementById('btn-geom');
+    if (btnGeom) {
+        btnGeom.onclick = () => {
+            const overlay = document.getElementById("work-overlay");
+            if (overlay) {
+                overlay.style.display = "flex";
+                overlay.style.flexDirection = "column";
+                // Ajustement du canvas de M. DIOUF
+                setTimeout(() => { if (typeof resize === "function") resize(); }, 150);
+                if (typeof parler === "function") parler("Module de géométrie activé");
+            }
+        };
+    }
+
+    // --- AUTRES BOUTONS ---
+    const configAutres = [
         { id: 'btn-devoirs', msg: "Chargement de la liste de vos devoirs..." },
         { id: 'btn-parents', msg: "Accès sécurisé à l'Espace Parents (Code requis)..." },
         { id: 'btn-apropos', msg: "Système Diouf Maths 5em - Version 2026.1" }
     ];
 
-    configBoutons.forEach(bouton => {
+    configAutres.forEach(bouton => {
         const el = document.getElementById(bouton.id);
-        if (el) {
-            el.onclick = () => alert(bouton.msg);
-        }
+        if (el) { el.onclick = () => alert(bouton.msg); }
     });
 
     // 7. GESTION DU MENU SOMMAIRE (Ouverture GAUCHE)
@@ -2032,35 +2053,33 @@ window.addEventListener('load', async () => {
         menuG.onclick = () => {
             const sideMenu = document.getElementById("side-menu");
             if (sideMenu) sideMenu.style.width = "280px";
-            console.log("📂 Menu Sommaire ouvert");
         };
     }
 
-    // 8. MODIFICATION DE LA GESTION DU MENU DROIT (Trois points)
-// 8. GESTION DU MENU RÉGLAGES (Trois points)
-const menuD = document.querySelector('.menu-2026-right');
-if (menuD) {
-    menuD.onclick = () => {
-        openRightMenu(); 
-        console.log("⚙️ Menu de réglages ouvert");
-    };
-}
+    // 8. GESTION DU MENU RÉGLAGES (Ouverture DROITE)
+    const menuD = document.querySelector('.menu-2026-right');
+    if (menuD) {
+        menuD.onclick = () => {
+            if (typeof openRightMenu === "function") openRightMenu();
+        };
+    }
 
     // 9. REMPLISSAGE DU SOMMAIRE
     if (typeof chargerSommaire === "function") {
         chargerSommaire();
     }
 
-    // Appliquer la couleur de texte sauvegardée
+    // --- COULEURS ET THÈMES ---
     const texteSauve = localStorage.getItem('couleur_texte_boutons');
-    if (texteSauve) changerCouleurTexte(texteSauve);
+    if (texteSauve && typeof changerCouleurTexte === "function") {
+        changerCouleurTexte(texteSauve);
+    }
     
-    // 10. APPLIQUER LE THÈME SAUVEGARDÉ AU DÉMARRAGE
+    // 10. APPLIQUER LE THÈME SAUVEGARDÉ
     const themeSauve = localStorage.getItem('theme_prefere');
     if (themeSauve && typeof changerTheme === "function") {
         changerTheme(themeSauve);
     }
 
     console.log("✅ Système Maths 5ème prêt.");
-
-}); // FIN DE L'INITIALISATION
+});
