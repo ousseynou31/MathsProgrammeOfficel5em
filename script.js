@@ -1970,16 +1970,19 @@ window.addEventListener('load', async () => {
 // 6. INITIALISATION SYSTÈME MATHS 5ème (Boutons & Sommaire)
 // =========================================================
 
-// On attend que la page soit totalement chargée
+// =========================================================
+// 6. INITIALISATION SYSTÈME MATHS 5ème
+// =========================================================
+
 window.addEventListener('load', () => {
     console.log("✨ Activation du système dynamique 2026...");
     
-    // --- GESTION DES 4 BOUTONS CENTRAUX ---
+    // 1. Configuration des boutons centraux
     const configBoutons = [
         { id: 'btn-geom', msg: "Ouverture du module : Construction Géométrique..." },
         { id: 'btn-devoirs', msg: "Chargement de la liste de vos devoirs..." },
         { id: 'btn-parents', msg: "Accès sécurisé à l'Espace Parents (Code requis)..." },
-        { id: 'btn-apropos', msg: "Système Diouf Maths 5em - Version 2026.1\nDéveloppé pour le programme officiel." }
+        { id: 'btn-apropos', msg: "Système Diouf Maths 5em - Version 2026.1" }
     ];
 
     configBoutons.forEach(bouton => {
@@ -1989,24 +1992,24 @@ window.addEventListener('load', () => {
         }
     });
 
-    // --- GESTION DU MENU GAUCHE (Ouverture) ---
+    // 2. Gestion du menu Sommaire (Ouverture)
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
         menuG.onclick = () => {
             const sideMenu = document.getElementById("side-menu");
             if (sideMenu) {
                 sideMenu.style.width = "280px";
-                console.log("📂 Menu Sommaire ouvert");
             }
         };
     }
 
-    // --- DÉCLENCHEMENT DU SOMMAIRE ---
-    chargerSommaire();
+    // 3. Lancement du sommaire
+    if (typeof chargerSommaire === "function") {
+        chargerSommaire();
+    }
 
-    console.log("✅ Système et Fenêtre Dynamique prêts.");
-});
-
+    console.log("✅ Système prêt.");
+}); // <--- C'EST CETTE LIGNE QUI MANQUAIT (Accolade + Parenthèse)
 // =========================================================
 // FONCTIONS GLOBALES (Accessibles partout)
 // =========================================================
