@@ -1922,8 +1922,8 @@ window.addEventListener('load', async () => {
         if (typeof surveillerConnexion === "function") surveillerConnexion();
     }
 
-    // =========================================================
-    // 6. NOUVEAU : INITIALISATION FENÊTRE DYNAMIQUE 2026 (4 BOUTONS)
+   // =========================================================
+    // 6. INITIALISATION FENÊTRE DYNAMIQUE 2026 (4 BOUTONS)
     // =========================================================
     console.log("✨ Activation de la fenêtre dynamique 2026...");
     
@@ -1943,11 +1943,15 @@ window.addEventListener('load', async () => {
         }
     });
 
-    // GESTION DES MENUS DE LA BARRE SUPÉRIEURE
+    // MODIFICATION DE LA GESTION DU MENU GAUCHE (Ouverture)
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
         menuG.addEventListener('click', () => {
-            alert("Sommaire du programme officiel");
+            const sideMenu = document.getElementById("side-menu");
+            if (sideMenu) {
+                sideMenu.style.width = "280px"; // Déclenche l'animation de glissement
+                console.log("📂 Menu Sommaire ouvert");
+            }
         });
     }
 
@@ -1959,4 +1963,16 @@ window.addEventListener('load', async () => {
     }
 
     console.log("✅ Système et Fenêtre Dynamique prêts.");
-});
+}); // Fin de l'écouteur 'load'
+
+// =========================================================
+// FONCTIONS GLOBALES (Accessibles partout)
+// =========================================================
+
+// FONCTION POUR FERMER LE MENU (Cliquée via la croix '×')
+function closeMenu() {
+    const sideMenu = document.getElementById("side-menu");
+    if (sideMenu) {
+        sideMenu.style.width = "0"; // Masque le menu
+    }
+}
