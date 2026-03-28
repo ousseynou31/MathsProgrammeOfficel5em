@@ -691,3 +691,70 @@ body {
     font-size: 0.75rem; /* Texte un peu plus petit */
     letter-spacing: 2px;
 }
+/* --- LA FENÊTRE DYNAMIQUE 2026 --- */
+.glass-window-2026 {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 40px;
+    padding: 30px 20px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+.window-header-text {
+    height: 60px; /* Espace réservé pour votre texte */
+}
+
+.window-buttons-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+/* --- BOUTONS MODERNES 2026 --- */
+.btn-modern-2026 {
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    border-radius: 20px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+/* Animation au clic (Enfoncement 3D) */
+.btn-modern-2026:active {
+    transform: scale(0.96) translateY(4px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+/* Le bouton À Propos (Petit) */
+.btn-mini-2026 {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* ANIMATIONS D'ENTRÉE */
+.anim-slide-up {
+    animation: slideUp 0.8s ease-out forwards;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
