@@ -800,3 +800,21 @@ body {
     padding: 20px;
     color: white;
 }
+body {
+    transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Style pour le menu de droite (si tu ne l'as pas encore) */
+#right-menu {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 2000;
+    top: 0;
+    right: 0;
+    background-color: #111;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 60px;
+    border-left: 1px solid #333;
+}
