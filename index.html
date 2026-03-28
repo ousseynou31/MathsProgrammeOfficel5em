@@ -359,54 +359,41 @@
     </div>
 </div>
 
-  <div id="right-menu" class="side-menu-2026">
+
+
+
+
+    <div id="right-menu" style="position: fixed; top: 0; right: 0; height: 100%; width: 0; background: #111; z-index: 3000; transition: 0.5s; overflow-x: hidden; border-left: 1px solid #333; box-shadow: -5px 0 15px rgba(0,0,0,0.5);">
+    
     <a href="javascript:void(0)" class="closebtn" onclick="closeRightMenu()" style="position: absolute; top: 10px; left: 20px; font-size: 36px; color: white; text-decoration: none;">&times;</a>
     
-    <div style="padding: 20px; text-align: center;">
-        <h2 style="color: #ffd700; margin-bottom: 30px;">Réglages Visuels</h2>
+    <div style="padding: 60px 20px 20px 20px; text-align: center;">
+        <h2 style="color: #ffd700; margin-bottom: 30px; font-family: sans-serif;">Réglages Visuels</h2>
         
-        <p style="color: #aaa; margin-bottom: 10px;">Choisir le thème :</p>
+        <p style="color: #aaa; margin-bottom: 15px; font-family: sans-serif;">Choisir le thème :</p>
         
         <div style="display: flex; flex-direction: column; gap: 15px;">
             <button class="btn-modern-2026" onclick="changerTheme('noir')">⚫ Mode Sombre</button>
             <button class="btn-modern-2026" onclick="changerTheme('blanc')" style="background: #ffffff; color: #000;">⚪ Mode Clair</button>
             <button class="btn-modern-2026" onclick="changerTheme('bleu')" style="background: #1e3a8a; color: #fff;">🔵 Mode Bleu Nuit</button>
         </div>
-        
+
         <hr style="margin: 30px 0; border: 0; border-top: 1px solid #333;">
-        
-        <button class="btn-modern-2026" onclick="closeRightMenu()" style="background: #cc0000;">FERMER</button>
-    </div>
-</div>
 
+        <p style="color: #aaa; margin-top: 10px; margin-bottom: 15px; font-family: sans-serif; font-size: 14px;">Couleur de l'écriture des boutons :</p>
 
-    <div id="right-menu" style="position: fixed; top: 0; right: 0; height: 100%; width: 0; background: #111; z-index: 3000; transition: 0.5s; overflow-x: hidden; border-left: 1px solid #333; box-shadow: -5px 0 15px rgba(0,0,0,0.5);">
-    
-    <a href="javascript:void(0)" onclick="closeRightMenu()" style="display: block; padding: 20px; color: #ff4500; text-decoration: none; font-size: 24px; font-weight: bold;">&times; FERMER</a>
-
-    <div style="padding: 20px;">
-        <h3 style="color: #ffd700; margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 10px;">Réglages Visuels</h3>
-        
-            <div id="reglages-contenu">
-    <p style="color: #aaa; margin-top: 10px; margin-bottom: 10px; font-family: sans-serif; font-size: 14px;">Thème de l'application :</p>
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button onclick="changerTheme('noir')" style="flex: 1; padding: 10px; background: #000; color: white; border: 1px solid #444; border-radius: 5px; cursor: pointer;">Sombre</button>
-        <button onclick="changerTheme('blanc')" style="flex: 1; padding: 10px; background: #fff; color: black; border: 1px solid #ccc; border-radius: 5px; cursor: pointer;">Clair</button>
-    </div>
-            <p style="color: #aaa; margin-top: 20px; margin-bottom: 10px; font-family: sans-serif; font-size: 14px;">Couleur de l'écriture des boutons :</p>
-
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px;">
-    <div onclick="changerCouleurTexte('#ffffff')" style="background:white; height:30px; border-radius:5px; cursor:pointer; border:1px solid #333;"></div>
-    <div onclick="changerCouleurTexte('#000000')" style="background:black; height:30px; border-radius:5px; cursor:pointer; border:1px solid #333;"></div>
-    <div onclick="changerCouleurTexte('#ffd700')" style="background:#ffd700; height:30px; border-radius:5px; cursor:pointer;"></div>
-    <div onclick="changerCouleurTexte('#ff4500')" style="background:#ff4500; height:30px; border-radius:5px; cursor:pointer;"></div>
-    <div onclick="changerCouleurTexte('#00ff00')" style="background:#00ff00; height:30px; border-radius:5px; cursor:pointer;"></div>
-    <div onclick="changerCouleurTexte('#00d4ff')" style="background:#00d4ff; height:30px; border-radius:5px; cursor:pointer;"></div>
-    <div onclick="changerCouleurTexte('#ff00ff')" style="background:#ff00ff; height:30px; border-radius:5px; cursor:pointer;"></div>
-    <div onclick="changerCouleurTexte('#ff8c00')" style="background:#ff8c00; height:30px; border-radius:5px; cursor:pointer;"></div>
-</div>
-            <p style="color: #666;">Les options de couleurs apparaîtront ici...</p>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 30px;">
+            <div onclick="changerCouleurTexte('#ffffff')" style="background:white; height:30px; border-radius:5px; cursor:pointer; border:1px solid #333;"></div>
+            <div onclick="changerCouleurTexte('#000000')" style="background:black; height:30px; border-radius:5px; cursor:pointer; border:1px solid #333;"></div>
+            <div onclick="changerCouleurTexte('#ffd700')" style="background:#ffd700; height:30px; border-radius:5px; cursor:pointer;"></div>
+            <div onclick="changerCouleurTexte('#ff4500')" style="background:#ff4500; height:30px; border-radius:5px; cursor:pointer;"></div>
+            <div onclick="changerCouleurTexte('#00ff00')" style="background:#00ff00; height:30px; border-radius:5px; cursor:pointer;"></div>
+            <div onclick="changerCouleurTexte('#00d4ff')" style="background:#00d4ff; height:30px; border-radius:5px; cursor:pointer;"></div>
+            <div onclick="changerCouleurTexte('#ff00ff')" style="background:#ff00ff; height:30px; border-radius:5px; cursor:pointer;"></div>
+            <div onclick="changerCouleurTexte('#ff8c00')" style="background:#ff8c00; height:30px; border-radius:5px; cursor:pointer;"></div>
         </div>
+
+        <button class="btn-modern-2026" onclick="closeRightMenu()" style="background: #cc0000; color: white;">FERMER</button>
     </div>
 </div>
 </body>
