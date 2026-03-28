@@ -1991,6 +1991,9 @@ window.addEventListener('load', async () => {
     }
 
     console.log("✅ Système et Fenêtre Dynamique prêts.");
+
+    // Cette ligne "tourne la clé" au chargement de la page
+window.addEventListener('load', chargerSommaire);
 }); // Fin de l'écouteur 'load'
 
 // =========================================================
