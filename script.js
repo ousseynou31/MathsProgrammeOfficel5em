@@ -1963,10 +1963,7 @@ function closeMenu() {
     if (sideMenu) sideMenu.style.width = "0";
 }
 
-function closeWorkOverlay() {
-    const overlay = document.getElementById("work-overlay");
-    if (overlay) overlay.style.display = "none";
-}
+
 
 // Fonction pour quitter le module de géométrie
 function closeWorkOverlay() {
