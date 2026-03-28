@@ -359,17 +359,23 @@
     </div>
 </div>
 
-    <div id="right-menu" class="side-menu-2026" style="right: 0; left: auto; width: 0;">
-    <a href="javascript:void(0)" class="closebtn" onclick="closeRightMenu()">&times;</a>
-    <div class="menu-content">
-        <h3 style="color: #ffd700; padding: 20px;">Réglages</h3>
-        <p style="padding: 0 20px; color: #ccc;">Couleur de fond :</p>
+  <div id="right-menu" class="side-menu-2026">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeRightMenu()" style="position: absolute; top: 10px; left: 20px; font-size: 36px; color: white; text-decoration: none;">&times;</a>
+    
+    <div style="padding: 20px; text-align: center;">
+        <h2 style="color: #ffd700; margin-bottom: 30px;">Réglages Visuels</h2>
         
-        <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px;">
+        <p style="color: #aaa; margin-bottom: 10px;">Choisir le thème :</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 15px;">
             <button class="btn-modern-2026" onclick="changerTheme('noir')">⚫ Mode Sombre</button>
-            <button class="btn-modern-2026" onclick="changerTheme('blanc')" style="background: #eee; color: #111;">⚪ Mode Clair</button>
-            <button class="btn-modern-2026" onclick="changerTheme('bleu')" style="background: #1a2a6c; color: white;">🔵 Mode Bleu Nuit</button>
+            <button class="btn-modern-2026" onclick="changerTheme('blanc')" style="background: #ffffff; color: #000;">⚪ Mode Clair</button>
+            <button class="btn-modern-2026" onclick="changerTheme('bleu')" style="background: #1e3a8a; color: #fff;">🔵 Mode Bleu Nuit</button>
         </div>
+        
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #333;">
+        
+        <button class="btn-modern-2026" onclick="closeRightMenu()" style="background: #cc0000;">FERMER</button>
     </div>
 </div>
 </body>
