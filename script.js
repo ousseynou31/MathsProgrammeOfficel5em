@@ -1764,6 +1764,60 @@ async function validerPaiementFinal(id) {
 // NOUVETE
 // NOUVETE
 // NOUVETE
+
+// MENU DES 3 TRAITS GAUCHE
+// MENU DES 3 TRAITS GAUCHE
+// MENU DES 3 TRAITS GAUCHE
+// BASE DE DONNÉES DU PROGRAMME 5ème
+const programmeMaths = [
+    { id: 1, titre: "Nombres décimaux et opérations", rappel: "Cours sur les additions, soustractions...", exo: "Quiz décimaux" },
+    { id: 2, titre: "Symétrie centrale", rappel: "Propriétés de la symétrie centrale...", exo: "Quiz symétrie" },
+    { id: 3, titre: "Fractions : Comparaison et somme", rappel: "Règles pour additionner des fractions...", exo: "Quiz fractions" },
+    { id: 4, titre: "Angles et parallélisme", rappel: "Angles alternes-internes et correspondants...", exo: "Quiz angles" }
+];
+
+// FONCTION POUR GÉNÉRER LA LISTE DANS LE MENU
+function chargerSommaire() {
+    const listContainer = document.getElementById("chapters-list");
+    if (!listContainer) return;
+
+    listContainer.innerHTML = ""; // On vide avant de remplir
+
+    programmeMaths.forEach(chapitre => {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${chapitre.id}.</strong> ${chapitre.titre}`;
+        li.onclick = () => ouvrirChapitre(chapitre.id); // On lie le clic à l'ouverture
+        listContainer.appendChild(li);
+    });
+}
+
+// Appeler le chargement du sommaire à la fin de votre 'load'
+// chargerSommaire();
+
+function ouvrirChapitre(id) {
+    const chapitre = programmeMaths.find(c => c.id === id);
+    const overlay = document.getElementById("work-overlay");
+    const body = document.getElementById("overlay-body");
+
+    if (chapitre && overlay && body) {
+        closeMenu(); // On ferme le menu latéral d'abord
+        overlay.style.display = "block"; // On affiche l'overlay
+        
+        // On injecte les 3 boutons spécifiques au chapitre
+        body.innerHTML = `
+            <h2 style="color:#ffd700; margin-bottom:20px;">${chapitre.titre}</h2>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <button class="btn-modern-2026" onclick="afficherRappel(${id})">📖 RAPPELS DU CHAPITRE</button>
+                <button class="btn-modern-2026" onclick="lancerExercice(${id})">✍️ S'EXERCER</button>
+            </div>
+        `;
+    }
+}
+
+
+// MENU DES 3 TRAITS GAUCHE
+// MENU DES 3 TRAITS GAUCHE
+// MENU DES 3 TRAITS GAUCHE
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
     if(confirm("⚠️ TEST DE SÉCURITÉ :\nVoulez-vous verrouiller l'accès et revenir à la page d'activation ?")) {
