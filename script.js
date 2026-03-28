@@ -2039,23 +2039,89 @@ function handleInput(x, y) {
     draw(); // On redessine tout après chaque action
 }
 
+function handleInput(x, y) {
+    // 1. Chercher si on clique près d'un point existant (tolérance de 10px)
+    let p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 10);
+
+    if (mode === 'point') {
+        if (!p) {
+            const nouveauPoint = { x, y, label: "P" + (points.length + 1) };
+            points.push(nouveauPoint);
+            history.push({ type: 'point', data: nouveauPoint });
+            parler("Point placé");
+        }
+    } else {
+        // Pour les autres modes (Segment, Médiatrice, etc.), on sélectionne des points
+        if (p) {
+            selected.push(p);
+            parler("Point sélectionné");
+            
+            if (selected.length === 2) {
+                creerForme(selected[0], selected[1]);
+                selected = []; // On vide la sélection après création
+            }
+        }
+    }
+    draw();
+}
+
+function creerForme(p1, p2) {
+    let nouvelleForme = { type: mode, p1, p2, color: document.getElementById('color-picker').value };
+
+    if (mode === 'mediatrice') {
+        // Math : Le milieu du segment [p1p2]
+        const mx = (p1.x + p2.x) / 2;
+        const my = (p1.y + p2.y) / 2;
+        // Math : Vecteur normal pour la perpendiculaire
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        nouvelleForme.extra = { mx, my, dx, dy }; // Stockage pour le dessin
+        parler("Médiatrice tracée");
+    } 
+    else if (mode === 'milieu') {
+        const mx = (p1.x + p2.x) / 2;
+        const my = (p1.y + p2.y) / 2;
+        points.push({ x: mx, y: my, label: "M" });
+        parler("Milieu calculé");
+        return; // Pas besoin de stocker dans shapes
+    }
+
+    shapes.push(nouvelleForme);
+    history.push({ type: 'shape', data: nouvelleForme });
+}
 function draw() {
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Dessiner les points
+
+    // Dessiner les FORMES (Segments, Droites, Médiatrices)
+    shapes.forEach(s => {
+        ctx.beginPath();
+        ctx.strokeStyle = s.color || "#2d3436";
+        ctx.lineWidth = 2;
+
+        if (s.type === 'segment') {
+            ctx.moveTo(s.p1.x, s.p1.y);
+            ctx.lineTo(s.p2.x, s.p2.y);
+        } 
+        else if (s.type === 'mediatrice') {
+            // Dessin d'une droite "infinie" passant par le milieu
+            const { mx, my, dx, dy } = s.extra;
+            ctx.moveTo(mx - dy * 100, my + dx * 100);
+            ctx.lineTo(mx + dy * 100, my - dx * 100);
+        }
+        ctx.stroke();
+    });
+
+    // Dessiner les POINTS
     points.forEach(p => {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = "#6c5ce7";
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = selected.includes(p) ? "#ff7675" : "#6c5ce7";
         ctx.fill();
-        ctx.fillText(p.label, p.x + 5, p.y - 5);
+        ctx.fillStyle = "#2d3436";
+        ctx.fillText(p.label, p.x + 8, p.y - 8);
     });
 }
-
-
-
-
 
 
 
