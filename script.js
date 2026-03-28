@@ -1814,52 +1814,7 @@ function ouvrirChapitre(id) {
     }
 }
 
-// --- SYSTÈME DE NAVIGATION MATHS 5ème 2026 ---
 
-// 1. Ouvre le menu latéral (Sommaire)
-function openMenu() {
-    const menu = document.getElementById("side-menu");
-    if (menu) {
-        menu.style.width = "280px"; // Largeur du menu quand il glisse
-    }
-}
-
-// 2. Ferme le menu latéral
-function closeMenu() {
-    const menu = document.getElementById("side-menu");
-    if (menu) {
-        menu.style.width = "0";
-    }
-}
-
-// 3. Ouvre l'écran de travail (Overlay) pour afficher une leçon
-function openWorkOverlay(titre, contenuHtml) {
-    const overlay = document.getElementById("work-overlay");
-    const body = document.getElementById("overlay-body");
-    
-    if (overlay && body) {
-        // On injecte le titre et le contenu proprement
-        body.innerHTML = `
-            <h2 style="color: #ffd700; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
-                ${titre}
-            </h2>
-            <div class="lecon-content">
-                ${contenuHtml}
-            </div>
-        `;
-        overlay.style.display = "flex";
-        closeMenu(); // On ferme le sommaire automatiquement
-    }
-}
-
-// 4. Ferme l'écran de travail et vide la mémoire
-function closeWorkOverlay() {
-    const overlay = document.getElementById("work-overlay");
-    if (overlay) {
-        overlay.style.display = "none";
-        document.getElementById("overlay-body").innerHTML = ""; 
-    }
-}
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
