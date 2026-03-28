@@ -1916,7 +1916,7 @@ function changerTheme(couleur) {
     const body = document.body;
     
     if (couleur === 'noir') {
-        body.style.background = "#000000";
+        body.style.background = "#000000"; 
         body.style.color = "#ffffff";
     } else if (couleur === 'blanc') {
         body.style.background = "#ffffff";
