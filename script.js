@@ -2013,7 +2013,45 @@ function resize() {
     if (typeof draw === "function") draw(); 
 }
 
+// =========================================================
+// 4. MOTEUR DE CALCUL GÉOMÉTRIQUE (Après le bloc LOAD)
+// =========================================================
 
+function setMode(m) {
+    mode = m;
+    parler("Outil " + m + " sélectionné");
+    // Mise à jour visuelle des boutons
+    document.querySelectorAll('.btn-ui').forEach(b => b.classList.remove('active'));
+    const activeBtn = document.getElementById('btn-' + m);
+    if (activeBtn) activeBtn.classList.add('active');
+}
+
+function handleInput(x, y) {
+    if (mode === 'point') {
+        const nouveauPoint = { x, y, label: "P" + (points.length + 1) };
+        points.push(nouveauPoint);
+        history.push({ type: 'point', data: nouveauPoint });
+    } 
+    else if (mode === 'segment') {
+        // Logique de sélection de deux points pour créer un segment
+        // ... (à compléter selon tes besoins)
+    }
+    draw(); // On redessine tout après chaque action
+}
+
+function draw() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Dessiner les points
+    points.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = "#6c5ce7";
+        ctx.fill();
+        ctx.fillText(p.label, p.x + 5, p.y - 5);
+    });
+}
 
 
 
