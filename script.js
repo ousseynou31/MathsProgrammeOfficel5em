@@ -1769,52 +1769,79 @@ async function validerPaiementFinal(id) {
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // BASE DE DONNÉES DU PROGRAMME 5ème°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// 1. Tes données (Parfait pour la gestion)
 const programmeMaths = [
-    { id: 1, titre: "Nombres décimaux et opérations", rappel: "Cours sur les additions, soustractions...", exo: "Quiz décimaux" },
-    { id: 2, titre: "Symétrie centrale", rappel: "Propriétés de la symétrie centrale...", exo: "Quiz symétrie" },
-    { id: 3, titre: "Fractions : Comparaison et somme", rappel: "Règles pour additionner des fractions...", exo: "Quiz fractions" },
-    { id: 4, titre: "Angles et parallélisme", rappel: "Angles alternes-internes et correspondants...", exo: "Quiz angles" }
+    { id: 1, titre: "Nombres décimaux et opérations", rappel: "Cours sur les additions...", exo: "Quiz décimaux" },
+    { id: 2, titre: "Symétrie centrale", rappel: "Propriétés de la symétrie...", exo: "Quiz symétrie" },
+    { id: 3, titre: "Fractions : Comparaison et somme", rappel: "Règles pour les fractions...", exo: "Quiz fractions" },
+    { id: 4, titre: "Angles et parallélisme", rappel: "Angles alternes-internes...", exo: "Quiz angles" }
 ];
 
-// FONCTION POUR GÉNÉRER LA LISTE DANS LE MENU
+// 2. Ta fonction de chargement (On ajoute juste un peu de style aux <li>)
 function chargerSommaire() {
     const listContainer = document.getElementById("chapters-list");
     if (!listContainer) return;
 
-    listContainer.innerHTML = ""; // On vide avant de remplir
-
+    listContainer.innerHTML = ""; 
     programmeMaths.forEach(chapitre => {
         const li = document.createElement("li");
-        li.innerHTML = `<strong>${chapitre.id}.</strong> ${chapitre.titre}`;
-        li.onclick = () => ouvrirChapitre(chapitre.id); // On lie le clic à l'ouverture
+        li.style = "padding: 15px; border-bottom: 1px solid #222; cursor: pointer; color: white; transition: 0.3s;";
+        li.innerHTML = `<strong style="color:var(--p);">${chapitre.id}.</strong> ${chapitre.titre}`;
+        li.onclick = () => ouvrirChapitre(chapitre.id);
+        
+        // Petit effet au survol
+        li.onmouseover = () => li.style.background = "rgba(255,215,0,0.1)";
+        li.onmouseout = () => li.style.background = "transparent";
+        
         listContainer.appendChild(li);
     });
 }
 
-// Appeler le chargement du sommaire à la fin de votre 'load'
-// chargerSommaire();
-
+// 3. Ta fonction d'ouverture (On utilise 'flex' pour le centrage)
 function ouvrirChapitre(id) {
     const chapitre = programmeMaths.find(c => c.id === id);
     const overlay = document.getElementById("work-overlay");
     const body = document.getElementById("overlay-body");
 
     if (chapitre && overlay && body) {
-        closeMenu(); // On ferme le menu latéral d'abord
-        overlay.style.display = "block"; // On affiche l'overlay
+        closeMenu(); 
+        overlay.style.display = "flex"; // 'flex' permet de mieux centrer le contenu
         
-        // On injecte les 3 boutons spécifiques au chapitre
         body.innerHTML = `
-            <h2 style="color:#ffd700; margin-bottom:20px;">${chapitre.titre}</h2>
-            <div style="display:flex; flex-direction:column; gap:15px;">
-                <button class="btn-modern-2026" onclick="afficherRappel(${id})">📖 RAPPELS DU CHAPITRE</button>
-                <button class="btn-modern-2026" onclick="lancerExercice(${id})">✍️ S'EXERCER</button>
+            <h2 style="color:#ffd700; margin-bottom:30px; text-align:center;">${chapitre.titre}</h2>
+            <div style="display:flex; flex-direction:column; gap:20px; max-width:400px; margin: 0 auto;">
+                <button class="btn-modern-2026" onclick="alert('Cours à venir...')">📖 RAPPELS DU CHAPITRE</button>
+                <button class="btn-modern-2026 primary-glow" onclick="alert('Quiz à venir...')">✍️ S'EXERCER</button>
             </div>
         `;
     }
 }
 
+function afficherRappel(id) {
+    const chapitre = programmeMaths.find(c => c.id === id);
+    const body = document.getElementById("overlay-body");
+    
+    body.innerHTML = `
+        <button onclick="ouvrirChapitre(${id})" style="background:none; border:none; color:gray; cursor:pointer;">⬅ Retour</button>
+        <h2 style="color:#ffd700;">📖 Rappel : ${chapitre.titre}</h2>
+        <div style="background:#1a1a1a; padding:15px; border-radius:10px; line-height:1.6;">
+            ${chapitre.rappel}
+        </div>
+    `;
+}
 
+function lancerExercice(id) {
+    const chapitre = programmeMaths.find(c => c.id === id);
+    const body = document.getElementById("overlay-body");
+    
+    body.innerHTML = `
+        <button onclick="ouvrirChapitre(${id})" style="background:none; border:none; color:gray; cursor:pointer;">⬅ Retour</button>
+        <h2 style="color:#ffd700;">✍️ Exercice : ${chapitre.exo}</h2>
+        <div style="text-align:center; padding:20px;">
+            <p>Le quiz pour <strong>${chapitre.titre}</strong> va démarrer...</p>
+            </div>
+    `;
+}
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
