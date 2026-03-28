@@ -1771,53 +1771,6 @@ async function validerPaiementFinal(id) {
 // BASE DE DONNÉES DU PROGRAMME 5ème°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // 1. Tes données (Parfait pour la gestion)
 // 1. Tes données (Tu peux ajouter du HTML dans 'rappel')
-const programmeMaths = [
-    { id: 1, titre: "Nombres décimaux et opérations", rappel: "Les nombres décimaux s'écrivent avec une virgule. Exemple : 12,5 + 3,7 = 16,2.", exo: "Quiz décimaux" },
-    { id: 2, titre: "Symétrie centrale", rappel: "Faire le symétrique d'un point O, c'est faire un demi-tour autour de ce point.", exo: "Quiz symétrie" },
-    { id: 3, titre: "Fractions : Comparaison et somme", rappel: "Pour additionner deux fractions de même dénominateur, on additionne les numérateurs.", exo: "Quiz fractions" },
-    { id: 4, titre: "Angles et parallélisme", rappel: "Si deux droites sont parallèles, alors les angles alternes-internes sont égaux.", exo: "Quiz angles" }
-];
-
-// 2. Fonction de chargement du sommaire (Menu latéral)
-function chargerSommaire() {
-    const listContainer = document.getElementById("chapters-list");
-    if (!listContainer) return;
-
-    listContainer.innerHTML = ""; 
-    programmeMaths.forEach(chapitre => {
-        const li = document.createElement("li");
-        li.style = "padding: 15px; border-bottom: 1px solid #222; cursor: pointer; color: white; transition: 0.3s; list-style:none;";
-        li.innerHTML = `<strong style="color:#ffd700;">${chapitre.id}.</strong> ${chapitre.titre}`;
-        
-        li.onclick = () => ouvrirChapitre(chapitre.id);
-        
-        li.onmouseover = () => li.style.background = "rgba(255,215,0,0.1)";
-        li.onmouseout = () => li.style.background = "transparent";
-        
-        listContainer.appendChild(li);
-    });
-}
-
-// 3. Fonction d'ouverture d'un chapitre (Menu de choix)
-function ouvrirChapitre(id) {
-    const chapitre = programmeMaths.find(c => c.id === id);
-    const overlay = document.getElementById("work-overlay");
-    const body = document.getElementById("overlay-body");
-
-    if (chapitre && overlay && body) {
-        closeMenu(); 
-        overlay.style.display = "flex"; 
-        
-        // CORRECTION ICI : On lie les boutons aux fonctions afficherRappel et lancerExercice
-        body.innerHTML = `
-            <h2 style="color:#ffd700; margin-bottom:30px; text-align:center;">${chapitre.titre}</h2>
-            <div style="display:flex; flex-direction:column; gap:20px; max-width:400px; margin: 0 auto;">
-                <button class="btn-modern-2026" onclick="afficherRappel(${id})">📖 RAPPELS DU CHAPITRE</button>
-                <button class="btn-modern-2026 primary-glow" onclick="lancerExercice(${id})">✍️ S'EXERCER</button>
-            </div>
-        `;
-    }
-}
 
 // 4. Fonction d'affichage du cours
 function afficherRappel(id) {
@@ -1847,21 +1800,12 @@ function lancerExercice(id) {
         </div>
     `;
 }
-// --- FONCTIONS GLOBALES DE FERMETURE ---
 
-function closeMenu() {
-    const sideMenu = document.getElementById("side-menu");
-    if (sideMenu) sideMenu.style.width = "0";
-}
-
-function closeWorkOverlay() {
-    const overlay = document.getElementById("work-overlay");
-    if (overlay) overlay.style.display = "none";
-}
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // BASE DE DONNÉES DU PROGRAMME 5ème°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
     if(confirm("⚠️ TEST DE SÉCURITÉ :\nVoulez-vous verrouiller l'accès et revenir à la page d'activation ?")) {
@@ -1924,6 +1868,62 @@ function rafraichirListeParFiltre() {
         loadUsers(filtre);
     }
 }
+// =========================================================
+// 7. LOGIQUE DU SOMMAIRE & NAVIGATION
+// =========================================================
+
+const programmeMaths = [
+    { id: 1, titre: "Nombres décimaux et opérations", rappel: "Les nombres décimaux s'écrivent avec une virgule.", exo: "Quiz décimaux" },
+    { id: 2, titre: "Symétrie centrale", rappel: "Propriétés de la symétrie centrale...", exo: "Quiz symétrie" },
+    { id: 3, titre: "Fractions : Comparaison et somme", rappel: "Règles pour les fractions...", exo: "Quiz fractions" },
+    { id: 4, titre: "Angles et parallélisme", rappel: "Angles alternes-internes...", exo: "Quiz angles" }
+];
+
+function chargerSommaire() {
+    const listContainer = document.getElementById("chapters-list");
+    if (!listContainer) return;
+
+    listContainer.innerHTML = ""; 
+    programmeMaths.forEach(chapitre => {
+        const li = document.createElement("li");
+        li.style = "padding: 15px; border-bottom: 1px solid #222; cursor: pointer; color: white; list-style:none;";
+        li.innerHTML = `<strong style="color:#ffd700;">${chapitre.id}.</strong> ${chapitre.titre}`;
+        li.onclick = () => ouvrirChapitre(chapitre.id);
+        listContainer.appendChild(li);
+    });
+}
+
+function ouvrirChapitre(id) {
+    const chapitre = programmeMaths.find(c => c.id === id);
+    const overlay = document.getElementById("work-overlay");
+    const body = document.getElementById("overlay-body");
+
+    if (chapitre && overlay && body) {
+        closeMenu(); 
+        overlay.style.display = "flex"; 
+        body.innerHTML = `
+            <h2 style="color:#ffd700; text-align:center;">${chapitre.titre}</h2>
+            <div style="display:flex; flex-direction:column; gap:20px; max-width:400px; margin: 20px auto;">
+                <button class="btn-modern-2026" onclick="alert('Cours à venir...')">📖 RAPPELS</button>
+                <button class="btn-modern-2026 primary-glow" onclick="alert('Exercices à venir...')">✍️ S'EXERCER</button>
+            </div>
+        `;
+    }
+}
+
+// =========================================================
+//  FONCTIONS DE FERMETURE (Indispensables)
+// =========================================================
+
+function closeMenu() {
+    const sideMenu = document.getElementById("side-menu");
+    if (sideMenu) sideMenu.style.width = "0";
+}
+
+function closeWorkOverlay() {
+    const overlay = document.getElementById("work-overlay");
+    if (overlay) overlay.style.display = "none";
+}
 
 // =========================================================
 //  LANCEMENT UNIQUE ET SÉCURISÉ DU SYSTÈME DIOUF 2026
@@ -1965,10 +1965,6 @@ window.addEventListener('load', async () => {
         if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
         if (typeof surveillerConnexion === "function") surveillerConnexion();
     }
-
-  // =========================================================
-// 6. INITIALISATION SYSTÈME MATHS 5ème (Boutons & Sommaire)
-// =========================================================
 
 // =========================================================
 // 6. INITIALISATION SYSTÈME MATHS 5ème
