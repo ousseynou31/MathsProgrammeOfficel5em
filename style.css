@@ -944,3 +944,58 @@ body {
     border: none;
     cursor: pointer;
 }
+/* 1. Le conteneur principal (Overlay) */
+#work-overlay {
+    display: none; /* Changé en 'flex' par le JS */
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100vh !important;
+    width: 100vw !important;
+    background: #f0f2f5;
+}
+
+/* 2. Les barres d'outils (Haut et Bas) */
+.toolbar-geo {
+    display: flex !important; /* Force l'affichage horizontal */
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    background: #2d3436; /* Fond sombre pour contraste */
+    min-height: 60px;
+    z-index: 5000;
+}
+
+/* 3. Zone du Canvas (Doit prendre TOUT l'espace central) */
+#canvas-area {
+    flex-grow: 1; /* C'est ce qui pousse les barres en haut et en bas */
+    position: relative;
+    background: white;
+    margin: 5px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#geoCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+}
+
+/* 4. Les boutons eux-mêmes */
+.btn-ui {
+    min-width: 50px;
+    height: 45px;
+    padding: 5px 10px;
+    background: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 13px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-ui:active { transform: scale(0.95); }
+.btn-ui.active { background: #6c5ce7; color: white; }
