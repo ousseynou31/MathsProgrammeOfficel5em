@@ -2037,16 +2037,15 @@ window.addEventListener('load', async () => {
     }
 
     // 8. MODIFICATION DE LA GESTION DU MENU DROIT (Trois points)
-    const menuD = document.querySelector('.menu-2026-right');
-    if (menuD) {
-        menuD.onclick = () => {
-            const rightMenu = document.getElementById("right-menu");
-            if (rightMenu) {
-                rightMenu.style.width = "280px"; // Ouvre le menu des réglages
-                console.log("⚙️ Menu Réglages ouvert");
-            }
-        };
-    }
+    // CHERCHE CE PASSAGE DANS TON SCRIPT.JS :
+const menuD = document.querySelector('.menu-2026-right');
+if (menuD) {
+    menuD.onclick = () => {
+        // AU LIEU D'UN CONSOLE.LOG, ON APPELLE LA FONCTION :
+        openRightMenu(); 
+        console.log("⚙️ Ouverture du menu de réglages réussie !");
+    };
+}
 
     // 9. REMPLISSAGE DU SOMMAIRE
     if (typeof chargerSommaire === "function") {
