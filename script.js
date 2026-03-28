@@ -2037,13 +2037,12 @@ window.addEventListener('load', async () => {
     }
 
     // 8. MODIFICATION DE LA GESTION DU MENU DROIT (Trois points)
-    // CHERCHE CE PASSAGE DANS TON SCRIPT.JS :
+// 8. GESTION DU MENU RÉGLAGES (Trois points)
 const menuD = document.querySelector('.menu-2026-right');
 if (menuD) {
     menuD.onclick = () => {
-        // AU LIEU D'UN CONSOLE.LOG, ON APPELLE LA FONCTION :
         openRightMenu(); 
-        console.log("⚙️ Ouverture du menu de réglages réussie !");
+        console.log("⚙️ Menu de réglages ouvert");
     };
 }
 
