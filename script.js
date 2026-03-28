@@ -1942,7 +1942,7 @@ window.addEventListener('load', async () => {
         initAdminTrigger();
     }
 
-    // 3. SYNCHRONISATION DES DONNÉES CRUCIALES (Tarifs)
+    // 3. SYNCHRONISATION DES DONNÉES (Tarifs)
     if (typeof chargerTarifs === "function") {
         try {
             console.log("📊 Synchronisation des tarifs...");
@@ -1950,7 +1950,7 @@ window.addEventListener('load', async () => {
         } catch(e) { console.warn("Tarifs chargés en mode local."); }
     }
 
-    // 4. LE TUNNEL DE SÉCURITÉ (DÉCISION DE LA PAGE)
+    // 4. LE TUNNEL DE SÉCURITÉ
     if (typeof launchApp === "function") {
         console.log("🔓 Vérification de la licence...");
         await launchApp();
@@ -1966,14 +1966,9 @@ window.addEventListener('load', async () => {
         if (typeof surveillerConnexion === "function") surveillerConnexion();
     }
 
-// =========================================================
-// 6. INITIALISATION SYSTÈME MATHS 5ème
-// =========================================================
-
-window.addEventListener('load', () => {
-    console.log("✨ Activation du système dynamique 2026...");
+    // 6. INITIALISATION INTERFACE MATHS 5ème
+    console.log("✨ Activation de l'interface dynamique...");
     
-    // 1. Configuration des boutons centraux
     const configBoutons = [
         { id: 'btn-geom', msg: "Ouverture du module : Construction Géométrique..." },
         { id: 'btn-devoirs', msg: "Chargement de la liste de vos devoirs..." },
@@ -1988,32 +1983,26 @@ window.addEventListener('load', () => {
         }
     });
 
-    // 2. Gestion du menu Sommaire (Ouverture)
+    // 7. GESTION DU MENU SOMMAIRE (Ouverture)
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
         menuG.onclick = () => {
             const sideMenu = document.getElementById("side-menu");
-            if (sideMenu) {
-                sideMenu.style.width = "280px";
-            }
+            if (sideMenu) sideMenu.style.width = "280px";
         };
     }
 
-    // 3. Lancement du sommaire
+    // 8. REMPLISSAGE DU SOMMAIRE
     if (typeof chargerSommaire === "function") {
         chargerSommaire();
     }
 
-    console.log("✅ Système prêt.");
-}); // <--- C'EST CETTE LIGNE QUI MANQUAIT (Accolade + Parenthèse)
-// =========================================================
-// FONCTIONS GLOBALES (Accessibles partout)
-// =========================================================
+    console.log("✅ Système Maths 5ème prêt.");
 
-// FONCTION POUR FERMER LE MENU (Cliquée via la croix '×')
-function closeMenu() {
-    const sideMenu = document.getElementById("side-menu");
-    if (sideMenu) {
-        sideMenu.style.width = "0"; // Masque le menu
-    }
-}
+}); // <--- FIN UNIQUE ET CORRECTE DE L'INITIALISATION
+
+
+
+
+
+
