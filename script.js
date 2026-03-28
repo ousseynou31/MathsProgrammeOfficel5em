@@ -1827,7 +1827,38 @@ function rafraichirListeParFiltre() {
     }
 }
 
-// 5. ACTIVATION DES SERVICES "BACKGROUND"
+// =========================================================
+//  LANCEMENT UNIQUE ET SÉCURISÉ DU SYSTÈME DIOUF 2026
+// =========================================================
+window.addEventListener('load', async () => {
+    console.log("🚀 Initialisation du moteur Maths 5em...");
+
+    // 1. AFFICHAGE IMMÉDIAT DE L'ID
+    const devIdDisplay = document.getElementById('display-device-id');
+    if (devIdDisplay && typeof getDeviceId === "function") {
+        devIdDisplay.innerText = getDeviceId();
+    }
+
+    // 2. PRÉPARATION DES OUTILS ADMIN
+    if (typeof initAdminTrigger === "function") {
+        initAdminTrigger();
+    }
+
+    // 3. SYNCHRONISATION DES DONNÉES CRUCIALES (Tarifs)
+    if (typeof chargerTarifs === "function") {
+        try {
+            console.log("📊 Synchronisation des tarifs...");
+            await chargerTarifs();
+        } catch(e) { console.warn("Tarifs chargés en mode local."); }
+    }
+
+    // 4. LE TUNNEL DE SÉCURITÉ (DÉCISION DE LA PAGE)
+    if (typeof launchApp === "function") {
+        console.log("🔓 Vérification de la licence...");
+        await launchApp();
+    }
+
+    // 5. ACTIVATION DES SERVICES "BACKGROUND"
     const telLocal = localStorage.getItem('user_tel_id');
     const estActif = localStorage.getItem('v32_active') === 'true';
 
@@ -1842,7 +1873,6 @@ function rafraichirListeParFiltre() {
     // =========================================================
     console.log("✨ Activation de la fenêtre dynamique 2026...");
     
-    // Configuration des actions pour les 4 boutons verticaux
     const configBoutons = [
         { id: 'btn-geom', msg: "Ouverture du module : Construction Géométrique..." },
         { id: 'btn-devoirs', msg: "Chargement de la liste de vos devoirs..." },
@@ -1850,19 +1880,16 @@ function rafraichirListeParFiltre() {
         { id: 'btn-apropos', msg: "Système Diouf Maths 5em - Version 2026.1\nDéveloppé pour le programme officiel." }
     ];
 
-    // Activation automatique des écouteurs de clic
     configBoutons.forEach(bouton => {
         const el = document.getElementById(bouton.id);
         if (el) {
             el.addEventListener('click', () => {
                 alert(bouton.msg);
-                // Vous pourrez remplacer alert par vos fonctions réelles ici
-                // ex: ouvrirModule(bouton.id);
             });
         }
     });
 
-    // GESTION DES MENUS DE LA BARRE SUPÉRIEURE (Barre de navigation)
+    // GESTION DES MENUS DE LA BARRE SUPÉRIEURE
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
         menuG.addEventListener('click', () => {
