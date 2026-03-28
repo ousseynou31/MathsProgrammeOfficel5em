@@ -1006,3 +1006,31 @@ body {
     align-items: center;
     width: 100%;
 }
+/* FORCE L'AFFICHAGE DE TOUS LES BOUTONS DANS LA BARRE */
+.toolbar-geo {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    background: #2d3436 !important; /* Fond gris foncé pour voir le contraste */
+    min-height: 60px !important;
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+.btn-ui {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    min-width: 40px !important;
+    margin: 2px !important;
+    z-index: 9999 !important;
+}
+
+/* On s'assure que le bouton "Point" et "Segment" ne sont pas cachés */
+#btn-point, #btn-segment, #btn-droite {
+    display: inline-block !important;
+}
