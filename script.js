@@ -1765,10 +1765,10 @@ async function validerPaiementFinal(id) {
 // NOUVETE
 // NOUVETE
 
-// MENU DES 3 TRAITS GAUCHE
-// MENU DES 3 TRAITS GAUCHE
-// MENU DES 3 TRAITS GAUCHE
-// BASE DE DONNÉES DU PROGRAMME 5ème
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// BASE DE DONNÉES DU PROGRAMME 5ème°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 const programmeMaths = [
     { id: 1, titre: "Nombres décimaux et opérations", rappel: "Cours sur les additions, soustractions...", exo: "Quiz décimaux" },
     { id: 2, titre: "Symétrie centrale", rappel: "Propriétés de la symétrie centrale...", exo: "Quiz symétrie" },
@@ -1814,10 +1814,56 @@ function ouvrirChapitre(id) {
     }
 }
 
+// --- SYSTÈME DE NAVIGATION MATHS 5ème 2026 ---
 
-// MENU DES 3 TRAITS GAUCHE
-// MENU DES 3 TRAITS GAUCHE
-// MENU DES 3 TRAITS GAUCHE
+// 1. Ouvre le menu latéral (Sommaire)
+function openMenu() {
+    const menu = document.getElementById("side-menu");
+    if (menu) {
+        menu.style.width = "280px"; // Largeur du menu quand il glisse
+    }
+}
+
+// 2. Ferme le menu latéral
+function closeMenu() {
+    const menu = document.getElementById("side-menu");
+    if (menu) {
+        menu.style.width = "0";
+    }
+}
+
+// 3. Ouvre l'écran de travail (Overlay) pour afficher une leçon
+function openWorkOverlay(titre, contenuHtml) {
+    const overlay = document.getElementById("work-overlay");
+    const body = document.getElementById("overlay-body");
+    
+    if (overlay && body) {
+        // On injecte le titre et le contenu proprement
+        body.innerHTML = `
+            <h2 style="color: #ffd700; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
+                ${titre}
+            </h2>
+            <div class="lecon-content">
+                ${contenuHtml}
+            </div>
+        `;
+        overlay.style.display = "flex";
+        closeMenu(); // On ferme le sommaire automatiquement
+    }
+}
+
+// 4. Ferme l'écran de travail et vide la mémoire
+function closeWorkOverlay() {
+    const overlay = document.getElementById("work-overlay");
+    if (overlay) {
+        overlay.style.display = "none";
+        document.getElementById("overlay-body").innerHTML = ""; 
+    }
+}
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// BASE DE DONNÉES DU PROGRAMME 5ème°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
     if(confirm("⚠️ TEST DE SÉCURITÉ :\nVoulez-vous verrouiller l'accès et revenir à la page d'activation ?")) {
