@@ -873,63 +873,96 @@ body {
     box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
 }
 
-#geoCanvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    touch-action: none;
-    cursor: crosshair;
-}
-/* --- STYLE GÉO-MAGIE PRO --- */
-.toolbar-geo {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    padding: 12px;
-    background: #dfe6e9;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+/* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
+
+#work-overlay {
+    display: none; /* Activé en 'flex' par le JS */
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: #f0f2f5;
+    z-index: 4000;
 }
 
+/* Les barres d'outils (Haut et Bas) */
+.toolbar-geo {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: #2d3436; /* Fond sombre pour faire ressortir les boutons */
+    min-height: 60px;
+    z-index: 5000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* Zone centrale pour le dessin */
 #canvas-area {
-    flex-grow: 1;
+    flex-grow: 1; /* Prend tout l'espace disponible entre les deux barres */
     position: relative;
-    height: calc(100vh - 220px); /* Ajuste selon la hauteur des toolbars */
     background: #ffffff;
-    margin: 8px;
-    border-radius: 15px;
+    margin: 5px;
+    border-radius: 12px;
     border: 2px solid #bdc3c7;
     overflow: hidden;
+    display: flex;
 }
 
 #geoCanvas {
-    display: block;
     width: 100%;
     height: 100%;
+    display: block;
     touch-action: none;
+    cursor: crosshair;
+    background: white;
 }
 
+/* Bulle d'information en haut à droite du canvas */
 #info-box-geo {
     position: absolute;
     top: 15px;
     right: 15px;
-    background: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.95);
     border: 2px solid #6c5ce7;
     border-radius: 10px;
     padding: 8px 15px;
     font-weight: bold;
     z-index: 100;
     pointer-events: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
+/* --- BOUTONS D'INTERFACE --- */
+
 .btn-ui {
-    height: 48px;
-    border: 1px solid #b2bec3;
-    border-radius: 12px;
+    min-width: 50px;
+    height: 46px;
+    padding: 5px 12px;
     background: white;
+    color: #2d3436;
+    border: none;
+    border-radius: 10px;
     font-weight: bold;
-    font-size: 0.8rem;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-ui:hover {
+    background: #ecf0f1;
+}
+
+.btn-ui:active {
+    transform: scale(0.92);
 }
 
 .btn-ui.active {
@@ -937,65 +970,18 @@ body {
     color: white !important;
 }
 
+/* Bouton spécifique pour supprimer */
+.delete-btn {
+    background: #ff7675;
+    color: white;
+}
+
+/* Sélecteur de couleur */
 #color-picker {
-    width: 100%;
-    height: 48px;
-    border-radius: 12px;
-    border: none;
-    cursor: pointer;
-}
-/* 1. Le conteneur principal (Overlay) */
-#work-overlay {
-    display: none; /* Changé en 'flex' par le JS */
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100vh !important;
-    width: 100vw !important;
-    background: #f0f2f5;
-}
-
-/* 2. Les barres d'outils (Haut et Bas) */
-.toolbar-geo {
-    display: flex !important; /* Force l'affichage horizontal */
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px;
-    background: #2d3436; /* Fond sombre pour contraste */
-    min-height: 60px;
-    z-index: 5000;
-}
-
-/* 3. Zone du Canvas (Doit prendre TOUT l'espace central) */
-#canvas-area {
-    flex-grow: 1; /* C'est ce qui pousse les barres en haut et en bas */
-    position: relative;
-    background: white;
-    margin: 5px;
+    width: 50px;
+    height: 46px;
     border-radius: 10px;
-    overflow: hidden;
-}
-
-#geoCanvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-    cursor: crosshair;
-}
-
-/* 4. Les boutons eux-mêmes */
-.btn-ui {
-    min-width: 50px;
-    height: 45px;
-    padding: 5px 10px;
-    background: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
+    border: 2px solid white;
     cursor: pointer;
-    font-size: 13px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    background: none;
 }
-
-.btn-ui:active { transform: scale(0.95); }
-.btn-ui.active { background: #6c5ce7; color: white; }
