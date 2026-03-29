@@ -2011,7 +2011,9 @@ function closeWorkOverlay() {
     const overlay = document.getElementById("work-overlay");
     if (overlay) {
         overlay.style.display = "none";
-        parler("Retour à l'accueil");
+        // On réaffiche l'accueil proprement
+        const accueil = document.getElementById("hub-accueil"); // Votre conteneur principal
+        if (accueil) accueil.style.display = "block";
     }
 }
 
@@ -2210,49 +2212,45 @@ window.addEventListener('load', async () => {
         if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
     }
 
-    // 6. INTERFACE DYNAMIQUE & GÉOMÉTRIE (Version Sécurisée)
-    const btnGeom = document.getElementById('btn-geom');
-    if (btnGeom) {
-        btnGeom.onclick = (e) => {
-            // Bloque toute interférence avec le système de chapitres/sommaire
-            e.preventDefault();
-            e.stopPropagation();
+   // 6. INTERFACE DYNAMIQUE & GÉOMÉTRIE (Version Réparatrice)
+const btnGeom = document.getElementById('btn-geom');
+if (btnGeom) {
+    btnGeom.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
 
-            const overlay = document.getElementById("work-overlay");
-            if (overlay) {
-                // Force l'affichage du tableau blanc par-dessus tout
-                overlay.style.display = "flex";
-                overlay.style.flexDirection = "column";
-                overlay.style.zIndex = "9999"; 
+        // --- ÉTAPE A : NETTOYAGE ---
+        // On cache le sommaire et les éventuels chapitres ouverts
+        const sideMenu = document.getElementById("side-menu");
+        if (sideMenu) sideMenu.style.width = "0"; 
+        
+        // Si vous avez un conteneur de cours/chapitre, on le cache
+        const coursContainer = document.getElementById("chapitre-display"); // Adaptez l'ID si besoin
+        if (coursContainer) coursContainer.style.display = "none";
 
-                // Réajustement du canvas après affichage
-                setTimeout(() => { 
-                    if (typeof resize === "function") resize(); 
-                }, 200);
+        // --- ÉTAPE B : OUVERTURE GÉOMÉTRIE ---
+        const overlay = document.getElementById("work-overlay");
+        if (overlay) {
+            overlay.style.display = "flex";
+            overlay.style.flexDirection = "column";
+            overlay.style.zIndex = "10000"; 
 
-                if (typeof parler === "function") parler("Ouverture du tableau de géométrie");
-            }
-        };
-    }
+            // --- ÉTAPE C : FORCE L'AFFICHAGE DES BOUTONS ---
+            // On force le navigateur à recalculer les barres d'outils
+            const toolbars = document.querySelectorAll('.toolbar-geo');
+            toolbars.forEach(bar => {
+                bar.style.display = "flex";
+                bar.style.visibility = "visible";
+            });
 
-    // Gestion des autres boutons de la pile (Stack)
-    const actionsMenu = [
-        { id: 'btn-devoirs', msg: "Chargement de vos devoirs..." },
-        { id: 'btn-parents', msg: "Espace Parents : Identification requise." },
-        { id: 'btn-apropos', msg: "Système Diouf Maths 5em - Version 2026.1" }
-    ];
+            setTimeout(() => { 
+                if (typeof resize === "function") resize(); 
+            }, 250);
 
-    actionsMenu.forEach(action => {
-        const el = document.getElementById(action.id);
-        if (el) {
-            el.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation(); // Évite que le clic n'ouvre un chapitre derrière
-                alert(action.msg);
-            };
+            if (typeof parler === "function") parler("Tableau de construction prêt");
         }
-    });
-
+    };
+}
     // 7. MENU SOMMAIRE (Ouverture du tiroir)
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
