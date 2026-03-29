@@ -2011,20 +2011,22 @@ function changerCouleurTexte(couleur) {
 // OUVRE L'OUTIL
 
 function ouvrirGeometrie() {
-    // 1. Affichage du conteneur
     const container = document.getElementById('geo-container');
+    
+    // FORCE L'AFFICHAGE PAR-DESSUS TOUT (Z-INDEX)
+    container.style.zIndex = "9999"; 
     container.style.display = 'flex';
 
-    // 2. Configuration du Canvas
+    // BLOQUE LE DÉFILEMENT DU TITRE ET DE L'ACCUEIL EN ARRIÈRE-PLAN
+    document.body.style.overflow = 'hidden';
+
     canvas = document.getElementById('geoCanvas');
     ctx = canvas.getContext('2d');
 
-    // 3. Ajustement précis de la taille (après affichage du CSS)
     const area = document.getElementById('canvas-area');
     canvas.width = area.clientWidth;
     canvas.height = area.clientHeight;
 
-    // 4. Activation des écouteurs de clic/toucher (si pas déjà fait)
     if (!canvas.getAttribute('data-init')) {
         canvas.addEventListener('pointerdown', function(e) {
             const r = canvas.getBoundingClientRect();
@@ -2033,16 +2035,17 @@ function ouvrirGeometrie() {
         canvas.setAttribute('data-init', 'true');
     }
 
-    // 5. Nettoyage et premier tracé
     draw(); 
-    parler("Espace de géométrie prêt. Choisis un outil dans le dock en bas.");
+    parler("Espace de géométrie prêt.");
 }
 
-// FERME L'OUTIL
 function fermerGeometrie() {
     if(confirm("Quitter la construction ? Vos tracés seront effacés.")) {
         document.getElementById('geo-container').style.display = 'none';
-        // Reset des données pour la prochaine fois
+        
+        // REDONNE LE CONTRÔLE À LA PAGE D'ACCUEIL
+        document.body.style.overflow = 'auto'; 
+        
         points = [];
         shapes = [];
     }
