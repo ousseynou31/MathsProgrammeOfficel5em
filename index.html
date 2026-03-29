@@ -356,19 +356,19 @@
 
 
 
-    <div id="right-menu" style="position: fixed; top: 0; right: 0; height: 100%; width: 0; background: #111; z-index: 3000; transition: 0.5s; overflow-x: hidden; border-left: 1px solid #333; box-shadow: -5px 0 15px rgba(0,0,0,0.5);">
+   <div id="right-menu" style="position: fixed; top: 0; right: 0; height: 100%; width: 0; background: #111; z-index: 3000; transition: 0.5s; overflow-x: hidden; border-left: 1px solid #333; box-shadow: -5px 0 15px rgba(0,0,0,0.5);">
     
-    <a href="javascript:void(0)" class="closebtn" onclick="closeRightMenu()" style="position: absolute; top: 10px; left: 20px; font-size: 36px; color: white; text-decoration: none;">&times;</a>
+    <a href="javascript:void(0)" class="closebtn" onclick="closeRightMenu()" style="position: absolute; top: 10px; left: 20px; font-size: 36px; color: white; text-decoration: none; cursor: pointer;">&times;</a>
     
     <div style="padding: 60px 20px 20px 20px; text-align: center;">
-        <h2 style="color: #ffd700; margin-bottom: 30px; font-family: sans-serif;">Réglages Visuels</h2>
+        <h2 style="color: #ffd700; margin-bottom: 30px; font-family: sans-serif; font-weight: 800;">RÉGLAGES VISUELS</h2>
         
-        <p style="color: #aaa; margin-bottom: 15px; font-family: sans-serif;">Choisir le thème :</p>
+        <p style="color: #aaa; margin-bottom: 15px; font-family: sans-serif; font-size: 0.8rem; text-transform: uppercase;">Choisir le thème :</p>
         
         <div style="display: flex; flex-direction: column; gap: 15px;">
-            <button class="btn-modern-2026" onclick="changerTheme('noir')">⚫ Mode Sombre</button>
-            <button class="btn-modern-2026" onclick="changerTheme('blanc')" style="background: #ffffff; color: #000;">⚪ Mode Clair</button>
-            <button class="btn-modern-2026" onclick="changerTheme('bleu')" style="background: #1e3a8a; color: #fff;">🔵 Mode Bleu Nuit</button>
+            <button class="btn-modern-2026" onclick="changerTheme('noir')" style="cursor: pointer;">⚫ Mode Sombre</button>
+            <button class="btn-modern-2026" onclick="changerTheme('blanc')" style="background: #ffffff; color: #000; cursor: pointer;">⚪ Mode Clair</button>
+            <button class="btn-modern-2026" onclick="changerTheme('bleu')" style="background: #1e3a8a; color: #fff; cursor: pointer;">🔵 Mode Bleu Nuit</button>
         </div>
 
         <hr style="margin: 30px 0; border: 0; border-top: 1px solid #333;">
@@ -376,20 +376,19 @@
         <p style="color: #aaa; margin-top: 10px; margin-bottom: 15px; font-family: sans-serif; font-size: 14px;">Couleur de l'écriture des boutons :</p>
 
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 30px;">
-            <div onclick="changerCouleurTexte('#ffffff')" style="background:white; height:30px; border-radius:5px; cursor:pointer; border:1px solid #333;"></div>
-            <div onclick="changerCouleurTexte('#000000')" style="background:black; height:30px; border-radius:5px; cursor:pointer; border:1px solid #333;"></div>
-            <div onclick="changerCouleurTexte('#ffd700')" style="background:#ffd700; height:30px; border-radius:5px; cursor:pointer;"></div>
-            <div onclick="changerCouleurTexte('#ff4500')" style="background:#ff4500; height:30px; border-radius:5px; cursor:pointer;"></div>
-            <div onclick="changerCouleurTexte('#00ff00')" style="background:#00ff00; height:30px; border-radius:5px; cursor:pointer;"></div>
-            <div onclick="changerCouleurTexte('#00d4ff')" style="background:#00d4ff; height:30px; border-radius:5px; cursor:pointer;"></div>
-            <div onclick="changerCouleurTexte('#ff00ff')" style="background:#ff00ff; height:30px; border-radius:5px; cursor:pointer;"></div>
-            <div onclick="changerCouleurTexte('#ff8c00')" style="background:#ff8c00; height:30px; border-radius:5px; cursor:pointer;"></div>
+            <div onclick="changerCouleurTexte('#ffffff')" style="background:#ffffff; height:35px; border-radius:8px; cursor:pointer; border:1px solid #333;"></div>
+            <div onclick="changerCouleurTexte('#000000')" style="background:#000000; height:35px; border-radius:8px; cursor:pointer; border:1px solid #444;"></div>
+            <div onclick="changerCouleurTexte('#ffd700')" style="background:#ffd700; height:35px; border-radius:8px; cursor:pointer;"></div>
+            <div onclick="changerCouleurTexte('#ff4500')" style="background:#ff4500; height:35px; border-radius:8px; cursor:pointer;"></div>
+            <div onclick="changerCouleurTexte('#00ff00')" style="background:#00ff00; height:35px; border-radius:8px; cursor:pointer;"></div>
+            <div onclick="changerCouleurTexte('#00d4ff')" style="background:#00d4ff; height:35px; border-radius:8px; cursor:pointer;"></div>
+            <div onclick="changerCouleurTexte('#ff00ff')" style="background:#ff00ff; height:35px; border-radius:8px; cursor:pointer;"></div>
+            <div onclick="changerCouleurTexte('#ff8c00')" style="background:#ff8c00; height:35px; border-radius:8px; cursor:pointer;"></div>
         </div>
 
-        <button class="btn-modern-2026" onclick="closeRightMenu()" style="background: #cc0000; color: white;">FERMER</button>
+        <button class="btn-modern-2026" onclick="closeRightMenu()" style="background: #cc0000; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer;">FERMER</button>
     </div>
 </div>
-
 
 
     
