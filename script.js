@@ -2158,28 +2158,22 @@ function draw() {
 window.addEventListener('load', async () => {
     console.log("🚀 Initialisation du moteur Maths 5em...");
 
-    // 1. AFFICHAGE IMMÉDIAT DE L'ID
+    // 1. AFFICHAGE DE L'ID
     const devIdDisplay = document.getElementById('display-device-id');
     if (devIdDisplay && typeof getDeviceId === "function") {
         devIdDisplay.innerText = getDeviceId();
     }
 
-    // 2. PRÉPARATION DES OUTILS ADMIN
-    if (typeof initAdminTrigger === "function") {
-        initAdminTrigger();
-    }
+    // 2. OUTILS ADMIN
+    if (typeof initAdminTrigger === "function") initAdminTrigger();
 
-    // 3. SYNCHRONISATION DES DONNÉES
+    // 3. SYNCHRONISATION
     if (typeof chargerTarifs === "function") {
-        try {
-            await chargerTarifs();
-        } catch(e) { console.warn("Tarifs en mode local."); }
+        try { await chargerTarifs(); } catch(e) { console.warn("Mode local."); }
     }
 
-    // 4. LE TUNNEL DE SÉCURITÉ
-    if (typeof launchApp === "function") {
-        await launchApp();
-    }
+    // 4. TUNNEL DE SÉCURITÉ
+    if (typeof launchApp === "function") await launchApp();
 
     // 5. SERVICES BACKGROUND
     const telLocal = localStorage.getItem('user_tel_id');
@@ -2189,31 +2183,28 @@ window.addEventListener('load', async () => {
         if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
     }
 
-    // 6. INTERFACE DYNAMIQUE & GÉOMÉTRIE (Version Réparatrice & Anti-Conflit)
+    // 6. INTERFACE DYNAMIQUE & GÉOMÉTRIE (Version Harmonisée V2)
     const btnGeom = document.getElementById('btn-geom');
     if (btnGeom) {
         btnGeom.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
 
-            // --- ÉTAPE A : NETTOYAGE ÉTANCHÉITÉ ---
-            // On ferme le menu latéral s'il est ouvert
+            // --- ÉTAPE A : FERMETURE DES MENUS ---
             const sideMenu = document.getElementById("side-menu");
             if (sideMenu) sideMenu.style.width = "0"; 
             
-            // On cache les chapitres du sommaire pour éviter la superposition
-            // Remplace "chapitre-display" par l'ID réel de ta zone de texte/cours
-            const coursContainer = document.getElementById("chapitre-display") || document.getElementById("main-content");
+            // On cache les cours pour éviter les superpositions visuelles
+            const coursContainer = document.getElementById("chapitre-display") || document.getElementById("main-content") || document.getElementById("overlay-body");
             if (coursContainer) coursContainer.style.display = "none";
 
-            // --- ÉTAPE B : OUVERTURE GÉOMÉTRIE ---
+            // --- ÉTAPE B : AFFICHAGE DU MODULE ---
             const overlay = document.getElementById("work-overlay");
             if (overlay) {
                 overlay.style.display = "flex";
-                overlay.style.flexDirection = "column";
-                overlay.style.zIndex = "10000"; // Passe devant tout le monde
+                overlay.style.zIndex = "20000"; // Ton nouveau Z-INDEX de sécurité
 
-                // --- ÉTAPE C : FORCE LA VISIBILITÉ DES BARRES D'OUTILS ---
+                // --- ÉTAPE C : RÉVEIL DU MOTEUR DE DESSIN ---
                 const toolbars = document.querySelectorAll('.toolbar-geo');
                 toolbars.forEach(bar => {
                     bar.style.display = "flex";
@@ -2221,7 +2212,6 @@ window.addEventListener('load', async () => {
                     bar.style.opacity = "1";
                 });
 
-                // Réajustement du canvas avec un léger délai
                 setTimeout(() => { 
                     if (typeof resize === "function") resize(); 
                 }, 250);
@@ -2231,7 +2221,24 @@ window.addEventListener('load', async () => {
         };
     }
 
-    // 7. MENU SOMMAIRE (Ouverture du tiroir)
+    // 7. GESTION DES AUTRES BOUTONS (Devoirs, Parents, À propos)
+    const extraButtons = [
+        { id: 'btn-devoirs', msg: "Ouverture de l'espace devoirs..." },
+        { id: 'btn-parents', msg: "Accès à l'espace parents sécurisé." },
+        { id: 'btn-apropos', msg: "Diouf Maths 5ème - Version 2026.2" }
+    ];
+
+    extraButtons.forEach(btn => {
+        const el = document.getElementById(btn.id);
+        if (el) {
+            el.onclick = (e) => {
+                e.stopPropagation();
+                alert(btn.msg);
+            };
+        }
+    });
+
+    // 8. MENUS LATÉRAUX (Sommaire et Réglages)
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
         menuG.onclick = () => {
@@ -2240,24 +2247,16 @@ window.addEventListener('load', async () => {
         };
     }
 
-    // 8. MENU RÉGLAGES
     const menuD = document.querySelector('.menu-2026-right');
     if (menuD) {
         menuD.onclick = () => { if (typeof openRightMenu === "function") openRightMenu(); };
     }
 
-    // 9. COULEURS ET THÈMES
-    const texteSauve = localStorage.getItem('couleur_texte_boutons');
-    if (texteSauve && typeof changerCouleurTexte === "function") {
-        changerCouleurTexte(texteSauve);
-    }
-    
+    // 9. THÈMES ET PRÉFÉRENCES
     const themeSauve = localStorage.getItem('theme_prefere');
-    if (themeSauve && typeof changerTheme === "function") {
-        changerTheme(themeSauve);
-    }
+    if (themeSauve && typeof changerTheme === "function") changerTheme(themeSauve);
 
-    // 10. ÉCOUTEUR DU CANVAS
+    // 10. GESTION DU CLIC SUR CANVAS
     document.addEventListener('pointerdown', (e) => {
         if (e.target.id !== 'geoCanvas') return;
         const r = e.target.getBoundingClientRect(); 
@@ -2266,12 +2265,8 @@ window.addEventListener('load', async () => {
         }
     });
 
-    // 11. ACTIVATION DU SOMMAIRE
-    if (typeof chargerSommaire === "function") {
-        console.log("📚 Remplissage automatique du sommaire...");
-        chargerSommaire();
-    }
+    // 11. CHARGEMENT FINAL DU SOMMAIRE
+    if (typeof chargerSommaire === "function") chargerSommaire();
 
     console.log("✅ Système Maths 5ème prêt.");
-}); 
-// FIN DU BLOC LOAD
+});
