@@ -1837,8 +1837,98 @@ function rafraichirListeParFiltre() {
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+/** Ouvre le sommaire (Appelé par les 3 traits du header) */
+function openMenu() {
+    document.getElementById("side-menu").style.width = "280px";
+}
 
+/** Ferme le sommaire */
+function closeMenu() {
+    document.getElementById("side-menu").style.width = "0";
+}
 
+/** Ferme l'overlay de travail pour revenir au menu principal */
+function closeWorkOverlay() {
+    const overlay = document.getElementById("work-overlay");
+    if (overlay) {
+        overlay.style.display = "none";
+        // On vide le contenu pour libérer de la mémoire
+        document.getElementById("overlay-body").innerHTML = "";
+    }
+}
+// ==========================================
+// PROGRAMME MATHÉMATIQUES (C11 à C14)
+// ==========================================
+
+const programmeMaths = [
+    { id: "C11", titre: "Puissance" },
+    { id: "C12", titre: "Fractions" },
+    { id: "C13", titre: "Nombres décimaux & Opérations" },
+    { id: "C14", titre: "Calcul littéral & Équations" }
+];
+
+/** GÉNÈRE LE SOMMAIRE DANS LE MENU GAUCHE */
+function chargerSommaire() {
+    const listeUl = document.getElementById("chapters-list");
+    if (!listeUl) return;
+
+    listeUl.innerHTML = ""; // Nettoyage de sécurité
+
+    programmeMaths.forEach(chap => {
+        const li = document.createElement("li");
+        
+        // Style du bouton de chapitre (Harmonisé 2026)
+        li.style.padding = "15px";
+        li.style.margin = "8px 0";
+        li.style.background = "rgba(255,255,255,0.05)";
+        li.style.borderRadius = "10px";
+        li.style.cursor = "pointer";
+        li.style.transition = "0.3s";
+        
+        // Contenu du bouton
+        li.innerHTML = `
+            <b style="color:#ffd700; margin-right:10px;">${chap.id}</b> 
+            <span style="color:white; text-transform:uppercase; font-size:0.85rem;">${chap.titre}</span>
+        `;
+
+        // --- LIAISON DIRECTE AU CLIC ---
+        li.onclick = () => ouvrirChapitre(chap.id);
+
+        // Effet de survol
+        li.onmouseenter = () => li.style.background = "rgba(255,215,0,0.15)";
+        li.onmouseleave = () => li.style.background = "rgba(255,255,255,0.05)";
+
+        listeUl.appendChild(li);
+    });
+}
+
+/** OUVRE UN CHAPITRE DANS L'OVERLAY */
+function ouvrirChapitre(id) {
+    const chapitre = programmeMaths.find(c => c.id === id);
+    if (!chapitre) return;
+
+    closeMenu(); // On ferme le sommaire
+
+    const overlay = document.getElementById("work-overlay");
+    const corps = document.getElementById("overlay-body");
+
+    if (overlay && corps) {
+        overlay.style.display = "flex";
+        
+        // Structure interne de l'overlay (Liaison vers Leçon et Exos)
+        corps.innerHTML = `
+            <div style="text-align:center; padding-top:40px;">
+                <h1 style="color:#ffd700; font-size:1.8rem;">${chapitre.id}</h1>
+                <h2 style="color:white; margin-bottom:40px;">${chapitre.titre}</h2>
+                
+                <div style="display:flex; flex-direction:column; gap:20px; max-width:400px; margin: 0 auto;">
+                    <button class="btn-modern-2026" onclick="chargerLecon('${id}')" style="padding:20px; font-weight:bold;">📖 ACCÉDER AU COURS</button>
+                    <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="padding:20px; font-weight:bold; background:#2ecc71; color:white;">📝 FAIRE LES EXERCICES</button>
+                </div>
+            </div>
+        `;
+    }
+}
 
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -1910,15 +2000,6 @@ function changerCouleurTexte(couleur) {
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-
-// =========================================================
-//  FONCTIONS DE FERMETURE (Indispensables)
-// =========================================================
-// Fonction pour fermer le SOMMAIRE (Celle appelée par le bouton close-btn)
-function closeMenu() {
-    const sideMenu = document.getElementById("side-menu");
-    if (sideMenu) sideMenu.style.width = "0";
-}
 
 
 // =========================================================
