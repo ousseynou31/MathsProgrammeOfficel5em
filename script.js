@@ -2013,6 +2013,35 @@ function resize() {
     if (typeof draw === "function") draw(); 
 }
 
+// FONCTION GÉOMÉTRIE : Appelée directement par le bouton
+function ouvrirGeometrie(event) {
+    if(event) {
+        event.preventDefault();
+        event.stopPropagation(); // Empêche d'activer le sommaire par erreur
+    }
+    
+    const overlay = document.getElementById("work-overlay");
+    if (overlay) {
+        overlay.style.display = "flex";
+        overlay.style.zIndex = "10000"; // Passe devant tout
+        
+        // On force le redimensionnement du canvas
+        setTimeout(() => { if (typeof resize === "function") resize(); }, 150);
+        
+        if (typeof parler === "function") parler("Module de géométrie activé");
+    }
+}
+
+// FONCTION POUR LES AUTRES BOUTONS
+function ouvrirDevoirs(event) {
+    event.stopPropagation();
+    alert("Chargement de vos devoirs...");
+}
+
+function ouvrirParents(event) {
+    event.stopPropagation();
+    alert("Espace Parents sécurisé.");
+}
 // =========================================================
 // 4. MOTEUR DE CALCUL GÉOMÉTRIQUE (Après le bloc LOAD)
 // =========================================================
