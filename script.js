@@ -2070,41 +2070,36 @@ function setMode(m) {
 }
 
 function handleInput(x, y) {
-    // 1. On cherche si un point existe déjà sous le doigt (rayon de 20px pour la précision tactile)
+    // 1. Détection de point existant (aimant tactile)
     let p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 20);
-    
-    // 2. Si on est en mode "POINT" et que l'endroit est vide :
-    if (mode === 'point' && !p) {
-        // Création d'un nouveau point avec une lettre automatique (A, B, C...)
-        const lettre = String.fromCharCode(65 + (points.length % 26));
-        p = { 
-            x: x, 
-            y: y, 
-            label: lettre 
-        };
-        
-        points.push(p);
-        parler("Point " + lettre);
-    } 
-    
-    // 3. Si on est dans un mode de TRACÉ (Segment, Cercle, etc.) :
-    else if (mode !== 'point') {
-        // Si l'élève clique dans le vide, on crée un point d'appui
+
+    // 2. Mode POINT : On crée un point si la zone est vide
+    if (mode === 'point') {
         if (!p) {
-            const lettre = String.fromCharCode(65 + (points.length % 26));
-            p = { x: x, y: y, label: lettre };
+            const label = String.fromCharCode(65 + (points.length % 26));
+            p = { x, y, label };
+            points.push(p);
+            parler("Point " + label);
+        }
+    } 
+    // 3. Modes de CONSTRUCTION : On sélectionne des points
+    else {
+        // Si on clique dans le vide, on crée le point automatiquement pour aider l'élève
+        if (!p) {
+            const label = String.fromCharCode(65 + (points.length % 26));
+            p = { x, y, label };
             points.push(p);
         }
-        
-        // On ajoute ce point à la sélection actuelle
-        selected.push(p);
-        parler("Sélectionné");
 
-        // On vérifie si on a assez de points pour tracer la forme demandée
+        // On évite de sélectionner deux fois le même point d'affilée
+        if (selected[selected.length - 1] !== p) {
+            selected.push(p);
+            parler(p.label);
+        }
+
+        // On vérifie si on a assez de points pour l'outil choisi
         verifierTrace();
     }
-
-    // 4. On rafraîchit le tableau pour voir le résultat
     draw();
 }
 function draw() {
@@ -2208,50 +2203,56 @@ function draw() {
 }
 
 function drawFullLine(p1, p2, col) {
-    let dx = p2.x - p1.x;
-    let dy = p2.y - p1.y;
-    // On calcule des points très loin en dehors du canvas
-    let pA = { x: p1.x - dx * 100, y: p1.y - dy * 100 };
-    let pB = { x: p1.x + dx * 100, y: p1.y + dy * 100 };
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
     
+    // On calcule deux points très loin (10000 pixels) pour simuler l'infini
+    const pA = { x: p1.x - dx * 100, y: p1.y - dy * 100 };
+    const pB = { x: p1.x + dx * 100, y: p1.y + dy * 100 };
+
     ctx.beginPath();
     ctx.strokeStyle = col;
     ctx.moveTo(pA.x, pA.y);
     ctx.lineTo(pB.x, pB.y);
     ctx.stroke();
 }
-
 function verifierTrace() {
-    // Liste des outils qui ont besoin de 3 points
-    const outils3Points = ['bissectrice', 'angle', 'mediane', 'hauteur', 'perp', 'para'];
-    
-    // Déterminer combien de points sont nécessaires pour l'outil actuel
-    let quota = outils3Points.includes(mode) ? 3 : 2;
+    // Définition des quotas de points par outil
+    const quotas = {
+        'segment': 2,
+        'droite': 2,
+        'cercle': 2,      // [Centre, Rayon]
+        'mediatrice': 2,  // [A, B] du segment
+        'angle': 3,       // [A, Sommet, B]
+        'bissectrice': 3, // [A, Sommet, B]
+        'mediane': 3,     // [A, B du côté, Sommet opposé]
+        'hauteur': 3,     // [A, B de la base, Sommet opposé]
+        'perp': 3,        // [A, B de la droite, Point de passage]
+        'para': 3         // [A, B de la droite, Point de passage]
+    };
 
-    // Si on a atteint le nombre de points nécessaires
-    if (selected.length === quota) {
-        // On crée la forme
-        const nouvelleForme = {
-            type: mode,
-            pts: [...selected], // Copie des points sélectionnés
-            col: document.getElementById('color-geo').value || "#0f172a"
-        };
+    let besoin = quotas[mode];
 
-        // On l'ajoute à la liste des tracés
-        shapes.push(nouvelleForme);
+    if (selected.length === besoin) {
+        // On crée la forme avec la couleur choisie
+        const couleur = document.getElementById('color-geo').value;
         
-        // On enregistre dans l'historique pour le bouton "Annuler"
-        history.push(JSON.stringify({p: points, s: shapes}));
+        shapes.push({
+            type: mode,
+            pts: [...selected], // On copie les points sélectionnés
+            col: couleur
+        });
 
-        // On vide la sélection pour le prochain tracé
+        // Feedback vocal pour l'élève
+        parler(mode + " tracé avec succès");
+
+        // RESET : On vide la sélection pour la prochaine figure
         selected = [];
         
-        parler("Tracé terminé");
-        draw(); // On rafraîchit le tableau
+        // Sauvegarde pour le bouton "Annuler"
+        saveHistory(); 
     }
 }
-
-
 
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
