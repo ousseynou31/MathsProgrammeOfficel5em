@@ -1853,20 +1853,18 @@ function rafraichirListeParFiltre() {
 // ==========================================
 // GESTION DU MENU DROIT (RÉGLAGES)
 // ==========================================
-
-// 1. Fonction pour OUVRIR le menu droit
 function openRightMenu() {
     const menu = document.getElementById("right-menu");
-    if (menu) menu.style.width = "280px";
+    if (menu) menu.style.width = "280px"; // Ajustez la largeur si besoin
 }
 
-// 2. Fonction pour FERMER le menu droit
+// 1. Fermeture du menu (Appelé par la croix et le bouton rouge)
 function closeRightMenu() {
     const menu = document.getElementById("right-menu");
     if (menu) menu.style.width = "0";
 }
 
-// 3. Fonction liée aux boutons "Thème" (onclick="changerTheme('...')")
+// 2. Thèmes de fond (Appelé par les 3 boutons du haut)
 function changerTheme(couleur) {
     const body = document.body;
     
@@ -1881,27 +1879,20 @@ function changerTheme(couleur) {
         body.style.color = "#ffffff";
     }
     
-    // On sauvegarde pour le prochain démarrage
     localStorage.setItem('theme_prefere', couleur);
-    console.log("🎨 Thème appliqué : " + couleur);
 }
 
-// 4. Fonction liée aux pastilles (onclick="changerCouleurTexte('#...')")
+// 3. Couleurs du texte (Appelé par les 8 pastilles)
 function changerCouleurTexte(couleur) {
-    // On récupère tous les boutons qui ont la classe "btn-modern-2026"
-    const boutons = document.querySelectorAll('.btn-modern-2026');
+    // On cible TOUS les éléments qui pourraient contenir du texte dans vos boutons
+    const boutons = document.querySelectorAll('.btn-modern-2026, .btn-modern-2026 span');
     
-    boutons.forEach(btn => {
-        // On change la couleur du texte (ou du span à l'intérieur)
-        btn.style.color = couleur;
-        
-        // Si vous avez des icônes ou des spans spécifiques :
-        const span = btn.querySelector('span');
-        if (span) span.style.color = couleur;
+    boutons.forEach(el => {
+        el.style.color = couleur;
     });
 
     localStorage.setItem('couleur_texte_boutons', couleur);
-    console.log("🎨 Couleur texte boutons : " + couleur);
+    console.log("✅ Couleur texte boutons synchronisée : " + couleur);
 }
 
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -1918,9 +1909,7 @@ function closeMenu() {
     if (sideMenu) sideMenu.style.width = "0";
 }
 
-function closeRightMenu() {
-    document.getElementById("right-menu").style.width = "0";
-}
+
 // =========================================================
 //  FONCTIONS DE FERMETURE (Indispensables)
 // =========================================================
