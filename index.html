@@ -391,25 +391,28 @@
 </div>
 
 
-   <div id="work-overlay">
+
+    <div id="work-overlay" style="display:none; position: fixed; width: 100vw; height: 100vh; top: 0; left: 0; background: #f0f2f5; z-index: 20000; flex-direction: column; overflow: hidden;">
     
-    <div class="toolbar-geo">
-        <button class="btn-ui" onclick="undo()">↩️</button>
-        <button class="btn-ui" onclick="redo()">↪️</button>
-        <button class="btn-ui home-btn" onclick="closeWorkOverlay()">🏠</button>
-        <button class="btn-ui delete-btn" onclick="confirmClear()">🗑️</button>
+    <div class="toolbar-geo" style="background:#2d3436; padding:10px; display:flex; justify-content:center; flex-wrap:wrap; gap:8px; min-height:65px; z-index:20001;">
+        <button class="btn-ui" onclick="undo()" style="min-width:45px;">↩️</button>
+        <button class="btn-ui" onclick="redo()" style="min-width:45px;">↪️</button>
+        <button class="btn-ui home-btn" onclick="closeWorkOverlay()" style="background:#ff7675; color:white;">🏠 ACCUEIL</button>
+        <button class="btn-ui delete-btn" onclick="confirmClear()" style="background:#d63031; color:white;">🗑️</button>
         <button class="btn-ui active" id="btn-point" onclick="setMode('point')">📍 Point</button>
         <button class="btn-ui" id="btn-segment" onclick="setMode('segment')">📏 Segm</button>
         <button class="btn-ui" id="btn-droite" onclick="setMode('droite')">♾️ Droite</button>
         <button class="btn-ui" id="btn-cercle" onclick="setMode('cercle')">⭕ Cercle</button>
     </div>
 
-    <div id="canvas-area">
-        <div id="info-box-geo">📊 Guide : <span id="msg-geo">Prêt</span></div>
-        <canvas id="geoCanvas"></canvas>
+    <div id="canvas-area" style="flex:1; position:relative; background:white; margin:10px; border-radius:15px; border:2px solid #bdc3c7; overflow:hidden; display:flex;">
+        <div id="info-box-geo" style="position:absolute; top:10px; right:10px; background:rgba(255,255,255,0.9); padding:5px 10px; border-radius:8px; border:1px solid #6c5ce7; font-size:12px; z-index:100; pointer-events:none;">
+            📊 <span id="msg-geo">Prêt</span>
+        </div>
+        <canvas id="geoCanvas" style="width:100%; height:100%; touch-action:none; cursor:crosshair;"></canvas>
     </div>
 
-    <div class="toolbar-geo bottom">
+    <div class="toolbar-geo bottom" style="background:#2d3436; padding:10px; display:flex; justify-content:center; flex-wrap:wrap; gap:8px; min-height:65px; z-index:20001;">
         <button class="btn-ui" id="btn-mediatrice" onclick="setMode('mediatrice')">📏 Média</button>
         <button class="btn-ui" id="btn-bissectrice" onclick="setMode('bissectrice')">✂️ Biss</button>
         <button class="btn-ui" id="btn-perp" onclick="setMode('perp')">⟂ Perp</button>
@@ -417,7 +420,7 @@
         <button class="btn-ui" id="btn-milieu" onclick="setMode('milieu')">🌓 Milieu</button>
         <button class="btn-ui" id="btn-angle" onclick="setMode('angle')">📐 Angle</button>
         <button class="btn-ui" id="voice-btn" onclick="toggleVoice()">🔊 Voix: ON</button>
-        <input type="color" id="color-picker" value="#2d3436">
+        <input type="color" id="color-picker" value="#2d3436" style="width:45px; height:45px; border-radius:8px; border:2px solid white; cursor:pointer;">
     </div>
 </div>
 </body>
