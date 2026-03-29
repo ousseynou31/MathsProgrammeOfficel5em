@@ -2210,48 +2210,50 @@ window.addEventListener('load', async () => {
         if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
     }
 
-   // 6. INTERFACE DYNAMIQUE & GÉOMÉTRIE (Version Sécurisée)
-const btnGeom = document.getElementById('btn-geom');
-if (btnGeom) {
-    btnGeom.onclick = (e) => {
-        // Bloque toute interférence avec le système de chapitres/sommaire
-        e.preventDefault();
-        e.stopPropagation();
+    // 6. INTERFACE DYNAMIQUE & GÉOMÉTRIE (Version Sécurisée)
+    const btnGeom = document.getElementById('btn-geom');
+    if (btnGeom) {
+        btnGeom.onclick = (e) => {
+            // Bloque toute interférence avec le système de chapitres/sommaire
+            e.preventDefault();
+            e.stopPropagation();
 
-        const overlay = document.getElementById("work-overlay");
-        if (overlay) {
-            // Force l'affichage du tableau blanc par-dessus tout
-            overlay.style.display = "flex";
-            overlay.style.flexDirection = "column";
-            overlay.style.zIndex = "9999"; 
+            const overlay = document.getElementById("work-overlay");
+            if (overlay) {
+                // Force l'affichage du tableau blanc par-dessus tout
+                overlay.style.display = "flex";
+                overlay.style.flexDirection = "column";
+                overlay.style.zIndex = "9999"; 
 
-            // Réajustement du canvas
-            setTimeout(() => { 
-                if (typeof resize === "function") resize(); 
-            }, 200);
+                // Réajustement du canvas après affichage
+                setTimeout(() => { 
+                    if (typeof resize === "function") resize(); 
+                }, 200);
 
-            if (typeof parler === "function") parler("Ouverture du tableau de géométrie");
-        }
-    };
-}
-
-// Gestion des autres boutons de la pile (Stack)
-const actionsMenu = [
-    { id: 'btn-devoirs', msg: "Chargement de vos devoirs..." },
-    { id: 'btn-parents', msg: "Espace Parents : Identification requise." },
-    { id: 'btn-apropos', msg: "Système Diouf Maths 5em - Version 2026.1" }
-];
-
-actionsMenu.forEach(action => {
-    const el = document.getElementById(action.id);
-    if (el) {
-        el.onclick = (e) => {
-            e.stopPropagation(); // Évite aussi les conflits ici
-            alert(action.msg);
+                if (typeof parler === "function") parler("Ouverture du tableau de géométrie");
+            }
         };
     }
-});
-    // 7. MENU SOMMAIRE (Configuration du clic)
+
+    // Gestion des autres boutons de la pile (Stack)
+    const actionsMenu = [
+        { id: 'btn-devoirs', msg: "Chargement de vos devoirs..." },
+        { id: 'btn-parents', msg: "Espace Parents : Identification requise." },
+        { id: 'btn-apropos', msg: "Système Diouf Maths 5em - Version 2026.1" }
+    ];
+
+    actionsMenu.forEach(action => {
+        const el = document.getElementById(action.id);
+        if (el) {
+            el.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation(); // Évite que le clic n'ouvre un chapitre derrière
+                alert(action.msg);
+            };
+        }
+    });
+
+    // 7. MENU SOMMAIRE (Ouverture du tiroir)
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
         menuG.onclick = () => {
@@ -2273,16 +2275,16 @@ actionsMenu.forEach(action => {
     const themeSauve = localStorage.getItem('theme_prefere');
     if (themeSauve && typeof changerTheme === "function") changerTheme(themeSauve);
 
-    // 10. ÉCOUTEUR DU CANVAS (Calcul des coordonnées)
+    // 10. ÉCOUTEUR DU CANVAS (Intégré au cycle de vie)
     document.addEventListener('pointerdown', (e) => {
         if (e.target.id !== 'geoCanvas') return;
-        const r = e.target.getBoundingClientRect(); // Utilisation de e.target pour plus de sécurité
+        const r = e.target.getBoundingClientRect(); 
         if (typeof handleInput === "function") {
             handleInput(e.clientX - r.left, e.clientY - r.top);
         }
     });
 
-    // 11. ACTIVATION DU SOMMAIRE (L'étape cruciale pour l'affichage)
+    // 11. ACTIVATION DU SOMMAIRE (Génération visuelle des chapitres)
     if (typeof chargerSommaire === "function") {
         console.log("📚 Remplissage automatique du sommaire...");
         chargerSommaire();
@@ -2290,4 +2292,4 @@ actionsMenu.forEach(action => {
 
     console.log("✅ Système Maths 5ème prêt.");
 }); 
-// FIN DU BLOC LOAD
+// FIN DU BLOC LOAD - NE RIEN AJOUTER APRÈS CETTE LIGNE
