@@ -1889,13 +1889,25 @@ function chargerSommaire() {
     if (!listContainer) return;
 
     listContainer.innerHTML = ""; 
-    programmeMaths.forEach(chapitre => {
-        const li = document.createElement("li");
-        li.style = "padding: 15px; border-bottom: 1px solid #222; cursor: pointer; color: white; list-style:none;";
-        li.innerHTML = `<strong style="color:#ffd700;">${chapitre.id}.</strong> ${chapitre.titre}`;
-        li.onclick = () => ouvrirChapitre(chapitre.id);
-        listContainer.appendChild(li);
-    });
+    
+    // On vérifie que programmeMaths existe pour éviter un crash
+    if (typeof programmeMaths !== "undefined") {
+        programmeMaths.forEach(chapitre => {
+            const li = document.createElement("li");
+            // Style épuré pour le sommaire
+            li.style = "padding: 15px; border-bottom: 1px solid #333; cursor: pointer; color: white; list-style:none;";
+            li.innerHTML = `<strong style="color:#ffd700;">${chapitre.id}.</strong> ${chapitre.titre}`;
+            
+            // On lie l'ouverture du chapitre
+            li.onclick = (e) => {
+                e.stopPropagation(); // Sécurité : le clic ne sort pas du sommaire
+                if (typeof ouvrirChapitre === "function") {
+                    ouvrirChapitre(chapitre.id);
+                }
+            };
+            listContainer.appendChild(li);
+        });
+    }
 }
 
 function ouvrirChapitre(id) {
