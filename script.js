@@ -2011,12 +2011,12 @@ function closeWorkOverlay() {
     const overlay = document.getElementById("work-overlay");
     if (overlay) {
         overlay.style.display = "none";
-        // On réaffiche l'accueil proprement
-        const accueil = document.getElementById("hub-accueil"); // Votre conteneur principal
-        if (accueil) accueil.style.display = "block";
+        
+        // Réafficher la zone des chapitres
+        const coursContainer = document.getElementById("chapitre-display") || document.getElementById("main-content");
+        if (coursContainer) coursContainer.style.display = "block";
     }
 }
-
 function resize() {
     canvas = document.getElementById('geoCanvas');
     if (!canvas) return;
@@ -2212,45 +2212,48 @@ window.addEventListener('load', async () => {
         if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
     }
 
-   // 6. INTERFACE DYNAMIQUE & GÉOMÉTRIE (Version Réparatrice)
-const btnGeom = document.getElementById('btn-geom');
-if (btnGeom) {
-    btnGeom.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
+    // 6. INTERFACE DYNAMIQUE & GÉOMÉTRIE (Version Réparatrice & Anti-Conflit)
+    const btnGeom = document.getElementById('btn-geom');
+    if (btnGeom) {
+        btnGeom.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
 
-        // --- ÉTAPE A : NETTOYAGE ---
-        // On cache le sommaire et les éventuels chapitres ouverts
-        const sideMenu = document.getElementById("side-menu");
-        if (sideMenu) sideMenu.style.width = "0"; 
-        
-        // Si vous avez un conteneur de cours/chapitre, on le cache
-        const coursContainer = document.getElementById("chapitre-display"); // Adaptez l'ID si besoin
-        if (coursContainer) coursContainer.style.display = "none";
+            // --- ÉTAPE A : NETTOYAGE ÉTANCHÉITÉ ---
+            // On ferme le menu latéral s'il est ouvert
+            const sideMenu = document.getElementById("side-menu");
+            if (sideMenu) sideMenu.style.width = "0"; 
+            
+            // On cache les chapitres du sommaire pour éviter la superposition
+            // Remplace "chapitre-display" par l'ID réel de ta zone de texte/cours
+            const coursContainer = document.getElementById("chapitre-display") || document.getElementById("main-content");
+            if (coursContainer) coursContainer.style.display = "none";
 
-        // --- ÉTAPE B : OUVERTURE GÉOMÉTRIE ---
-        const overlay = document.getElementById("work-overlay");
-        if (overlay) {
-            overlay.style.display = "flex";
-            overlay.style.flexDirection = "column";
-            overlay.style.zIndex = "10000"; 
+            // --- ÉTAPE B : OUVERTURE GÉOMÉTRIE ---
+            const overlay = document.getElementById("work-overlay");
+            if (overlay) {
+                overlay.style.display = "flex";
+                overlay.style.flexDirection = "column";
+                overlay.style.zIndex = "10000"; // Passe devant tout le monde
 
-            // --- ÉTAPE C : FORCE L'AFFICHAGE DES BOUTONS ---
-            // On force le navigateur à recalculer les barres d'outils
-            const toolbars = document.querySelectorAll('.toolbar-geo');
-            toolbars.forEach(bar => {
-                bar.style.display = "flex";
-                bar.style.visibility = "visible";
-            });
+                // --- ÉTAPE C : FORCE LA VISIBILITÉ DES BARRES D'OUTILS ---
+                const toolbars = document.querySelectorAll('.toolbar-geo');
+                toolbars.forEach(bar => {
+                    bar.style.display = "flex";
+                    bar.style.visibility = "visible";
+                    bar.style.opacity = "1";
+                });
 
-            setTimeout(() => { 
-                if (typeof resize === "function") resize(); 
-            }, 250);
+                // Réajustement du canvas avec un léger délai
+                setTimeout(() => { 
+                    if (typeof resize === "function") resize(); 
+                }, 250);
 
-            if (typeof parler === "function") parler("Tableau de construction prêt");
-        }
-    };
-}
+                if (typeof parler === "function") parler("Tableau de construction prêt");
+            }
+        };
+    }
+
     // 7. MENU SOMMAIRE (Ouverture du tiroir)
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
@@ -2268,12 +2271,16 @@ if (btnGeom) {
 
     // 9. COULEURS ET THÈMES
     const texteSauve = localStorage.getItem('couleur_texte_boutons');
-    if (texteSauve && typeof changerCouleurTexte === "function") changerCouleurTexte(texteSauve);
+    if (texteSauve && typeof changerCouleurTexte === "function") {
+        changerCouleurTexte(texteSauve);
+    }
     
     const themeSauve = localStorage.getItem('theme_prefere');
-    if (themeSauve && typeof changerTheme === "function") changerTheme(themeSauve);
+    if (themeSauve && typeof changerTheme === "function") {
+        changerTheme(themeSauve);
+    }
 
-    // 10. ÉCOUTEUR DU CANVAS (Intégré au cycle de vie)
+    // 10. ÉCOUTEUR DU CANVAS
     document.addEventListener('pointerdown', (e) => {
         if (e.target.id !== 'geoCanvas') return;
         const r = e.target.getBoundingClientRect(); 
@@ -2282,7 +2289,7 @@ if (btnGeom) {
         }
     });
 
-    // 11. ACTIVATION DU SOMMAIRE (Génération visuelle des chapitres)
+    // 11. ACTIVATION DU SOMMAIRE
     if (typeof chargerSommaire === "function") {
         console.log("📚 Remplissage automatique du sommaire...");
         chargerSommaire();
@@ -2290,4 +2297,4 @@ if (btnGeom) {
 
     console.log("✅ Système Maths 5ème prêt.");
 }); 
-// FIN DU BLOC LOAD - NE RIEN AJOUTER APRÈS CETTE LIGNE
+// FIN DU BLOC LOAD
