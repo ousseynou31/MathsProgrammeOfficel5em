@@ -873,6 +873,68 @@ body {
     box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
 }
 
+
+/* =========================================================
+   1. ZONE D'AFFICHAGE DES COURS (SOMMAIRE)
+   ========================================================= */
+#chapitre-display, #main-content {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #ffffff;
+    z-index: 1; /* Priorité basse */
+    padding: 20px;
+    overflow-y: auto;
+    display: block; /* Visible par défaut */
+}
+
+/* On s'assure que les images du cours ne dépassent pas */
+#chapitre-display img, #main-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* =========================================================
+   2. LE TABLEAU DE GÉOMÉTRIE (OVERLAY)
+   ========================================================= */
+#work-overlay {
+    display: none; /* Piloté par le JS */
+    position: fixed; /* Reste fixé par-dessus tout */
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: #f0f2f5; /* Couleur de fond du module */
+    z-index: 10000 !important; /* Priorité maximale (écrase le cours) */
+    flex-direction: column;
+}
+
+/* =========================================================
+   3. PROTECTION DES BARRES D'OUTILS
+   ========================================================= */
+.toolbar-geo {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background: #2d3436 !important;
+    min-height: 65px !important;
+    padding: 10px !important;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Empêche le clic de traverser le tableau blanc */
+#canvas-area {
+    flex-grow: 1;
+    background: #ffffff;
+    cursor: crosshair;
+    position: relative;
+    z-index: 10001; 
+}
+
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
