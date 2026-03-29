@@ -1909,22 +1909,74 @@ function chargerSommaire() {
         });
     }
 }
-
 function ouvrirChapitre(id) {
     const chapitre = programmeMaths.find(c => c.id === id);
-    const overlay = document.getElementById("work-overlay");
-    const body = document.getElementById("overlay-body");
+    if (!chapitre) return;
 
-    if (chapitre && overlay && body) {
-        closeMenu(); 
-        overlay.style.display = "flex"; 
-        body.innerHTML = `
-            <h2 style="color:#ffd700; text-align:center;">${chapitre.titre}</h2>
-            <div style="display:flex; flex-direction:column; gap:20px; max-width:400px; margin: 20px auto;">
-                <button class="btn-modern-2026" onclick="alert('Cours à venir...')">📖 RAPPELS</button>
-                <button class="btn-modern-2026 primary-glow" onclick="alert('Exercices à venir...')">✍️ S'EXERCER</button>
+    const overlay = document.getElementById("work-overlay");
+    const corps = document.getElementById("overlay-body");
+
+    if (overlay && corps) {
+        overlay.style.display = "flex";
+        overlay.style.zIndex = "10001"; // Sous la géométrie mais au-dessus du reste
+
+        // Injection de la structure avec les deux boutons en haut
+        corps.innerHTML = `
+            <div id="chapter-nav" style="display: flex; gap: 10px; margin-bottom: 20px; position: sticky; top: 0; background: #000; padding: 10px 0; z-index: 100; border-bottom: 1px solid #333;">
+                <button onclick="afficherRappel('${id}')" id="btn-rappel" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #ffd700; color: #000; font-weight: bold; cursor: pointer;">
+                    📖 RAPPEL DU COURS
+                </button>
+                <button onclick="afficherExercices('${id}')" id="btn-exercice" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #2ecc71; color: white; font-weight: bold; cursor: pointer;">
+                    📝 S'EXERCER
+                </button>
+            </div>
+
+            <div id="chapter-content-area" style="color: white; line-height: 1.6;">
+                <h2 style="color: #ffd700;">${chapitre.titre}</h2>
+                <p>Cliquez sur "Rappel" ou "S'exercer" pour commencer.</p>
             </div>
         `;
+
+        closeMenu(); // Ferme le sommaire
+        if (typeof parler === "function") parler("Chapitre " + chapitre.id + " : " + chapitre.titre);
+    }
+}
+
+// Affiche le texte du cours
+function afficherRappel(id) {
+    const chapitre = programmeMaths.find(c => c.id === id);
+    const contentArea = document.getElementById("chapter-content-area");
+    
+    if (contentArea && chapitre) {
+        contentArea.innerHTML = `
+            <div class="rappel-animation" style="animation: fadeIn 0.5s;">
+                <h3 style="color: #ffd700;">Cours : ${chapitre.titre}</h3>
+                <div>${chapitre.contenu || "Le contenu du cours arrive bientôt..."}</div>
+            </div>
+        `;
+        // Mise en évidence visuelle du bouton actif
+        document.getElementById("btn-rappel").style.border = "2px solid white";
+        document.getElementById("btn-exercice").style.border = "none";
+    }
+}
+
+// Affiche les exercices
+function afficherExercices(id) {
+    const chapitre = programmeMaths.find(c => c.id === id);
+    const contentArea = document.getElementById("chapter-content-area");
+    
+    if (contentArea && chapitre) {
+        contentArea.innerHTML = `
+            <div class="exercice-animation" style="animation: fadeIn 0.5s;">
+                <h3 style="color: #2ecc71;">Exercices d'entraînement</h3>
+                <p>Préparez votre cahier. Voici les exercices pour : ${chapitre.titre}</p>
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; border-left: 4px solid #2ecc71;">
+                    ${chapitre.exercices || "Les exercices pour ce chapitre sont en cours de préparation."}
+                </div>
+            </div>
+        `;
+        document.getElementById("btn-exercice").style.border = "2px solid white";
+        document.getElementById("btn-rappel").style.border = "none";
     }
 }
 // --- GESTION DU THÈME (COULEURS) ---
