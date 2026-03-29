@@ -2069,20 +2069,59 @@ function setMode(m) {
     parler("Outil " + m + " sélectionné");
 }
 
+function handleInput(x, y) {
+    // 1. On cherche si un point existe déjà sous le doigt (rayon de 20px pour la précision tactile)
+    let p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 20);
+    
+    // 2. Si on est en mode "POINT" et que l'endroit est vide :
+    if (mode === 'point' && !p) {
+        // Création d'un nouveau point avec une lettre automatique (A, B, C...)
+        const lettre = String.fromCharCode(65 + (points.length % 26));
+        p = { 
+            x: x, 
+            y: y, 
+            label: lettre 
+        };
+        
+        points.push(p);
+        parler("Point " + lettre);
+    } 
+    
+    // 3. Si on est dans un mode de TRACÉ (Segment, Cercle, etc.) :
+    else if (mode !== 'point') {
+        // Si l'élève clique dans le vide, on crée un point d'appui
+        if (!p) {
+            const lettre = String.fromCharCode(65 + (points.length % 26));
+            p = { x: x, y: y, label: lettre };
+            points.push(p);
+        }
+        
+        // On ajoute ce point à la sélection actuelle
+        selected.push(p);
+        parler("Sélectionné");
+
+        // On vérifie si on a assez de points pour tracer la forme demandée
+        verifierTrace();
+    }
+
+    // 4. On rafraîchit le tableau pour voir le résultat
+    draw();
+}
 function draw() {
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. DESSIN DES FORMES (LIGNES, CERCLES, ETC.)
+    // --- 1. DESSIN DES FORMES GÉOMÉTRIQUES ---
     shapes.forEach(s => {
         ctx.beginPath();
         ctx.strokeStyle = s.col;
-        ctx.lineWidth = 2.5; // Un peu plus épais pour le confort visuel
+        ctx.lineWidth = 2.5;
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
 
         let [p1, p2, p3] = s.pts;
-        let dx = p2 ? p2.x - p1.x : 0, dy = p2 ? p2.y - p1.y : 0;
+        let dx = p2 ? p2.x - p1.x : 0;
+        let dy = p2 ? p2.y - p1.y : 0;
 
         if (s.type === 'segment') {
             ctx.moveTo(p1.x, p1.y);
@@ -2093,7 +2132,7 @@ function draw() {
             drawFullLine(p1, p2, s.col);
         } 
         else if (s.type === 'cercle') {
-            let r = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+            let r = Math.hypot(dx, dy);
             ctx.arc(p1.x, p1.y, r, 0, Math.PI * 2);
             ctx.stroke();
         }
@@ -2107,39 +2146,110 @@ function draw() {
         else if (s.type === 'para' && p3) {
             drawFullLine(p3, {x: p3.x + dx, y: p3.y + dy}, s.col);
         }
-        // ... Ajoutez ici vos autres types (angle, bissectrice) avec la même logique
+        
+        // --- NOUVEAUX OUTILS AJOUTÉS ---
+        
+        else if (s.type === 'bissectrice' && p3) {
+            // Angle formé par p1-p2-p3 (p2 est le sommet)
+            let a1 = Math.atan2(p1.y - p2.y, p1.x - p2.x);
+            let a3 = Math.atan2(p3.y - p2.y, p3.x - p2.x);
+            let angle = a1 + ( (a3 - a1 + Math.PI * 3) % (Math.PI * 2) - Math.PI ) / 2;
+            drawFullLine(p2, {x: p2.x + Math.cos(angle), y: p2.y + Math.sin(angle)}, s.col);
+        }
+        else if (s.type === 'mediane' && p3) {
+            // Part du sommet p3 vers le milieu de [p1,p2]
+            ctx.moveTo(p3.x, p3.y);
+            ctx.lineTo((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+            ctx.stroke();
+        }
+        else if (s.type === 'hauteur' && p3) {
+            // Perpendiculaire à (p1p2) passant par p3
+            let d2 = dx*dx + dy*dy;
+            if (d2 > 0) {
+                let t = ((p3.x - p1.x) * dx + (p3.y - p1.y) * dy) / d2;
+                ctx.moveTo(p3.x, p3.y);
+                ctx.lineTo(p1.x + t * dx, p1.y + t * dy);
+                ctx.stroke();
+            }
+        }
+        else if (s.type === 'angle' && p3) {
+            // Dessine un petit arc au sommet p2
+            let a1 = Math.atan2(p1.y - p2.y, p1.x - p2.x);
+            let a3 = Math.atan2(p3.y - p2.y, p3.x - p2.x);
+            ctx.arc(p2.x, p2.y, 25, a1, a3);
+            ctx.stroke();
+        }
     });
 
-    // 2. DESSIN DES POINTS (PAR-DESSUS LES LIGNES)
+    // --- 2. DESSIN DES POINTS (INTERFACE) ---
     points.forEach(p => {
         const isSelected = selected.includes(p);
         
-        // Effet de Halo pour le point sélectionné
         if (isSelected) {
             ctx.beginPath();
             ctx.arc(p.x, p.y, 15, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(255, 215, 0, 0.2)"; // Halo doré transparent
+            ctx.fillStyle = "rgba(255, 215, 0, 0.2)";
             ctx.fill();
         }
 
-        // Le point lui-même
         ctx.beginPath();
         ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
         ctx.fillStyle = isSelected ? "#ffd700" : "#0f172a";
         ctx.shadowBlur = isSelected ? 10 : 0;
         ctx.shadowColor = "#ffd700";
         ctx.fill();
-        ctx.shadowBlur = 0; // Reset ombre pour ne pas baver sur le texte
+        ctx.shadowBlur = 0;
 
-        // Étiquette du point (A, B, C...)
-        ctx.fillStyle = "#0f172a";
+        ctx.fillStyle = "#1e293b";
         ctx.font = "bold 14px 'Verdana', sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(p.label, p.x + 15, p.y - 15);
     });
 }
 
+function drawFullLine(p1, p2, col) {
+    let dx = p2.x - p1.x;
+    let dy = p2.y - p1.y;
+    // On calcule des points très loin en dehors du canvas
+    let pA = { x: p1.x - dx * 100, y: p1.y - dy * 100 };
+    let pB = { x: p1.x + dx * 100, y: p1.y + dy * 100 };
+    
+    ctx.beginPath();
+    ctx.strokeStyle = col;
+    ctx.moveTo(pA.x, pA.y);
+    ctx.lineTo(pB.x, pB.y);
+    ctx.stroke();
+}
 
+function verifierTrace() {
+    // Liste des outils qui ont besoin de 3 points
+    const outils3Points = ['bissectrice', 'angle', 'mediane', 'hauteur', 'perp', 'para'];
+    
+    // Déterminer combien de points sont nécessaires pour l'outil actuel
+    let quota = outils3Points.includes(mode) ? 3 : 2;
+
+    // Si on a atteint le nombre de points nécessaires
+    if (selected.length === quota) {
+        // On crée la forme
+        const nouvelleForme = {
+            type: mode,
+            pts: [...selected], // Copie des points sélectionnés
+            col: document.getElementById('color-geo').value || "#0f172a"
+        };
+
+        // On l'ajoute à la liste des tracés
+        shapes.push(nouvelleForme);
+        
+        // On enregistre dans l'historique pour le bouton "Annuler"
+        history.push(JSON.stringify({p: points, s: shapes}));
+
+        // On vide la sélection pour le prochain tracé
+        selected = [];
+        
+        parler("Tracé terminé");
+        draw(); // On rafraîchit le tableau
+    }
+}
 
 
 
