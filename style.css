@@ -1034,3 +1034,15 @@ body {
 #btn-point, #btn-segment, #btn-droite {
     display: inline-block !important;
 }
+.toolbar-geo {
+    display: flex !important; /* On oublie le grid qui bloque tout */
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 65px !important; /* Force la visibilité */
+    background: #2d3436 !important;
+    padding: 10px !important;
+    width: 100% !important;
+}
