@@ -2001,17 +2001,31 @@ function changerCouleurTexte(couleur) {
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 /** Fonction pour le bouton GÉOMÉTRIE du menu */
+// OUVRE L'OUTIL
 function ouvrirGeometrie() {
-    closeMenu(); closeRightMenu();
-    const overlay = document.getElementById("work-overlay");
-    if (overlay) {
-        overlay.style.display = "flex";
-        overlay.style.zIndex = "20000";
-        document.querySelectorAll('.toolbar-geo').forEach(bar => bar.style.display = "flex");
-        setTimeout(() => { if (typeof resize === "function") resize(); }, 250);
-    }
+    const container = document.getElementById('geo-container');
+    container.style.display = 'flex'; // Affiche le bloc
+    
+    // Initialisation du Canvas (ajustement taille)
+    setTimeout(() => {
+        const canvas = document.getElementById('geoCanvas');
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        initGeoLogic(); // On lance la logique de dessin
+    }, 100);
+
+    parler("Bienvenue dans votre espace de construction géométrique.");
 }
 
+// FERME L'OUTIL
+function fermerGeometrie() {
+    if(confirm("Quitter la construction ? Vos tracés seront effacés.")) {
+        document.getElementById('geo-container').style.display = 'none';
+        // Reset des données pour la prochaine fois
+        points = [];
+        shapes = [];
+    }
+}
 function setMode(m) {
     mode = m;
     // On retire la classe active de TOUS les boutons géo
