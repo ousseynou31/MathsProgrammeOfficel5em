@@ -442,7 +442,41 @@
 </div>
 
 
+  <div id="geo-container" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; z-index: 2000; flex-direction: column;">
     
+    <div style="display: flex; align-items: center; padding: 10px 15px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,215,0,0.2);">
+        <button onclick="fermerGeometrie()" style="background: #ef4444; color: white; border: none; border-radius: 8px; padding: 5px 12px; font-weight: 800; cursor: pointer;">✕ QUITTER</button>
+        <div style="flex: 1; text-align: center;">
+            <span style="color: #ffd700; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">Géo-Magie Pro</span>
+        </div>
+        <div style="width: 70px;"></div> </div>
+
+    <div id="canvas-area" style="flex: 1; position: relative; background: white; margin: 10px; border-radius: 20px; overflow: hidden; cursor: crosshair;">
+        <div id="info-box-geo" style="position: absolute; top: 15px; left: 15px; background: rgba(15,23,42,0.9); color: #ffd700; padding: 8px 15px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; border: 1px solid #ffd700;">
+            MODE: <span id="msg-geo">POINT</span>
+        </div>
+        <canvas id="geoCanvas"></canvas>
+    </div>
+
+    <div class="instrument-dock" style="background: #1e293b; padding: 12px; border-top: 1px solid #334155;">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+            <button class="btn-ui-geo active" id="btn-point" onclick="setMode('point')">📍<span class="label">Point</span></button>
+            <button class="btn-ui-geo" id="btn-segment" onclick="setMode('segment')">📏<span class="label">Segment</span></button>
+            <button class="btn-ui-geo" id="btn-droite" onclick="setMode('droite')">♾️<span class="label">Droite</span></button>
+            <button class="btn-ui-geo" id="btn-cercle" onclick="setMode('cercle')">⭕<span class="label">Cercle</span></button>
+            
+            <button class="btn-ui-geo" id="btn-angle" onclick="setMode('angle')">📐<span class="label">Angle</span></button>
+            <button class="btn-ui-geo" id="btn-bissectrice" onclick="setMode('bissectrice')">✂️<span class="label">Biss.</span></button>
+            <button class="btn-ui-geo" id="btn-mediatrice" onclick="setMode('mediatrice')">🌓<span class="label">Média.</span></button>
+            <button class="btn-ui-geo" id="btn-mediane" onclick="setMode('mediane')">📉<span class="label">Médiane</span></button>
+            
+            <button class="btn-ui-geo" id="btn-hauteur" onclick="setMode('hauteur')">📐<span class="label">Hauteur</span></button>
+            <button class="btn-ui-geo" id="btn-perp" onclick="setMode('perp')">⟂<span class="label">Perp.</span></button>
+            <button class="btn-ui-geo" id="btn-para" onclick="setMode('para')">||<span class="label">Para.</span></button>
+            <button class="btn-ui-geo" onclick="undo()" style="background:#475569;">↩️<span class="label">Undo</span></button>
+        </div>
+    </div>
+</div>  
 </body>
 </html>
 
