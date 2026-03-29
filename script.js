@@ -2169,32 +2169,47 @@ window.addEventListener('load', async () => {
         if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
     }
 
-    // 6. INTERFACE DYNAMIQUE & GÉOMÉTRIE
-    const btnGeom = document.getElementById('btn-geom');
-    if (btnGeom) {
-        btnGeom.onclick = () => {
-            const overlay = document.getElementById("work-overlay");
-            if (overlay) {
-                overlay.style.display = "flex";
-                overlay.style.flexDirection = "column";
-                // On force le redimensionnement du canvas après l'affichage
-                setTimeout(() => { if (typeof resize === "function") resize(); }, 150);
-                if (typeof parler === "function") parler("Module de géométrie activé");
-            }
+   // 6. INTERFACE DYNAMIQUE & GÉOMÉTRIE (Version Sécurisée)
+const btnGeom = document.getElementById('btn-geom');
+if (btnGeom) {
+    btnGeom.onclick = (e) => {
+        // Bloque toute interférence avec le système de chapitres/sommaire
+        e.preventDefault();
+        e.stopPropagation();
+
+        const overlay = document.getElementById("work-overlay");
+        if (overlay) {
+            // Force l'affichage du tableau blanc par-dessus tout
+            overlay.style.display = "flex";
+            overlay.style.flexDirection = "column";
+            overlay.style.zIndex = "9999"; 
+
+            // Réajustement du canvas
+            setTimeout(() => { 
+                if (typeof resize === "function") resize(); 
+            }, 200);
+
+            if (typeof parler === "function") parler("Ouverture du tableau de géométrie");
+        }
+    };
+}
+
+// Gestion des autres boutons de la pile (Stack)
+const actionsMenu = [
+    { id: 'btn-devoirs', msg: "Chargement de vos devoirs..." },
+    { id: 'btn-parents', msg: "Espace Parents : Identification requise." },
+    { id: 'btn-apropos', msg: "Système Diouf Maths 5em - Version 2026.1" }
+];
+
+actionsMenu.forEach(action => {
+    const el = document.getElementById(action.id);
+    if (el) {
+        el.onclick = (e) => {
+            e.stopPropagation(); // Évite aussi les conflits ici
+            alert(action.msg);
         };
     }
-
-    const configAutres = [
-        { id: 'btn-devoirs', msg: "Chargement de vos devoirs..." },
-        { id: 'btn-parents', msg: "Accès Espace Parents sécurisé..." },
-        { id: 'btn-apropos', msg: "Système Diouf Maths 5em - V 2026.1" }
-    ];
-
-    configAutres.forEach(bouton => {
-        const el = document.getElementById(bouton.id);
-        if (el) el.onclick = () => alert(bouton.msg);
-    });
-
+});
     // 7. MENU SOMMAIRE (Configuration du clic)
     const menuG = document.querySelector('.menu-2026-left');
     if (menuG) {
