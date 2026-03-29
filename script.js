@@ -5,9 +5,16 @@ window.minuteurAdmin = window.minuteurAdmin || null;
 console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
 
 // --- VARIABLES GLOBALES GÉO-MAGIE ---
-let canvas, ctx;
-let mode = 'point', points = [], shapes = [], selected = [], history = [], redoList = [];
-let voiceEnabled = true;
+
+// TOUT EN HAUT DU FICHIER SCRIPT.JS
+let canvas, ctx; 
+let mode = 'point';
+let points = [];
+let shapes = [];
+let selected = [];
+let history = [];
+let redoList = [];
+let voice = true;
 
 // 1. CONFIGURATION FIREBASE 
 const firebaseConfig = {
@@ -2002,7 +2009,6 @@ function changerCouleurTexte(couleur) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 /** Fonction pour le bouton GÉOMÉTRIE du menu */
 // OUVRE L'OUTIL
-let canvas, ctx; // Variables globales
 
 function ouvrirGeometrie() {
     // 1. Affichage du conteneur
