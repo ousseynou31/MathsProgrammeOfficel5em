@@ -1770,46 +1770,6 @@ async function validerPaiementFinal(id) {
 // NOUVETE
 // NOUVETE
 
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// BASE DE DONNÉES DU PROGRAMME 5ème°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// 1. Tes données (Parfait pour la gestion)
-// 1. Tes données (Tu peux ajouter du HTML dans 'rappel')
-
-// 4. Fonction d'affichage du cours
-function afficherRappel(id) {
-    const chapitre = programmeMaths.find(c => c.id === id);
-    const body = document.getElementById("overlay-body");
-    
-    body.innerHTML = `
-        <button onclick="ouvrirChapitre(${id})" style="background:#333; border:none; color:white; padding:8px 15px; border-radius:5px; cursor:pointer; margin-bottom:15px;">⬅ Retour</button>
-        <h2 style="color:#ffd700; margin-bottom:15px;">📖 Rappel : ${chapitre.titre}</h2>
-        <div style="background:#1a1a1a; padding:20px; border-radius:12px; line-height:1.6; border: 1px solid #333; color:#eee;">
-            ${chapitre.rappel}
-        </div>
-    `;
-}
-
-// 5. Fonction de lancement des exercices
-function lancerExercice(id) {
-    const chapitre = programmeMaths.find(c => c.id === id);
-    const body = document.getElementById("overlay-body");
-    
-    body.innerHTML = `
-        <button onclick="ouvrirChapitre(${id})" style="background:#333; border:none; color:white; padding:8px 15px; border-radius:5px; cursor:pointer; margin-bottom:15px;">⬅ Retour</button>
-        <h2 style="color:#ffd700; margin-bottom:15px;">✍️ Exercice : ${chapitre.exo}</h2>
-        <div style="text-align:center; padding:30px; background:#111; border-radius:12px;">
-            <p style="font-size:1.1rem;">Prêt pour le quiz sur <strong>${chapitre.titre}</strong> ?</p>
-            <button class="btn-modern-2026 primary-glow" style="margin-top:20px; width:auto; padding:12px 40px;">COMMENCER</button>
-        </div>
-    `;
-}
-
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// BASE DE DONNÉES DU PROGRAMME 5ème°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 function deconnecterApp() {
     // 1. Demande de confirmation pour éviter les erreurs de clic
@@ -1873,113 +1833,23 @@ function rafraichirListeParFiltre() {
         loadUsers(filtre);
     }
 }
-// =========================================================
-// 7. LOGIQUE DU SOMMAIRE & NAVIGATION
-// =========================================================
 
-const programmeMaths = [
-    { id: 1, titre: "Nombres décimaux et opérations", rappel: "Les nombres décimaux s'écrivent avec une virgule.", exo: "Quiz décimaux" },
-    { id: 2, titre: "Symétrie centrale", rappel: "Propriétés de la symétrie centrale...", exo: "Quiz symétrie" },
-    { id: 3, titre: "Fractions : Comparaison et somme", rappel: "Règles pour les fractions...", exo: "Quiz fractions" },
-    { id: 4, titre: "Angles et parallélisme", rappel: "Angles alternes-internes...", exo: "Quiz angles" }
-];
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
-function chargerSommaire() {
-    const listContainer = document.getElementById("chapters-list");
-    if (!listContainer) return;
 
-    listContainer.innerHTML = ""; 
-    
-    // On vérifie que programmeMaths existe pour éviter un crash
-    if (typeof programmeMaths !== "undefined") {
-        programmeMaths.forEach(chapitre => {
-            const li = document.createElement("li");
-            // Style épuré pour le sommaire
-            li.style = "padding: 15px; border-bottom: 1px solid #333; cursor: pointer; color: white; list-style:none;";
-            li.innerHTML = `<strong style="color:#ffd700;">${chapitre.id}.</strong> ${chapitre.titre}`;
-            
-            // On lie l'ouverture du chapitre
-            li.onclick = (e) => {
-                e.stopPropagation(); // Sécurité : le clic ne sort pas du sommaire
-                if (typeof ouvrirChapitre === "function") {
-                    ouvrirChapitre(chapitre.id);
-                }
-            };
-            listContainer.appendChild(li);
-        });
-    }
-}
-function ouvrirChapitre(id) {
-    const chapitre = programmeMaths.find(c => c.id === id);
-    if (!chapitre) return;
 
-    const overlay = document.getElementById("work-overlay");
-    const corps = document.getElementById("overlay-body");
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
-    if (overlay && corps) {
-        overlay.style.display = "flex";
-        overlay.style.zIndex = "10001"; // Sous la géométrie mais au-dessus du reste
 
-        // Injection de la structure avec les deux boutons en haut
-        corps.innerHTML = `
-            <div id="chapter-nav" style="display: flex; gap: 10px; margin-bottom: 20px; position: sticky; top: 0; background: #000; padding: 10px 0; z-index: 100; border-bottom: 1px solid #333;">
-                <button onclick="afficherRappel('${id}')" id="btn-rappel" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #ffd700; color: #000; font-weight: bold; cursor: pointer;">
-                    📖 RAPPEL DU COURS
-                </button>
-                <button onclick="afficherExercices('${id}')" id="btn-exercice" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #2ecc71; color: white; font-weight: bold; cursor: pointer;">
-                    📝 S'EXERCER
-                </button>
-            </div>
 
-            <div id="chapter-content-area" style="color: white; line-height: 1.6;">
-                <h2 style="color: #ffd700;">${chapitre.titre}</h2>
-                <p>Cliquez sur "Rappel" ou "S'exercer" pour commencer.</p>
-            </div>
-        `;
-
-        closeMenu(); // Ferme le sommaire
-        if (typeof parler === "function") parler("Chapitre " + chapitre.id + " : " + chapitre.titre);
-    }
-}
-
-// Affiche le texte du cours
-function afficherRappel(id) {
-    const chapitre = programmeMaths.find(c => c.id === id);
-    const contentArea = document.getElementById("chapter-content-area");
-    
-    if (contentArea && chapitre) {
-        contentArea.innerHTML = `
-            <div class="rappel-animation" style="animation: fadeIn 0.5s;">
-                <h3 style="color: #ffd700;">Cours : ${chapitre.titre}</h3>
-                <div>${chapitre.contenu || "Le contenu du cours arrive bientôt..."}</div>
-            </div>
-        `;
-        // Mise en évidence visuelle du bouton actif
-        document.getElementById("btn-rappel").style.border = "2px solid white";
-        document.getElementById("btn-exercice").style.border = "none";
-    }
-}
-
-// Affiche les exercices
-function afficherExercices(id) {
-    const chapitre = programmeMaths.find(c => c.id === id);
-    const contentArea = document.getElementById("chapter-content-area");
-    
-    if (contentArea && chapitre) {
-        contentArea.innerHTML = `
-            <div class="exercice-animation" style="animation: fadeIn 0.5s;">
-                <h3 style="color: #2ecc71;">Exercices d'entraînement</h3>
-                <p>Préparez votre cahier. Voici les exercices pour : ${chapitre.titre}</p>
-                <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; border-left: 4px solid #2ecc71;">
-                    ${chapitre.exercices || "Les exercices pour ce chapitre sont en cours de préparation."}
-                </div>
-            </div>
-        `;
-        document.getElementById("btn-exercice").style.border = "2px solid white";
-        document.getElementById("btn-rappel").style.border = "none";
-    }
-}
-// --- GESTION DU THÈME (COULEURS) ---
+// --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 function changerTheme(couleur) {
     const body = document.body;
@@ -2020,6 +1890,10 @@ function changerCouleurTexte(couleur) {
     console.log("🎨 Couleur du texte mise à jour : " + couleur);
 }
 
+// --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 // =========================================================
 //  FONCTIONS DE FERMETURE (Indispensables)
@@ -2029,171 +1903,23 @@ function closeMenu() {
     const sideMenu = document.getElementById("side-menu");
     if (sideMenu) sideMenu.style.width = "0";
 }
-function closeWorkOverlay() {
-    const geoWin = document.getElementById("work-overlay");
-    if (geoWin) {
-        geoWin.style.display = "none";
-        // On s'assure que le hub principal redevient visible
-        const hub = document.getElementById("hub-accueil"); 
-        if (hub) hub.style.display = "block";
-    }
-}
+
 function closeRightMenu() {
     document.getElementById("right-menu").style.width = "0";
 }
+// =========================================================
+//  FONCTIONS DE FERMETURE (Indispensables)
+// =========================================================
 
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
-// =========================================================
-//  FONCTIONS DE SERVICES (Vocal, Menus, Fermeture)
-// =========================================================
-function parler(message) {
-    if (!voiceEnabled) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(message);
-    utterance.lang = 'fr-FR';
-    window.speechSynthesis.speak(utterance);
-}
 
 
-function resize() {
-    canvas = document.getElementById('geoCanvas');
-    if (!canvas) return;
-    ctx = canvas.getContext('2d');
-    const area = canvas.parentElement;
-    canvas.width = area.clientWidth;
-    canvas.height = area.clientHeight;
-    if (typeof draw === "function") draw(); 
-}
-
-// Fonction pour ouvrir la GÉOMÉTRIE
-function ouvrirGeometrie(e) {
-    if(e) e.stopPropagation();
-    
-    // 1. On ferme d'abord le sommaire (side-menu)
-    closeMenu(); 
-
-    // 2. On affiche l'overlay de GÉOMÉTRIE
-    const geoWin = document.getElementById("work-overlay");
-    if(geoWin) {
-        geoWin.style.display = "flex";
-        geoWin.style.zIndex = "20000"; // On passe largement devant le sommaire
-        
-        // On force le rafraîchissement du dessin
-        setTimeout(() => { if(window.resize) window.resize(); }, 200);
-    }
-}
-
-// FONCTION POUR LES AUTRES BOUTONS
-function ouvrirDevoirs(event) {
-    event.stopPropagation();
-    alert("Chargement de vos devoirs...");
-}
-
-function ouvrirParents(event) {
-    event.stopPropagation();
-    alert("Espace Parents sécurisé.");
-}
-// =========================================================
-// 4. MOTEUR DE CALCUL GÉOMÉTRIQUE (Après le bloc LOAD)
-// =========================================================
-
-function setMode(m) {
-    mode = m;
-    parler("Outil " + m + " sélectionné");
-    // Mise à jour visuelle des boutons
-    document.querySelectorAll('.btn-ui').forEach(b => b.classList.remove('active'));
-    const activeBtn = document.getElementById('btn-' + m);
-    if (activeBtn) activeBtn.classList.add('active');
-}
 
 
-function handleInput(x, y) {
-    // 1. Chercher si on clique près d'un point existant (tolérance de 10px)
-    let p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 10);
-
-    if (mode === 'point') {
-        if (!p) {
-            const nouveauPoint = { x, y, label: "P" + (points.length + 1) };
-            points.push(nouveauPoint);
-            history.push({ type: 'point', data: nouveauPoint });
-            parler("Point placé");
-        }
-    } else {
-        // Pour les autres modes (Segment, Médiatrice, etc.), on sélectionne des points
-        if (p) {
-            selected.push(p);
-            parler("Point sélectionné");
-            
-            if (selected.length === 2) {
-                creerForme(selected[0], selected[1]);
-                selected = []; // On vide la sélection après création
-            }
-        }
-    }
-    draw();
-}
-
-function creerForme(p1, p2) {
-    let nouvelleForme = { type: mode, p1, p2, color: document.getElementById('color-picker').value };
-
-    if (mode === 'mediatrice') {
-        // Math : Le milieu du segment [p1p2]
-        const mx = (p1.x + p2.x) / 2;
-        const my = (p1.y + p2.y) / 2;
-        // Math : Vecteur normal pour la perpendiculaire
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
-        nouvelleForme.extra = { mx, my, dx, dy }; // Stockage pour le dessin
-        parler("Médiatrice tracée");
-    } 
-    else if (mode === 'milieu') {
-        const mx = (p1.x + p2.x) / 2;
-        const my = (p1.y + p2.y) / 2;
-        points.push({ x: mx, y: my, label: "M" });
-        parler("Milieu calculé");
-        return; // Pas besoin de stocker dans shapes
-    }
-
-    shapes.push(nouvelleForme);
-    history.push({ type: 'shape', data: nouvelleForme });
-}
-function draw() {
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Dessiner les FORMES (Segments, Droites, Médiatrices)
-    shapes.forEach(s => {
-        ctx.beginPath();
-        ctx.strokeStyle = s.color || "#2d3436";
-        ctx.lineWidth = 2;
-
-        if (s.type === 'segment') {
-            ctx.moveTo(s.p1.x, s.p1.y);
-            ctx.lineTo(s.p2.x, s.p2.y);
-        } 
-        else if (s.type === 'mediatrice') {
-            // Dessin d'une droite "infinie" passant par le milieu
-            const { mx, my, dx, dy } = s.extra;
-            ctx.moveTo(mx - dy * 100, my + dx * 100);
-            ctx.lineTo(mx + dy * 100, my - dx * 100);
-        }
-        ctx.stroke();
-    });
-
-    // Dessiner les POINTS
-    points.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = selected.includes(p) ? "#ff7675" : "#6c5ce7";
-        ctx.fill();
-        ctx.fillStyle = "#2d3436";
-        ctx.fillText(p.label, p.x + 8, p.y - 8);
-    });
-}
 
 
 
