@@ -1850,44 +1850,58 @@ function rafraichirListeParFiltre() {
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// ==========================================
+// GESTION DU MENU DROIT (RÉGLAGES)
+// ==========================================
 
+// 1. Fonction pour OUVRIR le menu droit
+function openRightMenu() {
+    const menu = document.getElementById("right-menu");
+    if (menu) menu.style.width = "280px";
+}
+
+// 2. Fonction pour FERMER le menu droit
+function closeRightMenu() {
+    const menu = document.getElementById("right-menu");
+    if (menu) menu.style.width = "0";
+}
+
+// 3. Fonction liée aux boutons "Thème" (onclick="changerTheme('...')")
 function changerTheme(couleur) {
     const body = document.body;
     
     if (couleur === 'noir') {
-        body.style.background = "#000000"; 
+        body.style.background = "#000000";
         body.style.color = "#ffffff";
     } else if (couleur === 'blanc') {
         body.style.background = "#ffffff";
         body.style.color = "#111111";
     } else if (couleur === 'bleu') {
-        body.style.background = "#0f172a"; // Un beau bleu nuit pro
+        body.style.background = "#0f172a"; 
         body.style.color = "#ffffff";
     }
     
-    // On sauvegarde le choix
+    // On sauvegarde pour le prochain démarrage
     localStorage.setItem('theme_prefere', couleur);
-    console.log("🎨 Thème modifié : " + couleur);
+    console.log("🎨 Thème appliqué : " + couleur);
 }
 
-// Fonctions pour ouvrir/fermer le menu de droite
-function openRightMenu() {
-    document.getElementById("right-menu").style.width = "280px";
-}
-
-// --- CHANGEMENT DE LA COULEUR DU TEXTE DES BOUTONS ---
-
+// 4. Fonction liée aux pastilles (onclick="changerCouleurTexte('#...')")
 function changerCouleurTexte(couleur) {
-    // On récupère tous les boutons de la page d'accueil
+    // On récupère tous les boutons qui ont la classe "btn-modern-2026"
     const boutons = document.querySelectorAll('.btn-modern-2026');
     
     boutons.forEach(btn => {
-        btn.style.color = couleur; // Applique la couleur choisie
+        // On change la couleur du texte (ou du span à l'intérieur)
+        btn.style.color = couleur;
+        
+        // Si vous avez des icônes ou des spans spécifiques :
+        const span = btn.querySelector('span');
+        if (span) span.style.color = couleur;
     });
 
-    // On sauvegarde ce choix pour le prochain démarrage
     localStorage.setItem('couleur_texte_boutons', couleur);
-    console.log("🎨 Couleur du texte mise à jour : " + couleur);
+    console.log("🎨 Couleur texte boutons : " + couleur);
 }
 
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
