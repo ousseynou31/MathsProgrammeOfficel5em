@@ -1853,48 +1853,59 @@ function rafraichirListeParFiltre() {
 // ==========================================
 // GESTION DU MENU DROIT (RÉGLAGES)
 // ==========================================
+// ==========================================
+// 1. NAVIGATION DU MENU DROIT
+// ==========================================
+
+/** Ouvre le menu réglages (Appelé par les 3 points du header) */
 function openRightMenu() {
     const menu = document.getElementById("right-menu");
-    if (menu) menu.style.width = "280px"; // Ajustez la largeur si besoin
+    if (menu) menu.style.width = "280px";
 }
 
-// 1. Fermeture du menu (Appelé par la croix et le bouton rouge)
+/** Ferme le menu réglages (Appelé par la croix ou le bouton FERMER) */
 function closeRightMenu() {
     const menu = document.getElementById("right-menu");
     if (menu) menu.style.width = "0";
 }
 
-// 2. Thèmes de fond (Appelé par les 3 boutons du haut)
-function changerTheme(couleur) {
-    const body = document.body;
+// ==========================================
+// 2. ACTIONS DE PERSONNALISATION
+// ==========================================
+
+/** Change la couleur de fond de l'application */
+function changerTheme(theme) {
+    const b = document.body.style;
     
-    if (couleur === 'noir') {
-        body.style.background = "#000000";
-        body.style.color = "#ffffff";
-    } else if (couleur === 'blanc') {
-        body.style.background = "#ffffff";
-        body.style.color = "#111111";
-    } else if (couleur === 'bleu') {
-        body.style.background = "#0f172a"; 
-        body.style.color = "#ffffff";
+    if (theme === 'noir') { 
+        b.background = "#000000"; 
+        b.color = "#ffffff"; 
+    }
+    if (theme === 'blanc') { 
+        b.background = "#ffffff"; 
+        b.color = "#111111"; 
+    }
+    if (theme === 'bleu') { 
+        b.background = "#0f172a"; // Bleu nuit profond
+        b.color = "#ffffff"; 
     }
     
-    localStorage.setItem('theme_prefere', couleur);
+    // Sauvegarde pour que l'élève retrouve son choix à la prochaine connexion
+    localStorage.setItem('maths5_theme', theme);
 }
 
-// 3. Couleurs du texte (Appelé par les 8 pastilles)
+/** Change la couleur du texte des boutons de l'interface */
 function changerCouleurTexte(couleur) {
-    // On cible TOUS les éléments qui pourraient contenir du texte dans vos boutons
-    const boutons = document.querySelectorAll('.btn-modern-2026, .btn-modern-2026 span');
+    // On cible tous les boutons modernes et leurs textes
+    const elements = document.querySelectorAll('.btn-modern-2026, .btn-modern-2026 span');
     
-    boutons.forEach(el => {
+    elements.forEach(el => {
         el.style.color = couleur;
     });
-
-    localStorage.setItem('couleur_texte_boutons', couleur);
-    console.log("✅ Couleur texte boutons synchronisée : " + couleur);
+    
+    // Sauvegarde de la préférence couleur
+    localStorage.setItem('maths5_color', couleur);
 }
-
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
