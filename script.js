@@ -1968,27 +1968,26 @@ function changerCouleurTexte(couleur) {
     console.log("🎨 Couleur du texte mise à jour : " + couleur);
 }
 
-function closeRightMenu() {
-    document.getElementById("right-menu").style.width = "0";
-}
+
 // =========================================================
 //  FONCTIONS DE FERMETURE (Indispensables)
 // =========================================================
-
+// Fonction pour fermer le SOMMAIRE (Celle appelée par le bouton close-btn)
 function closeMenu() {
     const sideMenu = document.getElementById("side-menu");
     if (sideMenu) sideMenu.style.width = "0";
 }
-
-
-
-// Fonction pour quitter le module de géométrie
 function closeWorkOverlay() {
-    const overlay = document.getElementById("work-overlay");
-    if (overlay) {
-        overlay.style.display = "none";
-        parler("Retour à l'accueil");
+    const geoWin = document.getElementById("work-overlay");
+    if (geoWin) {
+        geoWin.style.display = "none";
+        // On s'assure que le hub principal redevient visible
+        const hub = document.getElementById("hub-accueil"); 
+        if (hub) hub.style.display = "block";
     }
+}
+function closeRightMenu() {
+    document.getElementById("right-menu").style.width = "0";
 }
 
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -2007,16 +2006,7 @@ function parler(message) {
     window.speechSynthesis.speak(utterance);
 }
 
-function closeWorkOverlay() {
-    const overlay = document.getElementById("work-overlay");
-    if (overlay) {
-        overlay.style.display = "none";
-        
-        // Réafficher la zone des chapitres
-        const coursContainer = document.getElementById("chapitre-display") || document.getElementById("main-content");
-        if (coursContainer) coursContainer.style.display = "block";
-    }
-}
+
 function resize() {
     canvas = document.getElementById('geoCanvas');
     if (!canvas) return;
@@ -2027,22 +2017,21 @@ function resize() {
     if (typeof draw === "function") draw(); 
 }
 
-// FONCTION GÉOMÉTRIE : Appelée directement par le bouton
-function ouvrirGeometrie(event) {
-    if(event) {
-        event.preventDefault();
-        event.stopPropagation(); // Empêche d'activer le sommaire par erreur
-    }
+// Fonction pour ouvrir la GÉOMÉTRIE
+function ouvrirGeometrie(e) {
+    if(e) e.stopPropagation();
     
-    const overlay = document.getElementById("work-overlay");
-    if (overlay) {
-        overlay.style.display = "flex";
-        overlay.style.zIndex = "10000"; // Passe devant tout
+    // 1. On ferme d'abord le sommaire (side-menu)
+    closeMenu(); 
+
+    // 2. On affiche l'overlay de GÉOMÉTRIE
+    const geoWin = document.getElementById("work-overlay");
+    if(geoWin) {
+        geoWin.style.display = "flex";
+        geoWin.style.zIndex = "20000"; // On passe largement devant le sommaire
         
-        // On force le redimensionnement du canvas
-        setTimeout(() => { if (typeof resize === "function") resize(); }, 150);
-        
-        if (typeof parler === "function") parler("Module de géométrie activé");
+        // On force le rafraîchissement du dessin
+        setTimeout(() => { if(window.resize) window.resize(); }, 200);
     }
 }
 
@@ -2069,18 +2058,6 @@ function setMode(m) {
     if (activeBtn) activeBtn.classList.add('active');
 }
 
-function handleInput(x, y) {
-    if (mode === 'point') {
-        const nouveauPoint = { x, y, label: "P" + (points.length + 1) };
-        points.push(nouveauPoint);
-        history.push({ type: 'point', data: nouveauPoint });
-    } 
-    else if (mode === 'segment') {
-        // Logique de sélection de deux points pour créer un segment
-        // ... (à compléter selon tes besoins)
-    }
-    draw(); // On redessine tout après chaque action
-}
 
 function handleInput(x, y) {
     // 1. Chercher si on clique près d'un point existant (tolérance de 10px)
