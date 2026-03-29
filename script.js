@@ -1947,13 +1947,11 @@ function ouvrirChapitre(id) {
 // 1. NAVIGATION DU MENU DROIT
 // ==========================================
 
-function openRightMenu() {
-    document.getElementById("right-menu").style.width = "280px";
-}
+function openMenu() { document.getElementById("side-menu").style.width = "280px"; }
+function closeMenu() { document.getElementById("side-menu").style.width = "0"; }
+function openRightMenu() { document.getElementById("right-menu").style.width = "280px"; }
+function closeRightMenu() { document.getElementById("right-menu").style.width = "0"; }
 
-function closeRightMenu() {
-    document.getElementById("right-menu").style.width = "0";
-}
 
 // ==========================================
 // 2. ACTIONS DE PERSONNALISATION
@@ -2008,20 +2006,13 @@ function changerCouleurTexte(couleur) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 /** Fonction pour le bouton GÉOMÉTRIE du menu */
 function ouvrirGeometrie() {
-    // On utilise les fonctions de fermeture déjà liées
-    if (typeof closeMenu === "function") closeMenu();
-    if (typeof closeRightMenu === "function") closeRightMenu();
-
+    closeMenu(); closeRightMenu();
     const overlay = document.getElementById("work-overlay");
     if (overlay) {
         overlay.style.display = "flex";
-        overlay.style.zIndex = "20000"; 
-        
-        // Affichage forcé des barres d'outils géo
+        overlay.style.zIndex = "20000";
         document.querySelectorAll('.toolbar-geo').forEach(bar => bar.style.display = "flex");
-
         setTimeout(() => { if (typeof resize === "function") resize(); }, 250);
-        if (typeof parler === "function") parler("Espace de géométrie prêt");
     }
 }
 
