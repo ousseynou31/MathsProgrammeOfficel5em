@@ -1996,10 +1996,6 @@ function changerCouleurTexte(couleur) {
 // --- GESTION DU THÈME (COULEURS)°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 
-// =========================================================
-//  FONCTIONS DE FERMETURE (Indispensables)
-// =========================================================
-
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -2016,9 +2012,94 @@ function ouvrirGeometrie() {
     }
 }
 
+function setMode(m) {
+    mode = m;
+    // On retire la classe active de TOUS les boutons géo
+    document.querySelectorAll('.btn-ui-geo').forEach(b => b.classList.remove('active'));
+    
+    // On l'ajoute au bouton cliqué
+    const activeBtn = document.getElementById('btn-' + m);
+    if(activeBtn) activeBtn.classList.add('active');
+    
+    selected = []; // On réinitialise la sélection
+    
+    // Mise à jour du texte d'aide en haut
+    const msgElement = document.getElementById('msg-geo');
+    if(msgElement) msgElement.innerText = m.toUpperCase();
+    
+    // Feedback vocal premium
+    parler("Outil " + m + " sélectionné");
+}
 
+function draw() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // 1. DESSIN DES FORMES (LIGNES, CERCLES, ETC.)
+    shapes.forEach(s => {
+        ctx.beginPath();
+        ctx.strokeStyle = s.col;
+        ctx.lineWidth = 2.5; // Un peu plus épais pour le confort visuel
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
 
+        let [p1, p2, p3] = s.pts;
+        let dx = p2 ? p2.x - p1.x : 0, dy = p2 ? p2.y - p1.y : 0;
+
+        if (s.type === 'segment') {
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+        } 
+        else if (s.type === 'droite') {
+            drawFullLine(p1, p2, s.col);
+        } 
+        else if (s.type === 'cercle') {
+            let r = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+            ctx.arc(p1.x, p1.y, r, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        else if (s.type === 'mediatrice') {
+            let mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+            drawFullLine({x: mx, y: my}, {x: mx - dy, y: my + dx}, s.col);
+        }
+        else if (s.type === 'perp' && p3) {
+            drawFullLine(p3, {x: p3.x - dy, y: p3.y + dx}, s.col);
+        }
+        else if (s.type === 'para' && p3) {
+            drawFullLine(p3, {x: p3.x + dx, y: p3.y + dy}, s.col);
+        }
+        // ... Ajoutez ici vos autres types (angle, bissectrice) avec la même logique
+    });
+
+    // 2. DESSIN DES POINTS (PAR-DESSUS LES LIGNES)
+    points.forEach(p => {
+        const isSelected = selected.includes(p);
+        
+        // Effet de Halo pour le point sélectionné
+        if (isSelected) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 15, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255, 215, 0, 0.2)"; // Halo doré transparent
+            ctx.fill();
+        }
+
+        // Le point lui-même
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = isSelected ? "#ffd700" : "#0f172a";
+        ctx.shadowBlur = isSelected ? 10 : 0;
+        ctx.shadowColor = "#ffd700";
+        ctx.fill();
+        ctx.shadowBlur = 0; // Reset ombre pour ne pas baver sur le texte
+
+        // Étiquette du point (A, B, C...)
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "bold 14px 'Verdana', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(p.label, p.x + 15, p.y - 15);
+    });
+}
 
 
 
