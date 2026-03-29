@@ -2012,33 +2012,23 @@ function changerCouleurTexte(couleur) {
 
 function ouvrirGeometrie() {
     const container = document.getElementById('geo-container');
-    
-    // FORCE L'AFFICHAGE PAR-DESSUS TOUT (Z-INDEX)
-    container.style.zIndex = "9999"; 
     container.style.display = 'flex';
-
-    // BLOQUE LE DÉFILEMENT DU TITRE ET DE L'ACCUEIL EN ARRIÈRE-PLAN
-    document.body.style.overflow = 'hidden';
+    container.style.zIndex = "9999";
 
     canvas = document.getElementById('geoCanvas');
     ctx = canvas.getContext('2d');
 
+    // On donne au canvas la taille réelle de la zone d'affichage
     const area = document.getElementById('canvas-area');
     canvas.width = area.clientWidth;
     canvas.height = area.clientHeight;
 
-    if (!canvas.getAttribute('data-init')) {
-        canvas.addEventListener('pointerdown', function(e) {
-            const r = canvas.getBoundingClientRect();
-            handleInput(e.clientX - r.left, e.clientY - r.top);
-        });
-        canvas.setAttribute('data-init', 'true');
-    }
+    // Rendu initial (vide mais prêt)
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     draw(); 
-    parler("Espace de géométrie prêt.");
 }
-
 function fermerGeometrie() {
     if(confirm("Quitter la construction ? Vos tracés seront effacés.")) {
         document.getElementById('geo-container').style.display = 'none';
