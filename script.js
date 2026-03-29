@@ -2070,36 +2070,31 @@ function setMode(m) {
 }
 
 function handleInput(x, y) {
-    // 1. Détection de point existant (aimant tactile)
+    // 1. On cherche si un point existe déjà à cet endroit (rayon de 20px)
     let p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 20);
 
-    // 2. Mode POINT : On crée un point si la zone est vide
-    if (mode === 'point') {
-        if (!p) {
-            const label = String.fromCharCode(65 + (points.length % 26));
-            p = { x, y, label };
-            points.push(p);
-            parler("Point " + label);
-        }
-    } 
-    // 3. Modes de CONSTRUCTION : On sélectionne des points
-    else {
-        // Si on clique dans le vide, on crée le point automatiquement pour aider l'élève
-        if (!p) {
-            const label = String.fromCharCode(65 + (points.length % 26));
-            p = { x, y, label };
-            points.push(p);
-        }
+    // 2. Si on clique dans le vide, on crée un nouveau point
+    if (!p) {
+        const label = String.fromCharCode(65 + (points.length % 26));
+        p = { x: x, y: y, label: label };
+        points.push(p);
+        parler("Point " + label);
+    }
 
-        // On évite de sélectionner deux fois le même point d'affilée
+    // 3. LOGIQUE DE TRACÉ (C'est ce qui vous manque !)
+    if (mode !== 'point') {
+        // On ajoute le point cliqué à la liste de sélection
+        // (On vérifie que ce n'est pas le même que le précédent)
         if (selected[selected.length - 1] !== p) {
             selected.push(p);
-            parler(p.label);
+            parler("Sélection " + p.label);
         }
 
-        // On vérifie si on a assez de points pour l'outil choisi
-        verifierTrace();
+        // APPEL CRUCIAL : On vérifie si on a assez de points pour tracer
+        verifierTrace(); 
     }
+
+    // 4. On redessine tout (les points et les formes en cours)
     draw();
 }
 function draw() {
@@ -2217,43 +2212,29 @@ function drawFullLine(p1, p2, col) {
     ctx.stroke();
 }
 function verifierTrace() {
-    // Définition des quotas de points par outil
+    // Règles de géométrie : combien de points par outil ?
     const quotas = {
-        'segment': 2,
-        'droite': 2,
-        'cercle': 2,      // [Centre, Rayon]
-        'mediatrice': 2,  // [A, B] du segment
-        'angle': 3,       // [A, Sommet, B]
-        'bissectrice': 3, // [A, Sommet, B]
-        'mediane': 3,     // [A, B du côté, Sommet opposé]
-        'hauteur': 3,     // [A, B de la base, Sommet opposé]
-        'perp': 3,        // [A, B de la droite, Point de passage]
-        'para': 3         // [A, B de la droite, Point de passage]
+        'segment': 2, 'droite': 2, 'cercle': 2, 'mediatrice': 2,
+        'angle': 3, 'bissectrice': 3, 'mediane': 3, 'hauteur': 3, 'perp': 3, 'para': 3
     };
 
     let besoin = quotas[mode];
 
     if (selected.length === besoin) {
-        // On crée la forme avec la couleur choisie
-        const couleur = document.getElementById('color-geo').value;
-        
-        shapes.push({
+        // On crée la forme finale
+        const nouvelleForme = {
             type: mode,
-            pts: [...selected], // On copie les points sélectionnés
-            col: couleur
-        });
+            pts: [...selected], // Copie des points choisis
+            col: document.getElementById('color-geo').value || "#0f172a"
+        };
 
-        // Feedback vocal pour l'élève
-        parler(mode + " tracé avec succès");
-
-        // RESET : On vide la sélection pour la prochaine figure
-        selected = [];
+        shapes.push(nouvelleForme); // On l'ajoute au tableau des dessins
+        selected = []; // On vide la sélection pour le prochain tracé
         
-        // Sauvegarde pour le bouton "Annuler"
-        saveHistory(); 
+        parler(mode + " tracé");
+        draw(); // On force le rafraîchissement visuel
     }
 }
-
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
