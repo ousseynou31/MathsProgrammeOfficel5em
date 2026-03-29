@@ -1080,3 +1080,14 @@ body {
     height: 100%;
     display: block;
 }
+#work-overlay {
+    display: none; /* Caché par défaut */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #f0f2f5;
+    z-index: 4000;
+    flex-direction: column; /* Indispensable pour séparer les barres du canvas */
+}
