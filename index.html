@@ -241,34 +241,44 @@
     </div>
 
     <div id="hub-accueil" class="main-app" style="display:none;">
-      <header class="top-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(0,0,0,0.2); backdrop-filter: blur(10px);">
-        
-      <div class="menu-2026-left" 
-     onclick="openMenu()" 
-     style="width: 45px; height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; cursor: pointer; transition: all 0.3s ease;"
-     onmouseover="this.style.background='rgba(255,215,0,0.2)'; this.style.transform='scale(1.1)';"
-     onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='scale(1)';"
-     title="Ouvrir le Sommaire">
-    <span style="width: 22px; height: 2px; background: #ffd700; border-radius: 2px;"></span>
-    <span style="width: 16px; height: 2px; background: white; border-radius: 2px; align-self: flex-start; margin-left: 11px;"></span>
-    <span style="width: 22px; height: 2px; background: #ffd700; border-radius: 2px;"></span>
-</div>
+     <header class="top-bar" style="
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 0 15px; 
+    height: 60px; 
+    background: rgba(0,0,0,0.3); 
+    backdrop-filter: blur(10px); 
+    position: sticky; 
+    top: 0; 
+    z-index: 9999; 
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+">
+    
+    <div class="menu-2026-left" 
+         onclick="openMenu()" 
+         style="width: 40px; height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; transition: 0.3s; flex-shrink: 0;">
+        <span style="width: 18px; height: 2px; background: #ffd700; border-radius: 2px;"></span>
+        <span style="width: 14px; height: 2px; background: white; border-radius: 2px; align-self: flex-start; margin-left: 11px;"></span>
+        <span style="width: 18px; height: 2px; background: #ffd700; border-radius: 2px;"></span>
+    </div>
 
-        <div id="admin-trigger" class="titre-pilule-premium" style="user-select: none; cursor: pointer; flex: 1; text-align: center; font-size: 0.7rem; font-weight: 800; color: #ffd700; padding: 0 10px;">
-            BIENVENU DANS MATHS 5em 
-        </div>
+    <div id="admin-trigger" 
+         style="flex: 1; text-align: center; user-select: none; cursor: pointer;">
+        <span style="font-size: 0.75rem; font-weight: 900; color: #ffd700; letter-spacing: 1.5px; text-transform: uppercase; font-family: sans-serif;">
+            BIENVENU DANS <span style="color: white;">MATHS 5em</span>
+        </span>
+    </div>
 
-       <div class="menu-2026-right" 
-     onclick="openRightMenu()" 
-     style="width: 45px; height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; cursor: pointer; transition: all 0.3s ease;"
-     onmouseover="this.style.background='rgba(255,215,0,0.2)'; this.style.transform='rotate(90deg)';"
-     onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='rotate(0deg)';"
-     title="Réglages Visuels">
-    <span style="width: 5px; height: 5px; background: #ffd700; border-radius: 50%;"></span>
-    <span style="width: 5px; height: 5px; background: white; border-radius: 50%;"></span>
-    <span style="width: 5px; height: 5px; background: #ffd700; border-radius: 50%;"></span>
-</div>
+    <div class="menu-2026-right" 
+         onclick="openRightMenu()" 
+         style="width: 40px; height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; background: rgba(255,255,255,0.1); border-radius: 50%; cursor: pointer; transition: 0.3s; flex-shrink: 0;">
+        <span style="width: 4px; height: 4px; background: #ffd700; border-radius: 50%;"></span>
+        <span style="width: 4px; height: 4px; background: white; border-radius: 50%;"></span>
+        <span style="width: 4px; height: 4px; background: #ffd700; border-radius: 50%;"></span>
+    </div>
 
+</header>
     <main class="empty-content" style="height: 75vh; display: flex; justify-content: center; align-items: center; position: relative;">
       <div class="glass-window-2026 anim-slide-up">
     <div class="window-header-text">
