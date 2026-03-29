@@ -1947,16 +1947,12 @@ function ouvrirChapitre(id) {
 // 1. NAVIGATION DU MENU DROIT
 // ==========================================
 
-/** Ouvre le menu réglages (Appelé par les 3 points du header) */
 function openRightMenu() {
-    const menu = document.getElementById("right-menu");
-    if (menu) menu.style.width = "280px";
+    document.getElementById("right-menu").style.width = "280px";
 }
 
-/** Ferme le menu réglages (Appelé par la croix ou le bouton FERMER) */
 function closeRightMenu() {
-    const menu = document.getElementById("right-menu");
-    if (menu) menu.style.width = "0";
+    document.getElementById("right-menu").style.width = "0";
 }
 
 // ==========================================
