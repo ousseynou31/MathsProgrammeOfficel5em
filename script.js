@@ -2002,19 +2002,34 @@ function changerCouleurTexte(couleur) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 /** Fonction pour le bouton GÉOMÉTRIE du menu */
 // OUVRE L'OUTIL
-function ouvrirGeometrie() {
-    const container = document.getElementById('geo-container');
-    container.style.display = 'flex'; // Affiche le bloc
-    
-    // Initialisation du Canvas (ajustement taille)
-    setTimeout(() => {
-        const canvas = document.getElementById('geoCanvas');
-        canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = canvas.parentElement.clientHeight;
-        initGeoLogic(); // On lance la logique de dessin
-    }, 100);
+let canvas, ctx; // Variables globales
 
-    parler("Bienvenue dans votre espace de construction géométrique.");
+function ouvrirGeometrie() {
+    // 1. Affichage du conteneur
+    const container = document.getElementById('geo-container');
+    container.style.display = 'flex';
+
+    // 2. Configuration du Canvas
+    canvas = document.getElementById('geoCanvas');
+    ctx = canvas.getContext('2d');
+
+    // 3. Ajustement précis de la taille (après affichage du CSS)
+    const area = document.getElementById('canvas-area');
+    canvas.width = area.clientWidth;
+    canvas.height = area.clientHeight;
+
+    // 4. Activation des écouteurs de clic/toucher (si pas déjà fait)
+    if (!canvas.getAttribute('data-init')) {
+        canvas.addEventListener('pointerdown', function(e) {
+            const r = canvas.getBoundingClientRect();
+            handleInput(e.clientX - r.left, e.clientY - r.top);
+        });
+        canvas.setAttribute('data-init', 'true');
+    }
+
+    // 5. Nettoyage et premier tracé
+    draw(); 
+    parler("Espace de géométrie prêt. Choisis un outil dans le dock en bas.");
 }
 
 // FERME L'OUTIL
