@@ -2011,23 +2011,26 @@ function changerCouleurTexte(couleur) {
 // OUVRE L'OUTIL
 
 function ouvrirGeometrie() {
+    // 1. On affiche le container
     const container = document.getElementById('geo-container');
     container.style.display = 'flex';
-    container.style.zIndex = "9999";
 
-    canvas = document.getElementById('geoCanvas');
-    ctx = canvas.getContext('2d');
-
-    // On donne au canvas la taille réelle de la zone d'affichage
-    const area = document.getElementById('canvas-area');
-    canvas.width = area.clientWidth;
-    canvas.height = area.clientHeight;
-
-    // Rendu initial (vide mais prêt)
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    draw(); 
+    // 2. On laisse 300ms au navigateur pour stabiliser l'affichage
+    setTimeout(() => {
+        // On initialise le canvas seulement quand il est visible
+        const canvas = document.getElementById('geoCanvas');
+        if (canvas) {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            
+            // On lance le premier dessin
+            if (typeof draw === "function") draw();
+            
+            if (typeof parler === "function") {
+                parler("Bienvenue dans Géo Magie Pro");
+            }
+        }
+    }, 300);
 }
 function fermerGeometrie() {
     if(confirm("Quitter la construction ? Vos tracés seront effacés.")) {
