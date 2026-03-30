@@ -6,7 +6,7 @@ console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
 
 // --- VARIABLES GLOBALES GÉO-MAGIE ---
 
-// TOUT EN HAUT DU FICHIER SCRIPT.JS
+// TOUT EN HAUT DU FICHIER SCRIPT.JS 
 let canvas, ctx; 
 let mode = 'point';
 let points = [];
