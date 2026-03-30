@@ -2009,29 +2009,33 @@ function changerCouleurTexte(couleur) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 /** Fonction pour le bouton GÉOMÉTRIE du menu */
 // OUVRE L'OUTIL
-
 function ouvrirGeometrie() {
-    // 1. On affiche le container
+    // 1. On affiche l'écran de géométrie
     const container = document.getElementById('geo-container');
     container.style.display = 'flex';
 
-    // 2. On laisse 300ms au navigateur pour stabiliser l'affichage
+    // 2. IMPORTANT : On attend 300ms que l'affichage soit stable
+    // avant de donner ses dimensions au canvas
     setTimeout(() => {
-        // On initialise le canvas seulement quand il est visible
         const canvas = document.getElementById('geoCanvas');
-        if (canvas) {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
+        const area = document.getElementById('canvas-area');
+        
+        if (canvas && area) {
+            // On donne au canvas la taille exacte de la zone blanche
+            canvas.width = area.clientWidth;
+            canvas.height = area.clientHeight;
             
-            // On lance le premier dessin
-            if (typeof draw === "function") draw();
+            // On active le mode point par défaut
+            setMode('point');
             
-            if (typeof parler === "function") {
-                parler("Bienvenue dans Géo Magie Pro");
-            }
+            // On force le premier rendu (nettoyage + fond blanc)
+            draw(); 
+            
+            console.log("Tableau prêt : " + canvas.width + "x" + canvas.height);
         }
     }, 300);
 }
+
 function fermerGeometrie() {
     if(confirm("Quitter la construction ? Vos tracés seront effacés.")) {
         document.getElementById('geo-container').style.display = 'none';
