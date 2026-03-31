@@ -2050,81 +2050,7 @@ function creerPoint(x, y) {
     if (typeof parler === "function") parler("Point " + nom);
 }
 
-// --- FONCTION QUI REÇOIT LE CLIC DU DOIGT OU DE LA SOURIS ---
-function handleInput(x, y) {
-    if (mode === 'point') {
-        const label = String.fromCharCode(65 + (points.length % 26));
-        points.push({ x: x, y: y, label: label, color: couleurActive });
-        refreshCanvas();
-        return;
-    }
 
-    const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
-    if (!pProche) return;
-
-    // Ajout à la sélection (autorise le double-clic sur un point pour les cas particuliers)
-    if (!selection.includes(pProche) || selection.length >= 2) {
-        selection.push(pProche);
-    }
-    
-    refreshCanvas();
-    const nb = selection.length;
-
-    // --- LOGIQUE 2 POINTS ---
-    if (nb === 2) {
-        const [p1, p2] = selection;
-        if (mode === 'milieu') {
-            points.push({ x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2, label: "M"+points.length, color: couleurActive });
-            selection = [];
-        } else if (mode === 'mediatrice') {
-            // Calcul du vecteur perpendiculaire passant par le milieu
-            const mx = (p1.x + p2.x) / 2;
-            const my = (p1.y + p2.y) / 2;
-            const dx = p2.x - p1.x;
-            const dy = p2.y - p1.y;
-            // On crée un point fictif pTemp pour donner la direction perpendiculaire
-            const pTemp = { x: mx - dy, y: my + dx };
-            elements.push({ type: 'mediatrice', p1: {x: mx, y: my}, p2: pTemp, color: couleurActive });
-            selection = [];
-        } else if (['segment', 'droite', 'cercle'].includes(mode)) {
-            elements.push({ type: mode, p1, p2, color: couleurActive });
-            selection = [];
-        }
-    }
-
-    // --- LOGIQUE 3 POINTS ---
-    if (nb === 3) {
-        const [p1, p2, p3] = selection; // p1,p2 = droite de référence | p3 = point de passage
-
-        if (mode === 'parallele') {
-            const dx = p2.x - p1.x;
-            const dy = p2.y - p1.y;
-            const p4 = { x: p3.x + dx, y: p3.y + dy };
-            elements.push({ type: 'parallele', p1: p3, p2: p4, color: couleurActive });
-        }
-        else if (mode === 'perpendiculaire' || mode === 'hauteur') {
-            const dx = p2.x - p1.x;
-            const dy = p2.y - p1.y;
-            // Vecteur perpendiculaire à (p1p2) partant de p3
-            const p4 = { x: p3.x - dy, y: p3.y + dx };
-            
-            if (mode === 'hauteur') {
-                elements.push({ type: 'droite', p1: p3, p2: p4, color: couleurActive, isHauteur: true });
-            } else {
-                elements.push({ type: 'perpendiculaire', p1: p3, p2: p4, color: couleurActive });
-            }
-        }
-        else if (mode === 'mediane') {
-            const M = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-            elements.push({ type: 'segment', p1: p3, p2: M, color: couleurActive });
-        }
-        else if (mode === 'angle' || mode === 'bissectrice') {
-            elements.push({ type: mode, p1, p2, p3, color: couleurActive });
-        }
-        selection = [];
-    }
-    refreshCanvas();
-}
 // --- LE DESSINATEUR GÉNÉRAL ---
 
 function dessinerAngleDroit(sommet, versPoint) {
@@ -2150,90 +2076,7 @@ function undo() {
     }
     refreshCanvas();
 }
-// --- GESTION DES COULEURS ---
-function refreshCanvas() {
-    if (!ctx || !canvas) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    elements.forEach(el => {
-        ctx.beginPath();
-        ctx.strokeStyle = el.color;
-        ctx.lineWidth = 2;
-
-        // 1. ÉLÉMENTS FINIS (Segments, Médianes)
-        if (el.type === 'segment' || el.type === 'mediane') {
-            ctx.moveTo(el.p1.x, el.p1.y);
-            ctx.lineTo(el.p2.x, el.p2.y);
-        } 
-        
-        // 2. ÉLÉMENTS INFINIS (Droites, Parallèles, Perpendiculaires, Médiatrices)
-        else if (['droite', 'mediatrice', 'parallele', 'perpendiculaire'].includes(el.type) || el.isHauteur) {
-            const dx = el.p2.x - el.p1.x;
-            const dy = el.p2.y - el.p1.y;
-            
-            if (el.isHauteur) ctx.setLineDash([5, 5]); // Pointillés pour la hauteur
-
-            // Tracé très long
-            ctx.moveTo(el.p1.x - dx * 100, el.p1.y - dy * 100);
-            ctx.lineTo(el.p2.x + dx * 100, el.p2.y + dy * 100);
-        }
-
-        // 3. BISSECTRICE (Demi-droite)
-        else if (el.type === 'bissectrice') {
-            const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
-            const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
-            let bisAngle = (a1 + a3) / 2;
-            if (Math.abs(a3 - a1) > Math.PI) bisAngle += Math.PI;
-            ctx.moveTo(el.p2.x, el.p2.y);
-            ctx.lineTo(el.p2.x + Math.cos(bisAngle) * 2000, el.p2.y + Math.sin(bisAngle) * 2000);
-        }
-
-        // 4. CERCLE & ANGLE (Inchangés car ils fonctionnaient)
-        else if (el.type === 'cercle') {
-            const rayon = Math.hypot(el.p2.x - el.p1.x, el.p2.y - el.p1.y);
-            ctx.arc(el.p1.x, el.p1.y, rayon, 0, Math.PI * 2);
-        }
-        else if (el.type === 'angle') {
-            const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
-            const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
-            ctx.save();
-            ctx.globalAlpha = 0.3;
-            ctx.fillStyle = el.color;
-            ctx.moveTo(el.p2.x, el.p2.y);
-            ctx.arc(el.p2.x, el.p2.y, 40, a1, a3);
-            ctx.fill();
-            ctx.restore();
-
-            let midA = (a1 + a3) / 2;
-            if (Math.abs(a3 - a1) > Math.PI) midA += Math.PI;
-            const tx = el.p2.x + Math.cos(midA) * 25;
-            const ty = el.p2.y + Math.sin(midA) * 25;
-            let deg = Math.round(Math.abs((a3 - a1) * 180 / Math.PI));
-            if (deg > 180) deg = 360 - deg;
-            
-            ctx.fillStyle = el.color;
-            ctx.font = "bold 12px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText(deg + "°", tx, ty);
-        }
-        
-        ctx.stroke();
-        ctx.setLineDash([]); // Reset
-    });
-
-    // 5. POINTS
-    points.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = selection.includes(p) ? "#ff4757" : (p.color || "#0f172a");
-        ctx.fill();
-        ctx.fillStyle = "#0f172a";
-        ctx.font = "bold 15px Arial";
-        ctx.fillText(p.label, p.x + 12, p.y - 12);
-    });
-}
 // Fonction pour le sélecteur de couleurs HTML
 function setCouleur(hex) {
     couleurActive = hex; 
@@ -2275,6 +2118,154 @@ function pointsDroiteInfinie(A, B) {
         p1: { x: A.x - dx * 100, y: A.y - dy * 100 },
         p2: { x: A.x + dx * 100, y: A.y + dy * 100 }
     };
+}
+function refreshCanvas() {
+    if (!ctx || !canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    elements.forEach(el => {
+        ctx.beginPath();
+        ctx.strokeStyle = el.color;
+        ctx.lineWidth = 2;
+
+        // 1. OBJETS FINIS
+        if (el.type === 'segment' || el.type === 'mediane') {
+            ctx.moveTo(el.p1.x, el.p1.y);
+            ctx.lineTo(el.p2.x, el.p2.y);
+        } 
+        
+        // 2. OBJETS INFINIS (On utilise dx/dy pour prolonger loin)
+        else if (['droite', 'mediatrice', 'parallele', 'perpendiculaire'].includes(el.type) || el.isHauteur) {
+            const dx = el.p2.x - el.p1.x;
+            const dy = el.p2.y - el.p1.y;
+            
+            if (el.isHauteur) ctx.setLineDash([5, 5]); 
+
+            ctx.moveTo(el.p1.x - dx * 100, el.p1.y - dy * 100);
+            ctx.lineTo(el.p2.x + dx * 100, el.p2.y + dy * 100);
+        }
+
+        // 3. BISSECTRICE, CERCLE, ANGLE (Inchangés car stables)
+        else if (el.type === 'bissectrice') {
+            const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
+            const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
+            let bisAngle = (a1 + a3) / 2;
+            if (Math.abs(a3 - a1) > Math.PI) bisAngle += Math.PI;
+            ctx.moveTo(el.p2.x, el.p2.y);
+            ctx.lineTo(el.p2.x + Math.cos(bisAngle) * 2000, el.p2.y + Math.sin(bisAngle) * 2000);
+        }
+        else if (el.type === 'cercle') {
+            const rayon = Math.hypot(el.p2.x - el.p1.x, el.p2.y - el.p1.y);
+            ctx.arc(el.p1.x, el.p1.y, rayon, 0, Math.PI * 2);
+        }
+        else if (el.type === 'angle') {
+            const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
+            const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
+            ctx.save();
+            ctx.globalAlpha = 0.3; ctx.fillStyle = el.color;
+            ctx.moveTo(el.p2.x, el.p2.y); ctx.arc(el.p2.x, el.p2.y, 40, a1, a3);
+            ctx.fill(); ctx.restore();
+
+            let midA = (a1 + a3) / 2;
+            if (Math.abs(a3 - a1) > Math.PI) midA += Math.PI;
+            const tx = el.p2.x + Math.cos(midA) * 25;
+            const ty = el.p2.y + Math.sin(midA) * 25;
+            let deg = Math.round(Math.abs((a3 - a1) * 180 / Math.PI));
+            if (deg > 180) deg = 360 - deg;
+            ctx.fillStyle = el.color; ctx.font = "bold 12px Arial"; ctx.textAlign = "center";
+            ctx.fillText(deg + "°", tx, ty);
+        }
+        
+        ctx.stroke();
+        ctx.setLineDash([]); 
+    });
+
+    // 4. POINTS
+    points.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = selection.includes(p) ? "#ff4757" : (p.color || "#0f172a");
+        ctx.fill();
+        ctx.fillStyle = "#0f172a"; ctx.font = "bold 15px Arial";
+        ctx.fillText(p.label, p.x + 12, p.y - 12);
+    });
+}
+
+function handleInput(x, y) {
+    if (mode === 'point') {
+        const label = String.fromCharCode(65 + (points.length % 26));
+        points.push({ x: x, y: y, label: label, color: couleurActive });
+        refreshCanvas();
+        return;
+    }
+
+    const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
+    if (!pProche) return;
+
+    // On ajoute à la sélection. On accepte le même point uniquement si on a déjà 2 points différents.
+    if (!selection.includes(pProche) || (selection.length >= 2)) {
+        selection.push(pProche);
+    }
+    
+    refreshCanvas();
+    const nb = selection.length;
+
+    // --- LOGIQUE 2 POINTS ---
+    if (nb === 2) {
+        const [p1, p2] = selection;
+        if (p1 === p2 && mode !== 'point') { selection.pop(); return; } // Sécurité : 2 points différents requis
+
+        if (mode === 'milieu') {
+            points.push({ x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2, label: "M"+points.length, color: couleurActive });
+            selection = [];
+        } else if (mode === 'mediatrice') {
+            const mx = (p1.x + p2.x) / 2;
+            const my = (p1.y + p2.y) / 2;
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            // Direction perpendiculaire (-dy, dx)
+            elements.push({ type: 'mediatrice', p1: {x: mx, y: my}, p2: {x: mx - dy, y: my + dx}, color: couleurActive });
+            selection = [];
+        } else if (['segment', 'droite', 'cercle'].includes(mode)) {
+            elements.push({ type: mode, p1, p2, color: couleurActive });
+            selection = [];
+        }
+    }
+
+    // --- LOGIQUE 3 POINTS ---
+    if (nb === 3) {
+        const [p1, p2, p3] = selection; // p1, p2 définissent la droite de référence, p3 est le point de passage
+
+        if (mode === 'parallele') {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            // On crée la parallèle passant par p3 en utilisant la direction de (p1p2)
+            elements.push({ type: 'parallele', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
+        }
+        else if (mode === 'perpendiculaire' || mode === 'hauteur') {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            // Direction perpendiculaire (-dy, dx) appliquée depuis p3
+            const pTarget = { x: p3.x - dy, y: p3.y + dx };
+            
+            if (mode === 'hauteur') {
+                elements.push({ type: 'droite', p1: p3, p2: pTarget, color: couleurActive, isHauteur: true });
+            } else {
+                elements.push({ type: 'perpendiculaire', p1: p3, p2: pTarget, color: couleurActive });
+            }
+        }
+        else if (mode === 'mediane') {
+            const M = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+            elements.push({ type: 'segment', p1: p3, p2: M, color: couleurActive });
+        }
+        else if (mode === 'angle' || mode === 'bissectrice') {
+            elements.push({ type: mode, p1, p2, p3, color: couleurActive });
+        }
+        selection = [];
+    }
+    refreshCanvas();
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
