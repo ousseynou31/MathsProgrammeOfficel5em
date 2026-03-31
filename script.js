@@ -6,14 +6,12 @@ console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
 // =========================================================
 // 1. DÉCLARATIONS GLOBALES (UNE SEULE FOIS ICI)
 // =========================================================
-let canvas;
-let ctx;
+let canvas, ctx;
 let points = [];
+let elements = []; // Contiendra segments, droites, cercles, etc.
+let selection = []; // Points actuellement cliqués pour un outil
 let mode = 'point';
-
-// --- 🆕 NOUVELLES VARIABLES POUR LES SEGMENTS 2026 ---
-let segments = []; 
-let pointSelectionne = null;
+let activeColor = '#0f172a'; // Couleur par défaut
 
 // 1. CONFIGURATION FIREBASE 
 const firebaseConfig = {
@@ -2054,75 +2052,123 @@ function creerPoint(x, y) {
 
 // --- FONCTION QUI REÇOIT LE CLIC DU DOIGT OU DE LA SOURIS ---
 function handleInput(x, y) {
+    // 1. Mode point classique
     if (mode === 'point') {
         const label = String.fromCharCode(65 + (points.length % 26));
-        points.push({ x: x, y: y, label: label });
+        points.push({ x, y, label, color: activeColor });
         refreshCanvas();
-    } 
-    
-    else if (mode === 'segment') {
-        // 1. On cherche si l'élève a cliqué PROCHE d'un point existant (rayon de 20 pixels)
-        const pointClique = points.find(p => {
-            const distance = Math.sqrt((x - p.x)**2 + (y - p.y)**2);
-            return distance < 20; 
-        });
+        return;
+    }
 
-        if (pointClique) {
-            if (!pointSelectionne) {
-                // Premier clic : on sélectionne le point
-                pointSelectionne = pointClique;
-                refreshCanvas(); // Pour l'entourer en jaune/doré par exemple
-            } else if (pointSelectionne !== pointClique) {
-                // Deuxième clic sur un autre point : on crée le segment !
-                segments.push({ p1: pointSelectionne, p2: pointClique });
-                pointSelectionne = null; // On remet à zéro pour le suivant
-                refreshCanvas();
-            }
+    // 2. Sélection de points existants pour les autres outils
+    const p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 20);
+    if (!p) return;
+
+    // Ajouter à la sélection si pas déjà présent
+    if (!selection.includes(p)) selection.push(p);
+    refreshCanvas();
+
+    // 3. Logique des outils
+    const nb = selection.length;
+
+    // --- OUTILS À 2 POINTS ---
+    if (nb === 2) {
+        const [A, B] = selection;
+        if (mode === 'segment') elements.push({ type: 'segment', p1: A, p2: B, color: activeColor });
+        if (mode === 'droite') elements.push({ type: 'droite', p1: A, p2: B, color: activeColor });
+        if (mode === 'cercle') elements.push({ type: 'cercle', center: A, radius: distance(A, B), color: activeColor });
+        if (mode === 'mediatrice') {
+            const M = milieu(A, B);
+            elements.push({ type: 'mediatrice', p1: A, p2: B, mid: M, color: activeColor });
+        }
+        
+        if (['segment', 'droite', 'cercle', 'mediatrice'].includes(mode)) {
+            selection = [];
         }
     }
-}
 
+    // --- OUTILS À 3 POINTS (Triangle / Angle) ---
+    if (nb === 3) {
+        const [A, B, C] = selection; // B est souvent le sommet
+        if (mode === 'hauteur') {
+            const H = projectionPointSurDroite(A, B, C);
+            elements.push({ type: 'hauteur', p1: A, p2: H, color: activeColor });
+        }
+        if (mode === 'mediane') {
+            const M = milieu(B, C);
+            elements.push({ type: 'mediane', p1: A, p2: M, color: activeColor });
+        }
+        if (mode === 'angle') {
+            elements.push({ type: 'angle', p1: A, vertex: B, p2: C, color: activeColor });
+        }
+        selection = [];
+    }
+    refreshCanvas();
+}
 // --- LE DESSINATEUR GÉNÉRAL ---
 function refreshCanvas() {
     if (!ctx || !canvas) return;
-
-    // 1. Fond blanc
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 2. DESSIN DES SEGMENTS (On les dessine en premier pour qu'ils passent sous les points)
-    segments.forEach(seg => {
+    elements.forEach(el => {
         ctx.beginPath();
-        ctx.moveTo(seg.p1.x, seg.p1.y);
-        ctx.lineTo(seg.p2.x, seg.p2.y);
-        ctx.strokeStyle = "#0f172a"; // Même bleu-noir que les points
-        ctx.lineWidth = 3;            // Épaisseur de la règle
-        ctx.stroke();
+        ctx.strokeStyle = el.color;
+        ctx.lineWidth = 2;
+
+        if (el.type === 'segment' || el.type === 'hauteur' || el.type === 'mediane') {
+            ctx.moveTo(el.p1.x, el.p1.y);
+            ctx.lineTo(el.p2.x, el.p2.y);
+            ctx.stroke();
+            if (el.type === 'hauteur') dessinerAngleDroit(el.p2, el.p1);
+        }
+
+        if (el.type === 'mediatrice') {
+            // Dessin simplifié d'une droite perpendiculaire
+            const dx = el.p2.x - el.p1.x;
+            const dy = el.p2.y - el.p1.y;
+            ctx.moveTo(el.mid.x - dy, el.mid.y + dx);
+            ctx.lineTo(el.mid.x + dy, el.mid.y - dx);
+            ctx.stroke();
+            dessinerAngleDroit(el.mid, el.p1);
+        }
+
+        if (el.type === 'angle') {
+            const ang1 = Math.atan2(el.p1.y - el.vertex.y, el.p1.x - el.vertex.x);
+            const ang2 = Math.atan2(el.p2.y - el.vertex.y, el.p2.x - el.vertex.x);
+            
+            // Dessin de l'arc coloré
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = el.color;
+            ctx.moveTo(el.vertex.x, el.vertex.y);
+            ctx.arc(el.vertex.x, el.vertex.y, 40, ang1, ang2);
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+            
+            // Affichage de la mesure
+            let deg = Math.abs((ang2 - ang1) * 180 / Math.PI);
+            if (deg > 180) deg = 360 - deg;
+            ctx.fillStyle = el.color;
+            ctx.fillText(deg.toFixed(1) + "°", el.vertex.x + 45, el.vertex.y);
+        }
     });
 
-    // 3. DESSIN DES POINTS
+    // Dessin des points
     points.forEach(p => {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
-        
-        // Si le point est celui qu'on vient de sélectionner pour le segment, on le met en doré
-        if (pointSelectionne === p) {
-            ctx.fillStyle = "#ffd700"; // Couleur Or
-            ctx.arc(p.x, p.y, 10, 0, Math.PI * 2); // Un peu plus gros
-        } else {
-            ctx.fillStyle = "#0f172a"; // Couleur normale
-        }
-        
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = selection.includes(p) ? "red" : p.color;
         ctx.fill();
-        
-        // Lettres (A, B, C...)
-        ctx.fillStyle = "#0f172a";
-        ctx.font = "bold 16px Arial";
         ctx.fillText(p.label, p.x + 10, p.y - 10);
     });
 }
 
+function dessinerAngleDroit(sommet, versPoint) {
+    // Petite fonction pour dessiner le carré de l'angle droit
+    ctx.save();
+    ctx.strokeStyle = activeColor;
+    // Logique simplifiée pour le carré...
+    ctx.restore();
+}
 // --- FONCTION ANNULER MISE À JOUR ---
 function undo() {
     // Si on était en train de sélectionner un point pour un segment, on annule la sélection
@@ -2139,7 +2185,28 @@ function undo() {
     }
     refreshCanvas();
 }
+// --- GESTION DES COULEURS ---
+function changerCouleur(hex) {
+    activeColor = hex;
+    // On met à jour visuellement les boutons de couleur si nécessaire
+    console.log("Couleur active :", hex);
+}
 
+// Calcule le milieu entre deux points
+const milieu = (p1, p2) => ({ x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 });
+
+// Calcule la distance entre deux points
+const distance = (p1, p2) => Math.hypot(p1.x - p2.x, p1.y - p2.y);
+
+// Calcule la projection d'un point P sur la droite (AB) - Utile pour la Hauteur
+function projectionPointSurDroite(P, A, B) {
+    const v = { x: B.x - A.x, y: B.y - A.y };
+    const u = { x: P.x - A.x, y: P.y - A.y };
+    const dot = u.x * v.x + u.y * v.y;
+    const lenSq = v.x * v.x + v.y * v.y;
+    const param = dot / lenSq;
+    return { x: A.x + param * v.x, y: A.y + param * v.y };
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
