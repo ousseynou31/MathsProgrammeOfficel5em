@@ -2130,24 +2130,25 @@ function refreshCanvas() {
         ctx.strokeStyle = el.color;
         ctx.lineWidth = 2;
 
-        // 1. OBJETS FINIS
+        // --- TRACÉS FINIS ---
         if (el.type === 'segment' || el.type === 'mediane') {
             ctx.moveTo(el.p1.x, el.p1.y);
             ctx.lineTo(el.p2.x, el.p2.y);
         } 
         
-        // 2. OBJETS INFINIS (On utilise dx/dy pour prolonger loin)
+        // --- TRACÉS INFINIS ---
         else if (['droite', 'mediatrice', 'parallele', 'perpendiculaire'].includes(el.type) || el.isHauteur) {
             const dx = el.p2.x - el.p1.x;
             const dy = el.p2.y - el.p1.y;
             
             if (el.isHauteur) ctx.setLineDash([5, 5]); 
 
+            // On multiplie par 100 pour garantir que la droite traverse tout l'écran
             ctx.moveTo(el.p1.x - dx * 100, el.p1.y - dy * 100);
             ctx.lineTo(el.p2.x + dx * 100, el.p2.y + dy * 100);
         }
 
-        // 3. BISSECTRICE, CERCLE, ANGLE (Inchangés car stables)
+        // --- CAS SPÉCIFIQUES ---
         else if (el.type === 'bissectrice') {
             const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
             const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
@@ -2161,28 +2162,27 @@ function refreshCanvas() {
             ctx.arc(el.p1.x, el.p1.y, rayon, 0, Math.PI * 2);
         }
         else if (el.type === 'angle') {
+            // ... (Code de l'angle conservé car fonctionnel)
             const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
             const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
             ctx.save();
             ctx.globalAlpha = 0.3; ctx.fillStyle = el.color;
             ctx.moveTo(el.p2.x, el.p2.y); ctx.arc(el.p2.x, el.p2.y, 40, a1, a3);
             ctx.fill(); ctx.restore();
-
+            // Affichage du texte
             let midA = (a1 + a3) / 2;
             if (Math.abs(a3 - a1) > Math.PI) midA += Math.PI;
-            const tx = el.p2.x + Math.cos(midA) * 25;
-            const ty = el.p2.y + Math.sin(midA) * 25;
             let deg = Math.round(Math.abs((a3 - a1) * 180 / Math.PI));
             if (deg > 180) deg = 360 - deg;
             ctx.fillStyle = el.color; ctx.font = "bold 12px Arial"; ctx.textAlign = "center";
-            ctx.fillText(deg + "°", tx, ty);
+            ctx.fillText(deg + "°", el.p2.x + Math.cos(midA) * 25, el.p2.y + Math.sin(midA) * 25);
         }
         
         ctx.stroke();
         ctx.setLineDash([]); 
     });
 
-    // 4. POINTS
+    // --- DESSIN DES POINTS ---
     points.forEach(p => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
@@ -2204,18 +2204,20 @@ function handleInput(x, y) {
     const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
     if (!pProche) return;
 
-    // On ajoute à la sélection. On accepte le même point uniquement si on a déjà 2 points différents.
-    if (!selection.includes(pProche) || (selection.length >= 2)) {
+    // Logique de sélection : on accepte un point déjà choisi seulement si on a déjà une base de 2 points
+    if (!selection.includes(pProche) || selection.length >= 2) {
         selection.push(pProche);
     }
     
     refreshCanvas();
     const nb = selection.length;
 
-    // --- LOGIQUE 2 POINTS ---
+    // --- CAS 2 POINTS ---
     if (nb === 2) {
         const [p1, p2] = selection;
-        if (p1 === p2 && mode !== 'point') { selection.pop(); return; } // Sécurité : 2 points différents requis
+        
+        // Sécurité : Si l'utilisateur clique deux fois sur le même point pour un segment/droite
+        if (p1 === p2) { selection.pop(); return; } 
 
         if (mode === 'milieu') {
             points.push({ x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2, label: "M"+points.length, color: couleurActive });
@@ -2225,7 +2227,7 @@ function handleInput(x, y) {
             const my = (p1.y + p2.y) / 2;
             const dx = p2.x - p1.x;
             const dy = p2.y - p1.y;
-            // Direction perpendiculaire (-dy, dx)
+            // On stocke la médiatrice comme une droite passant par le milieu avec un vecteur perp (-dy, dx)
             elements.push({ type: 'mediatrice', p1: {x: mx, y: my}, p2: {x: mx - dy, y: my + dx}, color: couleurActive });
             selection = [];
         } else if (['segment', 'droite', 'cercle'].includes(mode)) {
@@ -2234,20 +2236,21 @@ function handleInput(x, y) {
         }
     }
 
-    // --- LOGIQUE 3 POINTS ---
+    // --- CAS 3 POINTS ---
     if (nb === 3) {
-        const [p1, p2, p3] = selection; // p1, p2 définissent la droite de référence, p3 est le point de passage
+        const [p1, p2, p3] = selection; 
+        // p1, p2 = la droite de référence | p3 = le point de passage (peut être égal à p1 ou p2)
 
         if (mode === 'parallele') {
             const dx = p2.x - p1.x;
             const dy = p2.y - p1.y;
-            // On crée la parallèle passant par p3 en utilisant la direction de (p1p2)
+            // Translation de la direction (p1p2) au point p3
             elements.push({ type: 'parallele', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
         }
         else if (mode === 'perpendiculaire' || mode === 'hauteur') {
             const dx = p2.x - p1.x;
             const dy = p2.y - p1.y;
-            // Direction perpendiculaire (-dy, dx) appliquée depuis p3
+            // Vecteur perpendiculaire (-dy, dx)
             const pTarget = { x: p3.x - dy, y: p3.y + dx };
             
             if (mode === 'hauteur') {
