@@ -2054,7 +2054,7 @@ function creerPoint(x, y) {
 function handleInput(x, y) {
     if (mode === 'point') {
         const label = String.fromCharCode(65 + (points.length % 26));
-        points.push({ x, y, label, color: couleurActive });
+        points.push({ x: x, y: y, label: label, color: couleurActive });
         refreshCanvas();
         return;
     }
@@ -2062,68 +2062,60 @@ function handleInput(x, y) {
     const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
     if (!pProche) return;
 
-    if (!selection.includes(pProche)) selection.push(pProche);
+    if (!selection.includes(pProche)) {
+        selection.push(pProche);
+    } else if (selection.length >= 2) {
+        // CAS PARTICULIER : Si l'élève clique une deuxième fois sur un point déjà choisi
+        // on l'autorise pour permettre la perpendiculaire/parallèle sur ce point précis.
+        selection.push(pProche); 
+    }
+    
     refreshCanvas();
-
     const nb = selection.length;
 
-    // --- CAS 2 POINTS ---
     if (nb === 2) {
         const [p1, p2] = selection;
-        if (mode === 'segment') elements.push({ type: 'segment', p1, p2, color: couleurActive });
-        if (mode === 'droite') elements.push({ type: 'droite', p1, p2, color: couleurActive });
         if (mode === 'milieu') {
             points.push({ x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2, label: "M"+points.length, color: couleurActive });
             selection = [];
-        }
-        if (mode === 'mediatrice') {
-            const M = { x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2 };
-            const dx = p2.x - p1.x;
-            const dy = p2.y - p1.y;
-            // Vecteur perpendiculaire (-dy, dx)
-            const pPassage = { x: M.x - dy, y: M.y + dx };
-            elements.push({ type: 'droite', p1: M, p2: pPassage, color: couleurActive });
+        } else if (['segment', 'droite', 'mediatrice', 'cercle'].includes(mode)) {
+            elements.push({ type: mode, p1, p2, color: couleurActive });
             selection = [];
         }
     }
 
-    // --- CAS 3 POINTS (Perpendiculaire, Parallèle, Hauteur) ---
     if (nb === 3) {
-        const [A, B, C] = selection; // (AB) est la droite de référence, C est le point de passage
+        const [p1, p2, p3] = selection;
 
-        if (mode === 'perpendiculaire' || mode === 'hauteur') {
-            const dx = B.x - A.x;
-            const dy = B.y - A.y;
-            // Si A et B sont confondus, on prend une direction par défaut
-            if (dx === 0 && dy === 0) return; 
-
-            // Vecteur perpendiculaire à AB
-            const pPerp = { x: C.x - dy, y: C.y + dx };
+        if (mode === 'parallele') {
+            // Direction (p1p2) appliquée à p3
+            const p4 = { x: p3.x + (p2.x - p1.x), y: p3.y + (p2.y - p1.y) };
+            elements.push({ type: 'parallele', p1: p3, p2: p4, color: couleurActive });
+        }
+        else if (mode === 'perpendiculaire' || mode === 'hauteur') {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            // Vecteur perpendiculaire
+            const pPerp = { x: p3.x - dy, y: p3.y + dx };
             
             if (mode === 'hauteur') {
-                // Pour la hauteur, on trace une droite pour voir l'intersection hors triangle
-                elements.push({ type: 'droite', p1: C, p2: pPerp, color: couleurActive, dash: [5, 5] });
+                // On transforme la hauteur en droite pour gérer les cas hors-triangle
+                elements.push({ type: 'droite', p1: p3, p2: pPerp, color: couleurActive, isHauteur: true });
             } else {
-                elements.push({ type: 'droite', p1: C, p2: pPerp, color: couleurActive });
+                elements.push({ type: 'droite', p1: p3, p2: pPerp, color: couleurActive });
             }
         }
-        
-        else if (mode === 'parallele') {
-            // Direction de AB appliquée à C
-            const pPara = { x: C.x + (B.x - A.x), y: C.y + (B.y - A.y) };
-            elements.push({ type: 'droite', p1: C, p2: pPara, color: couleurActive });
-        }
-        
         else if (mode === 'mediane') {
-            const M = { x: (A.x + B.x)/2, y: (A.y + B.y)/2 };
-            elements.push({ type: 'segment', p1: C, p2: M, color: couleurActive });
+            const M = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+            elements.push({ type: 'segment', p1: p3, p2: M, color: couleurActive });
         }
-
+        else if (mode === 'angle' || mode === 'bissectrice') {
+            elements.push({ type: mode, p1, p2, p3, color: couleurActive });
+        }
         selection = [];
     }
     refreshCanvas();
 }
-
 // --- LE DESSINATEUR GÉNÉRAL ---
 
 function dessinerAngleDroit(sommet, versPoint) {
@@ -2159,31 +2151,75 @@ function refreshCanvas() {
     elements.forEach(el => {
         ctx.beginPath();
         ctx.strokeStyle = el.color;
-        ctx.setLineDash(el.dash || []); // Pour les pointillés de la hauteur
         ctx.lineWidth = 2;
 
-        if (el.type === 'segment') {
+        // --- SEGMENTS & MÉDIANES ---
+        if (el.type === 'segment' || el.type === 'mediane') {
             ctx.moveTo(el.p1.x, el.p1.y);
             ctx.lineTo(el.p2.x, el.p2.y);
         } 
-        else if (el.type === 'droite') {
-            const inf = pointsDroiteInfinie(el.p1, el.p2);
-            ctx.moveTo(inf.p1.x, inf.p1.y);
-            ctx.lineTo(inf.p2.x, inf.p2.y);
+        
+        // --- DROITES, PARALLÈLES, PERPENDICULAIRES, MÉDIATRICES, HAUTEURS ---
+        else if (['droite', 'mediatrice', 'parallele', 'perpendiculaire'].includes(el.type) || el.isHauteur) {
+            const dx = el.p2.x - el.p1.x;
+            const dy = el.p2.y - el.p1.y;
+            // Prolongement infini pour que les outils se croisent toujours
+            ctx.moveTo(el.p1.x - dx * 100, el.p1.y - dy * 100);
+            ctx.lineTo(el.p2.x + dx * 100, el.p2.y + dy * 100);
+            
+            // Si c'est une hauteur, on peut forcer un style pointillé pour le prolongement
+            if (el.isHauteur) { ctx.setLineDash([5, 5]); }
         }
-        // ... (reste des outils : angle, cercle)
+
+        else if (el.type === 'bissectrice') {
+            const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
+            const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
+            let bisAngle = (a1 + a3) / 2;
+            if (Math.abs(a3 - a1) > Math.PI) bisAngle += Math.PI;
+            ctx.moveTo(el.p2.x, el.p2.y);
+            ctx.lineTo(el.p2.x + Math.cos(bisAngle) * 2000, el.p2.y + Math.sin(bisAngle) * 2000);
+        }
+
+        else if (el.type === 'cercle') {
+            const rayon = Math.hypot(el.p2.x - el.p1.x, el.p2.y - el.p1.y);
+            ctx.arc(el.p1.x, el.p1.y, rayon, 0, Math.PI * 2);
+        }
+
+        else if (el.type === 'angle') {
+            const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
+            const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = el.color;
+            ctx.moveTo(el.p2.x, el.p2.y);
+            ctx.arc(el.p2.x, el.p2.y, 40, a1, a3);
+            ctx.fill();
+            ctx.restore();
+
+            let midA = (a1 + a3) / 2;
+            if (Math.abs(a3 - a1) > Math.PI) midA += Math.PI;
+            const tx = el.p2.x + Math.cos(midA) * 25;
+            const ty = el.p2.y + Math.sin(midA) * 25;
+            let deg = Math.round(Math.abs((a3 - a1) * 180 / Math.PI));
+            if (deg > 180) deg = 360 - deg;
+            
+            ctx.fillStyle = el.color;
+            ctx.font = "bold 12px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(deg + "°", tx, ty);
+        }
         
         ctx.stroke();
-        ctx.setLineDash([]); // Reset des pointillés
+        ctx.setLineDash([]); // On remet en ligne pleine pour les autres éléments
     });
 
-    // Dessin des points (Toujours en dernier pour être au-dessus)
     points.forEach(p => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = selection.includes(p) ? "red" : (p.color || "black");
+        ctx.fillStyle = selection.includes(p) ? "#ff4757" : (p.color || "#0f172a");
         ctx.fill();
-        ctx.fillStyle = "black";
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "bold 15px Arial";
         ctx.fillText(p.label, p.x + 12, p.y - 12);
     });
 }
