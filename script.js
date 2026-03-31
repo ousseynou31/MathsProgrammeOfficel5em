@@ -2052,19 +2052,18 @@ function creerPoint(x, y) {
 
 // --- FONCTION QUI REÇOIT LE CLIC DU DOIGT OU DE LA SOURIS ---
 function handleInput(x, y) {
-    // 1. Création d'un point libre
+    // 1. GESTION DU MODE POINT
     if (mode === 'point') {
         const label = String.fromCharCode(65 + (points.length % 26));
-        points.push({ x, y, label, color: couleurActive });
+        points.push({ x: x, y: y, label: label, color: couleurActive });
         refreshCanvas();
-        return;
+        return; // ✅ ICI C'EST AUTORISÉ (on sort de la fonction handleInput)
     }
 
-    // 2. Sélection d'un point existant pour les outils
+    // 2. SÉLECTION D'UN POINT EXISTANT POUR LES AUTRES OUTILS
     const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
-    if (!pProche) return;
+    if (!pProche) return; // ✅ AUTORISÉ : on ne fait rien si on clique dans le vide
 
-    // Ajouter à la sélection si pas déjà dedans
     if (!selection.includes(pProche)) {
         selection.push(pProche);
     }
@@ -2072,33 +2071,28 @@ function handleInput(x, y) {
 
     const nb = selection.length;
 
-    // --- LOGIQUE SELON LE NOMBRE DE POINTS ---
-
-    // A. OUTIL MILIEU (2 points -> crée un nouveau point)
+    // --- LOGIQUE DES OUTILS ---
+    
+    // MILIEU (2 points)
     if (mode === 'milieu' && nb === 2) {
         const [A, B] = selection;
         const M = { 
             x: (A.x + B.x) / 2, 
             y: (A.y + B.y) / 2, 
-            label: "M" + (points.length), 
-            color: couleurActive,
-            isMilieu: true 
+            label: "M" + points.length, 
+            color: couleurActive 
         };
         points.push(M);
         selection = [];
     }
-
-    // B. OUTILS À 2 POINTS (Segment, Droite, Médiatrice, Cercle)
-    else if (nb === 2 && ['segment', 'droite', 'mediatrice', 'cercle'].includes(mode)) {
-        const [A, B] = selection;
-        elements.push({ type: mode, p1: A, p2: B, color: couleurActive });
+    // SEGMENT / DROITE / MEDIATRICE (2 points)
+    else if (nb === 2 && ['segment', 'droite', 'mediatrice'].includes(mode)) {
+        elements.push({ type: mode, p1: selection[0], p2: selection[1], color: couleurActive });
         selection = [];
     }
-
-    // C. OUTILS À 3 POINTS (Perpendiculaire, Hauteur, Médiane, Bissectrice, Angle)
+    // ANGLE / HAUTEUR / MEDIANE (3 points)
     else if (nb === 3) {
-        const [A, B, C] = selection;
-        elements.push({ type: mode, p1: A, p2: B, p3: C, color: couleurActive });
+        elements.push({ type: mode, p1: selection[0], p2: selection[1], p3: selection[2], color: couleurActive });
         selection = [];
     }
 
