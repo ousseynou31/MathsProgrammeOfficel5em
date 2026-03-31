@@ -6,11 +6,9 @@ console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
 
 // --- VARIABLES GLOBALES GÉO-MAGIE ---
 // 1. VARIABLES D'ÉTAT (Le cerveau du tableau)
-let canvas = null;
-let ctx = null;
-let points = [];    // Stocke les points {x, y, label}
-let mode = 'point'; // Mode par défaut
-
+let canvas, ctx;
+let points = [];
+let mode = 'point';
 // 1. CONFIGURATION FIREBASE 
 const firebaseConfig = {
     databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
@@ -2002,10 +2000,7 @@ function changerCouleurTexte(couleur) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// --- VARIABLES DE CONTRÔLE ---
-let canvas, ctx;
-let points = [];
-let mode = 'point';
+
 
 // --- FONCTION DE DESSIN (C'est elle qui affiche les points) ---
 function refreshCanvas() {
