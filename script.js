@@ -2002,57 +2002,71 @@ function changerCouleurTexte(couleur) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-/**
- * OUVRIR L'ESPACE DE GÉOMÉTRIE
- * Cette fonction est appelée par votre bouton "CONSTRUCTION GÉOMÉTRIQUE"
- */
-function ouvrirGeometrie() {
-    const container = document.getElementById('geo-container');
-    container.style.display = 'flex';
+// --- VARIABLES DE CONTRÔLE ---
+let canvas, ctx;
+let points = [];
+let mode = 'point';
 
-    // IMPORTANT : On attend que l'affichage soit stabilisé pour mesurer
+// --- FONCTION DE DESSIN (C'est elle qui affiche les points) ---
+function refreshCanvas() {
+    if (!ctx || !canvas) return;
+
+    // 1. On efface tout et on met un fond blanc
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 2. On dessine les points en NOIR (Bleu nuit foncé)
+    points.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = "#0f172a"; // COULEUR TRÈS FONCÉE
+        ctx.fill();
+        
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "bold 16px Arial";
+        ctx.fillText(p.label, p.x + 10, p.y - 10);
+    });
+}
+
+// --- FONCTION QUI REÇOIT LE CLIC ---
+function handleInput(x, y) {
+    console.log("Clic détecté aux coordonnées :", x, y); // Pour vérifier dans la console
+    
+    if (mode === 'point') {
+        const label = String.fromCharCode(65 + (points.length % 26));
+        points.push({ x: x, y: y, label: label });
+        refreshCanvas(); // On appelle le dessin
+    }
+}
+
+// --- INITIALISATION DU CANVAS ---
+function ouvrirGeometrie() {
+    document.getElementById('geo-container').style.display = 'flex';
     setTimeout(() => {
         canvas = document.getElementById('geoCanvas');
         const area = document.getElementById('canvas-area');
-        
         if (canvas && area) {
             ctx = canvas.getContext('2d');
-            
-            // On donne au canvas la taille exacte de la zone blanche
             canvas.width = area.clientWidth;
             canvas.height = area.clientHeight;
-            
-            // On initialise l'affichage
-            setMode('point');
             refreshCanvas();
-            
-            console.log("📏 Tableau de géométrie prêt : " + canvas.width + "x" + canvas.height);
         }
-    }, 400); 
+    }, 400);
 }
 
-/**
- * FERMER L'ESPACE
- */
-function fermerGeometrie() {
-    document.getElementById('geo-container').style.display = 'none';
+function setMode(m) {
+    mode = m;
+    document.querySelectorAll('.btn-ui-geo').forEach(b => b.classList.remove('active'));
+    if (document.getElementById('btn-' + m)) document.getElementById('btn-' + m).classList.add('active');
+    if (document.getElementById('msg-geo')) document.getElementById('msg-geo').innerText = m.toUpperCase();
 }
 
-/**
- * CHANGER D'OUTIL (Point, Segment, etc.)
- */
-function setMode(nouveauMode) {
-    mode = nouveauMode;
-    
-    // Mise à jour visuelle des boutons (DOCK)
-    document.querySelectorAll('.btn-ui-geo').forEach(btn => btn.classList.remove('active'));
-    const btnActif = document.getElementById('btn-' + nouveauMode);
-    if (btnActif) btnActif.classList.add('active');
-    
-    // Mise à jour du texte d'info sur le tableau
-    const labelMode = document.getElementById('msg-geo');
-    if (labelMode) labelMode.innerText = nouveauMode.toUpperCase();
-}
+function fermerGeometrie() { document.getElementById('geo-container').style.display = 'none'; }
+function undo() { points.pop(); refreshCanvas(); }
+
+
+
 /**
  * CRÉATION D'UN POINT
  */
@@ -2069,29 +2083,6 @@ function creerPoint(x, y) {
     if (typeof parler === "function") parler("Point " + nom);
 }
 
-/**
- * LE DESSINATEUR (RAFRAÎCHISSEMENT)
- */
-function refreshCanvas() {
-    if (!ctx) return;
-
-    // 1. On nettoie tout le tableau
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // 2. On dessine chaque point de la liste
-    points.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); // Le petit rond
-        ctx.fillStyle = "#0f172a";           // Couleur bleu nuit (pro)
-        ctx.fill();
-        
-        // On écrit le nom à côté du point
-        ctx.font = "bold 16px Arial";
-        ctx.fillText(p.label, p.x + 12, p.y - 12);
-    });
-}
 
 /**
  * FONCTION ANNULER (UNDO)
@@ -2113,7 +2104,7 @@ function undo() {
 window.addEventListener('load', async () => {
     console.log("🚀 Initialisation du moteur Maths 5em...");
 
-    // 1. AFFICHAGE IMMÉDIAT DE L'ID (Pour éviter l'affichage "...")
+    // 1. AFFICHAGE IMMÉDIAT DE L'ID
     const devIdDisplay = document.getElementById('display-device-id');
     if (devIdDisplay && typeof getDeviceId === "function") {
         devIdDisplay.innerText = getDeviceId();
@@ -2148,9 +2139,9 @@ window.addEventListener('load', async () => {
         if (typeof surveillerConnexion === "function") surveillerConnexion();
     }
 
-    // --- ⬇️ AJOUT DES NOUVEAUX PARAMÈTRES 2026 ⬇️ ---
+    // --- ⬇️ AJOUT DES PARAMÈTRES INTERFACE 2026 ⬇️ ---
 
-    // 6. GÉNÉRATION DU SOMMAIRE (C11 à C14)
+    // 6. GÉNÉRATION DU SOMMAIRE
     if (typeof chargerSommaire === "function") {
         chargerSommaire();
     }
@@ -2161,30 +2152,40 @@ window.addEventListener('load', async () => {
         changerTheme(themeSauve);
     }
 
-    // 8. ÉCOUTEUR TECHNIQUE POUR LA GÉOMÉTRIE (Canvas)
-    // Utilisation de 'pointerdown' pour une compatibilité Tactile + Souris
+    // 8. ÉCOUTEUR TECHNIQUE POUR LE TABLEAU DE GÉOMÉTRIE
+    // On utilise 'pointerdown' pour gérer à la fois la souris et le tactile (doigt/stylet)
     document.addEventListener('pointerdown', (e) => {
+        // Sécurité : On n'agit que si la cible est bien le canvas
         if (e.target.id !== 'geoCanvas') return;
         
+        // On récupère la position exacte du canvas sur l'écran
         const r = e.target.getBoundingClientRect(); 
         
-        // On envoie les coordonnées exactes par rapport au coin du tableau
+        // Calcul des coordonnées relatives au coin haut-gauche du tableau
+        const x = e.clientX - r.left;
+        const y = e.clientY - r.top;
+        
         if (typeof handleInput === "function") {
-            handleInput(e.clientX - r.left, e.clientY - r.top);
+            handleInput(x, y);
         }
     });
     
-    console.log("✅ Système Diouf Maths 5ème prêt (Sécurité & Interface OK).");
+    console.log("✅ Système Diouf Maths 5ème prêt (Interface & Géométrie OK).");
 });
 
-// --- GESTION DU REDIMENSIONNEMENT ---
-// Pour éviter que le tableau ne se déforme si l'élève tourne sa tablette
+// --- GESTION DU REDIMENSIONNEMENT & ROTATION ---
+// Indispensable pour que les points ne se décalent pas si l'élève tourne son téléphone
 window.addEventListener('resize', () => {
-    if (typeof canvas !== "undefined" && canvas && typeof refreshCanvas === "function") {
-        const area = document.getElementById('canvas-area');
-        if (area) {
-            canvas.width = area.clientWidth;
-            canvas.height = area.clientHeight;
+    const area = document.getElementById('canvas-area');
+    const geoContainer = document.getElementById('geo-container');
+
+    // On ne redimensionne que si l'espace géométrie est actuellement ouvert
+    if (geoContainer && geoContainer.style.display === 'flex' && area && canvas) {
+        canvas.width = area.clientWidth;
+        canvas.height = area.clientHeight;
+        
+        // On redessine tout immédiatement pour éviter un écran blanc
+        if (typeof refreshCanvas === "function") {
             refreshCanvas();
         }
     }
