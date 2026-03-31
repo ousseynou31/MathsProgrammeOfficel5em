@@ -2109,21 +2109,22 @@ function dessinerAngleDroit(sommet, versPoint) {
 }
 // --- FONCTION ANNULER MISE À JOUR ---
 function undo() {
-    // Si on était en train de sélectionner un point pour un segment, on annule la sélection
-    if (pointSelectionne) {
-        pointSelectionne = null;
+    // 1. Si une sélection est en cours (points en rouge), on l'annule d'abord
+    if (selection.length > 0) {
+        selection = [];
     } 
-    // Sinon on enlève le dernier segment créé
-    else if (segments.length > 0) {
-        segments.pop();
+    // 2. Sinon, on enlève le dernier élément tracé (segment, angle, etc.)
+    else if (elements.length > 0) {
+        elements.pop();
     } 
-    // Sinon on enlève le dernier point créé
+    // 3. Sinon, on enlève le dernier point créé
     else if (points.length > 0) {
         points.pop();
     }
     refreshCanvas();
 }
-// --- GESTION DES COULEURS ---function refreshCanvas() {
+// --- GESTION DES COULEURS ---
+function refreshCanvas() {
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
@@ -2181,11 +2182,14 @@ function undo() {
         ctx.fillText(p.label, p.x + 12, p.y - 12);
     });
 }
+
 // Fonction pour le sélecteur de couleurs HTML
 function setCouleur(hex) {
-    couleurActive = hex;
-    console.log("Couleur sélectionnée :", hex);
+    couleurActive = hex; 
+    activeColor = hex; // Pour être sûr de couvrir les deux noms
+    console.log("Couleur active :", hex);
 }
+
 
 function changerCouleur(hex) {
     activeColor = hex;
