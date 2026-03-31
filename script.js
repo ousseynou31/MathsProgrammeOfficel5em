@@ -3,12 +3,14 @@
 window.adminEnCours = window.adminEnCours || false;
 window.minuteurAdmin = window.minuteurAdmin || null;
 console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
+// =========================================================
+// 1. DÉCLARATIONS GLOBALES (UNE SEULE FOIS ICI)
+// =========================================================
+let canvas;       // On prépare la variable (sans 'let' plus tard)
+let ctx;          // Le pinceau du tableau
+let points = [];  // La liste des points tracés
+let mode = 'point'; // L'outil sélectionné par défaut
 
-// --- VARIABLES GLOBALES GÉO-MAGIE ---
-// 1. VARIABLES D'ÉTAT (Le cerveau du tableau)
-let canvas, ctx;
-let points = [];
-let mode = 'point';
 // 1. CONFIGURATION FIREBASE 
 const firebaseConfig = {
     databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
