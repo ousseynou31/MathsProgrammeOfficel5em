@@ -5,16 +5,11 @@ window.minuteurAdmin = window.minuteurAdmin || null;
 console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
 
 // --- VARIABLES GLOBALES GÉO-MAGIE ---
-
-// TOUT EN HAUT DU FICHIER SCRIPT.JS 
-let canvas, ctx; 
-let mode = 'point';
-let points = [];
-let shapes = [];
-let selected = [];
-let history = [];
-let redoList = [];
-let voice = true;
+// 1. VARIABLES D'ÉTAT (Le cerveau du tableau)
+let canvas = null;
+let ctx = null;
+let points = [];    // Stocke les points {x, y, label}
+let mode = 'point'; // Mode par défaut
 
 // 1. CONFIGURATION FIREBASE 
 const firebaseConfig = {
@@ -2007,7 +2002,106 @@ function changerCouleurTexte(couleur) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+/**
+ * OUVRIR L'ESPACE DE GÉOMÉTRIE
+ * Cette fonction est appelée par votre bouton "CONSTRUCTION GÉOMÉTRIQUE"
+ */
+function ouvrirGeometrie() {
+    const container = document.getElementById('geo-container');
+    container.style.display = 'flex';
 
+    // IMPORTANT : On attend que l'affichage soit stabilisé pour mesurer
+    setTimeout(() => {
+        canvas = document.getElementById('geoCanvas');
+        const area = document.getElementById('canvas-area');
+        
+        if (canvas && area) {
+            ctx = canvas.getContext('2d');
+            
+            // On donne au canvas la taille exacte de la zone blanche
+            canvas.width = area.clientWidth;
+            canvas.height = area.clientHeight;
+            
+            // On initialise l'affichage
+            setMode('point');
+            refreshCanvas();
+            
+            console.log("📏 Tableau de géométrie prêt : " + canvas.width + "x" + canvas.height);
+        }
+    }, 400); 
+}
+
+/**
+ * FERMER L'ESPACE
+ */
+function fermerGeometrie() {
+    document.getElementById('geo-container').style.display = 'none';
+}
+
+/**
+ * CHANGER D'OUTIL (Point, Segment, etc.)
+ */
+function setMode(nouveauMode) {
+    mode = nouveauMode;
+    
+    // Mise à jour visuelle des boutons (DOCK)
+    document.querySelectorAll('.btn-ui-geo').forEach(btn => btn.classList.remove('active'));
+    const btnActif = document.getElementById('btn-' + nouveauMode);
+    if (btnActif) btnActif.classList.add('active');
+    
+    // Mise à jour du texte d'info sur le tableau
+    const labelMode = document.getElementById('msg-geo');
+    if (labelMode) labelMode.innerText = nouveauMode.toUpperCase();
+}
+/**
+ * CRÉATION D'UN POINT
+ */
+function creerPoint(x, y) {
+    // Génère le nom : A, B, C...
+    const nom = String.fromCharCode(65 + (points.length % 26));
+    
+    points.push({ x: x, y: y, label: nom });
+    
+    // On redessine tout de suite
+    refreshCanvas();
+    
+    // Optionnel : Si vous avez une fonction vocale
+    if (typeof parler === "function") parler("Point " + nom);
+}
+
+/**
+ * LE DESSINATEUR (RAFRAÎCHISSEMENT)
+ */
+function refreshCanvas() {
+    if (!ctx) return;
+
+    // 1. On nettoie tout le tableau
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 2. On dessine chaque point de la liste
+    points.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); // Le petit rond
+        ctx.fillStyle = "#0f172a";           // Couleur bleu nuit (pro)
+        ctx.fill();
+        
+        // On écrit le nom à côté du point
+        ctx.font = "bold 16px Arial";
+        ctx.fillText(p.label, p.x + 12, p.y - 12);
+    });
+}
+
+/**
+ * FONCTION ANNULER (UNDO)
+ */
+function undo() {
+    if (points.length > 0) {
+        points.pop(); // Retire le dernier point
+        refreshCanvas();
+    }
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -2057,7 +2151,6 @@ window.addEventListener('load', async () => {
     // --- ⬇️ AJOUT DES NOUVEAUX PARAMÈTRES 2026 ⬇️ ---
 
     // 6. GÉNÉRATION DU SOMMAIRE (C11 à C14)
-    // On le lance ici pour que la liste soit prête dès que la licence est validée
     if (typeof chargerSommaire === "function") {
         chargerSommaire();
     }
@@ -2069,13 +2162,30 @@ window.addEventListener('load', async () => {
     }
 
     // 8. ÉCOUTEUR TECHNIQUE POUR LA GÉOMÉTRIE (Canvas)
+    // Utilisation de 'pointerdown' pour une compatibilité Tactile + Souris
     document.addEventListener('pointerdown', (e) => {
         if (e.target.id !== 'geoCanvas') return;
+        
         const r = e.target.getBoundingClientRect(); 
+        
+        // On envoie les coordonnées exactes par rapport au coin du tableau
         if (typeof handleInput === "function") {
             handleInput(e.clientX - r.left, e.clientY - r.top);
         }
     });
     
     console.log("✅ Système Diouf Maths 5ème prêt (Sécurité & Interface OK).");
+});
+
+// --- GESTION DU REDIMENSIONNEMENT ---
+// Pour éviter que le tableau ne se déforme si l'élève tourne sa tablette
+window.addEventListener('resize', () => {
+    if (typeof canvas !== "undefined" && canvas && typeof refreshCanvas === "function") {
+        const area = document.getElementById('canvas-area');
+        if (area) {
+            canvas.width = area.clientWidth;
+            canvas.height = area.clientHeight;
+            refreshCanvas();
+        }
+    }
 });
