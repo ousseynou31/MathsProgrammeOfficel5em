@@ -6,10 +6,14 @@ console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
 // =========================================================
 // 1. DÉCLARATIONS GLOBALES (UNE SEULE FOIS ICI)
 // =========================================================
-let canvas;       // On prépare la variable (sans 'let' plus tard)
-let ctx;          // Le pinceau du tableau
-let points = [];  // La liste des points tracés
-let mode = 'point'; // L'outil sélectionné par défaut
+let canvas;
+let ctx;
+let points = [];
+let mode = 'point';
+
+// --- 🆕 NOUVELLES VARIABLES POUR LES SEGMENTS 2026 ---
+let segments = []; 
+let pointSelectionne = null;
 
 // 1. CONFIGURATION FIREBASE 
 const firebaseConfig = {
@@ -2004,38 +2008,6 @@ function changerCouleurTexte(couleur) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 
-// --- FONCTION DE DESSIN (C'est elle qui affiche les points) ---
-function refreshCanvas() {
-    if (!ctx || !canvas) return;
-
-    // 1. On efface tout et on met un fond blanc
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // 2. On dessine les points en NOIR (Bleu nuit foncé)
-    points.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = "#0f172a"; // COULEUR TRÈS FONCÉE
-        ctx.fill();
-        
-        ctx.fillStyle = "#0f172a";
-        ctx.font = "bold 16px Arial";
-        ctx.fillText(p.label, p.x + 10, p.y - 10);
-    });
-}
-
-// --- FONCTION QUI REÇOIT LE CLIC ---
-function handleInput(x, y) {
-    console.log("Clic détecté aux coordonnées :", x, y); // Pour vérifier dans la console
-    
-    if (mode === 'point') {
-        const label = String.fromCharCode(65 + (points.length % 26));
-        points.push({ x: x, y: y, label: label });
-        refreshCanvas(); // On appelle le dessin
-    }
-}
 
 // --- INITIALISATION DU CANVAS ---
 function ouvrirGeometrie() {
@@ -2080,16 +2052,94 @@ function creerPoint(x, y) {
     if (typeof parler === "function") parler("Point " + nom);
 }
 
-
-/**
- * FONCTION ANNULER (UNDO)
- */
-function undo() {
-    if (points.length > 0) {
-        points.pop(); // Retire le dernier point
+// --- FONCTION QUI REÇOIT LE CLIC DU DOIGT OU DE LA SOURIS ---
+function handleInput(x, y) {
+    if (mode === 'point') {
+        const label = String.fromCharCode(65 + (points.length % 26));
+        points.push({ x: x, y: y, label: label });
         refreshCanvas();
+    } 
+    
+    else if (mode === 'segment') {
+        // 1. On cherche si l'élève a cliqué PROCHE d'un point existant (rayon de 20 pixels)
+        const pointClique = points.find(p => {
+            const distance = Math.sqrt((x - p.x)**2 + (y - p.y)**2);
+            return distance < 20; 
+        });
+
+        if (pointClique) {
+            if (!pointSelectionne) {
+                // Premier clic : on sélectionne le point
+                pointSelectionne = pointClique;
+                refreshCanvas(); // Pour l'entourer en jaune/doré par exemple
+            } else if (pointSelectionne !== pointClique) {
+                // Deuxième clic sur un autre point : on crée le segment !
+                segments.push({ p1: pointSelectionne, p2: pointClique });
+                pointSelectionne = null; // On remet à zéro pour le suivant
+                refreshCanvas();
+            }
+        }
     }
 }
+
+// --- LE DESSINATEUR GÉNÉRAL ---
+function refreshCanvas() {
+    if (!ctx || !canvas) return;
+
+    // 1. Fond blanc
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 2. DESSIN DES SEGMENTS (On les dessine en premier pour qu'ils passent sous les points)
+    segments.forEach(seg => {
+        ctx.beginPath();
+        ctx.moveTo(seg.p1.x, seg.p1.y);
+        ctx.lineTo(seg.p2.x, seg.p2.y);
+        ctx.strokeStyle = "#0f172a"; // Même bleu-noir que les points
+        ctx.lineWidth = 3;            // Épaisseur de la règle
+        ctx.stroke();
+    });
+
+    // 3. DESSIN DES POINTS
+    points.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        
+        // Si le point est celui qu'on vient de sélectionner pour le segment, on le met en doré
+        if (pointSelectionne === p) {
+            ctx.fillStyle = "#ffd700"; // Couleur Or
+            ctx.arc(p.x, p.y, 10, 0, Math.PI * 2); // Un peu plus gros
+        } else {
+            ctx.fillStyle = "#0f172a"; // Couleur normale
+        }
+        
+        ctx.fill();
+        
+        // Lettres (A, B, C...)
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "bold 16px Arial";
+        ctx.fillText(p.label, p.x + 10, p.y - 10);
+    });
+}
+
+// --- FONCTION ANNULER MISE À JOUR ---
+function undo() {
+    // Si on était en train de sélectionner un point pour un segment, on annule la sélection
+    if (pointSelectionne) {
+        pointSelectionne = null;
+    } 
+    // Sinon on enlève le dernier segment créé
+    else if (segments.length > 0) {
+        segments.pop();
+    } 
+    // Sinon on enlève le dernier point créé
+    else if (points.length > 0) {
+        points.pop();
+    }
+    refreshCanvas();
+}
+
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
