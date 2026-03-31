@@ -2052,17 +2052,17 @@ function creerPoint(x, y) {
 
 // --- FONCTION QUI REÇOIT LE CLIC DU DOIGT OU DE LA SOURIS ---
 function handleInput(x, y) {
-    // 1. GESTION DU MODE POINT
+    // --- 1. MODE POINT LIBRE ---
     if (mode === 'point') {
         const label = String.fromCharCode(65 + (points.length % 26));
         points.push({ x: x, y: y, label: label, color: couleurActive });
         refreshCanvas();
-        return; // ✅ ICI C'EST AUTORISÉ (on sort de la fonction handleInput)
+        return;
     }
 
-    // 2. SÉLECTION D'UN POINT EXISTANT POUR LES AUTRES OUTILS
+    // --- 2. SÉLECTION DE POINTS EXISTANTS ---
     const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
-    if (!pProche) return; // ✅ AUTORISÉ : on ne fait rien si on clique dans le vide
+    if (!pProche) return;
 
     if (!selection.includes(pProche)) {
         selection.push(pProche);
@@ -2071,29 +2071,53 @@ function handleInput(x, y) {
 
     const nb = selection.length;
 
-    // --- LOGIQUE DES OUTILS ---
-    
-    // MILIEU (2 points)
-    if (mode === 'milieu' && nb === 2) {
-        const [A, B] = selection;
-        const M = { 
-            x: (A.x + B.x) / 2, 
-            y: (A.y + B.y) / 2, 
-            label: "M" + points.length, 
-            color: couleurActive 
-        };
-        points.push(M);
-        selection = [];
+    // --- 3. LOGIQUE DES OUTILS À 2 POINTS ---
+    if (nb === 2) {
+        const [p1, p2] = selection;
+        
+        if (mode === 'milieu') {
+            const M = { 
+                x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2, 
+                label: "M" + points.length, color: couleurActive 
+            };
+            points.push(M);
+            selection = [];
+        } 
+        else if (['segment', 'droite', 'mediatrice', 'cercle'].includes(mode)) {
+            elements.push({ type: mode, p1, p2, color: couleurActive });
+            selection = [];
+        }
+        // Si c'est un outil à 3 points, on ne vide pas la sélection, on attend le 3ème !
     }
-    // SEGMENT / DROITE / MEDIATRICE (2 points)
-    else if (nb === 2 && ['segment', 'droite', 'mediatrice'].includes(mode)) {
-        elements.push({ type: mode, p1: selection[0], p2: selection[1], color: couleurActive });
-        selection = [];
-    }
-    // ANGLE / HAUTEUR / MEDIANE (3 points)
-    else if (nb === 3) {
-        elements.push({ type: mode, p1: selection[0], p2: selection[1], p3: selection[2], color: couleurActive });
-        selection = [];
+
+    // --- 4. LOGIQUE DES OUTILS À 3 POINTS ---
+    if (nb === 3) {
+        const [p1, p2, p3] = selection; // p1, p2 = la base | p3 = le point de passage ou sommet
+
+        if (mode === 'parallele') {
+            // On crée un vecteur directionnel à partir de p1, p2 et on l'applique à p3
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const p4 = { x: p3.x + dx, y: p3.y + dy };
+            elements.push({ type: 'droite', p1: p3, p2: p4, color: couleurActive });
+        }
+        else if (mode === 'perpendiculaire') {
+            const H = projectionPointSurDroite(p3, p1, p2);
+            elements.push({ type: 'droite', p1: p3, p2: H, color: couleurActive });
+        }
+        else if (mode === 'hauteur') {
+            const H = projectionPointSurDroite(p3, p1, p2);
+            elements.push({ type: 'segment', p1: p3, p2: H, color: couleurActive, isHauteur: true });
+        }
+        else if (mode === 'mediane') {
+            const M = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+            elements.push({ type: 'segment', p1: p3, p2: M, color: couleurActive });
+        }
+        else if (mode === 'angle' || mode === 'bissectrice') {
+            elements.push({ type: mode, p1, p2, p3, color: couleurActive });
+        }
+
+        selection = []; // On vide tout après l'action
     }
 
     refreshCanvas();
@@ -2128,61 +2152,96 @@ function refreshCanvas() {
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Fond blanc technique
+    // 1. Fond blanc
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // 2. Dessin des éléments géométriques
     elements.forEach(el => {
         ctx.beginPath();
         ctx.strokeStyle = el.color;
         ctx.lineWidth = 2;
 
-        // --- DESSIN DES LIGNES ---
-        if (el.type === 'segment') {
-            ctx.moveTo(el.p1.x, el.p1.y); ctx.lineTo(el.p2.x, el.p2.y);
+        // --- SEGMENTS, HAUTEURS, MÉDIANES ---
+        if (el.type === 'segment' || el.type === 'hauteur' || el.type === 'mediane') {
+            ctx.moveTo(el.p1.x, el.p1.y);
+            ctx.lineTo(el.p2.x, el.p2.y);
+            if (el.isHauteur) { /* On pourrait ajouter un petit carré ici */ }
         } 
-        else if (el.type === 'mediane') {
-            // Médiane de C passant par milieu de [AB]
-            const mx = (el.p1.x + el.p2.x) / 2;
-            const my = (el.p1.y + el.p2.y) / 2;
-            ctx.moveTo(el.p3.x, el.p3.y); ctx.lineTo(mx, my);
+        
+        // --- DROITES, PARALLÈLES, PERPENDICULAIRES, MÉDIATRICES ---
+        else if (el.type === 'droite' || el.type === 'mediatrice' || el.type === 'parallele') {
+            const dx = el.p2.x - el.p1.x;
+            const dy = el.p2.y - el.p1.y;
+            // On trace une ligne "infinie" (10000 pixels)
+            ctx.moveTo(el.p1.x - dx * 100, el.p1.y - dy * 100);
+            ctx.lineTo(el.p2.x + dx * 100, el.p2.y + dy * 100);
         }
-        else if (el.type === 'angle') {
-            // Calcul de l'angle au sommet B (p2) entre A(p1) et C(p3)
+
+        // --- BISSECTRICE ---
+        else if (el.type === 'bissectrice') {
             const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
-            const a2 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
+            const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
+            let bisAngle = (a1 + a3) / 2;
+            if (Math.abs(a3 - a1) > Math.PI) bisAngle += Math.PI;
             
+            ctx.moveTo(el.p2.x, el.p2.y);
+            ctx.lineTo(el.p2.x + Math.cos(bisAngle) * 2000, el.p2.y + Math.sin(bisAngle) * 2000);
+        }
+
+        // --- CERCLE ---
+        else if (el.type === 'cercle') {
+            const rayon = Math.hypot(el.p2.x - el.p1.x, el.p2.y - el.p1.y);
+            ctx.arc(el.p1.x, el.p1.y, rayon, 0, Math.PI * 2);
+        }
+
+        // --- ANGLE (Secteur + Mesure au centre) ---
+        else if (el.type === 'angle') {
+            const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
+            const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
+            
+            // Dessin du secteur coloré
             ctx.save();
-            ctx.globalAlpha = 0.4;
+            ctx.globalAlpha = 0.3;
             ctx.fillStyle = el.color;
             ctx.moveTo(el.p2.x, el.p2.y);
-            ctx.arc(el.p2.x, el.p2.y, 35, a1, a2); // Secteur coloré
+            ctx.arc(el.p2.x, el.p2.y, 40, a1, a3);
             ctx.fill();
             ctx.restore();
 
-            // Affichage de la mesure
-            let deg = Math.abs((a2 - a1) * 180 / Math.PI);
+            // Placement du texte au milieu du secteur
+            let midA = (a1 + a3) / 2;
+            if (Math.abs(a3 - a1) > Math.PI) midA += Math.PI;
+            const tx = el.p2.x + Math.cos(midA) * 25;
+            const ty = el.p2.y + Math.sin(midA) * 25;
+
+            let deg = Math.abs((a3 - a1) * 180 / Math.PI);
             if (deg > 180) deg = 360 - deg;
+            
             ctx.fillStyle = el.color;
-            ctx.font = "bold 14px Arial";
-            ctx.fillText(Math.round(deg) + "°", el.p2.x + 40, el.p2.y);
+            ctx.font = "bold 12px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(Math.round(deg) + "°", tx, ty);
         }
-        // ... (Ajouter ici les calculs pour Perpendiculaire/Médiatrice similaires)
         
         ctx.stroke();
     });
 
-    // --- DESSIN DES POINTS ---
+    // 3. Dessin des points (par-dessus les lignes)
     points.forEach(p => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = selection.includes(p) ? "#ff4757" : p.color;
+        // On met le point en rouge s'il est sélectionné
+        ctx.fillStyle = selection.includes(p) ? "#ff4757" : (p.color || "#0f172a");
         ctx.fill();
+        
+        // Étiquette du point (Nom)
         ctx.fillStyle = "#0f172a";
+        ctx.font = "bold 15px Arial";
+        ctx.textAlign = "left";
         ctx.fillText(p.label, p.x + 12, p.y - 12);
     });
 }
-
 // Fonction pour le sélecteur de couleurs HTML
 function setCouleur(hex) {
     couleurActive = hex; 
