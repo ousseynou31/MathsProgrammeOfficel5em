@@ -2006,8 +2006,15 @@ function changerCouleurTexte(couleur) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 
+// --- VARIABLES GLOBALES (À déclarer une seule fois en haut) ---
+let canvas, ctx;
+let points = [];
+let elements = [];
+let selection = [];
+let mode = 'point';
+let couleurActive = '#0f172a';
 
-// --- INITIALISATION DU CANVAS ---
+// --- INITIALISATION ---
 function ouvrirGeometrie() {
     document.getElementById('geo-container').style.display = 'flex';
     setTimeout(() => {
@@ -2018,197 +2025,126 @@ function ouvrirGeometrie() {
             canvas.width = area.clientWidth;
             canvas.height = area.clientHeight;
 
-            // --- AJOUT CRUCIAL : Écouter le clic sur le canvas ---
             canvas.onpointerdown = (e) => {
                 const rect = canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
                 handleInput(x, y);
             };
-
             refreshCanvas();
         }
     }, 400);
 }
+
+function fermerGeometrie() { 
+    document.getElementById('geo-container').style.display = 'none'; 
+}
+
 function setMode(m) {
     mode = m;
+    selection = []; // On vide la sélection quand on change d'outil pour débloquer
     document.querySelectorAll('.btn-ui-geo').forEach(b => b.classList.remove('active'));
     if (document.getElementById('btn-' + m)) document.getElementById('btn-' + m).classList.add('active');
     if (document.getElementById('msg-geo')) document.getElementById('msg-geo').innerText = m.toUpperCase();
-}
-
-function fermerGeometrie() { document.getElementById('geo-container').style.display = 'none'; }
-function undo() { points.pop(); refreshCanvas(); }
-
-
-
-/**
- * CRÉATION D'UN POINT
- */
-function creerPoint(x, y) {
-    // Génère le nom : A, B, C...
-    const nom = String.fromCharCode(65 + (points.length % 26));
-    
-    points.push({ x: x, y: y, label: nom });
-    
-    // On redessine tout de suite
-    refreshCanvas();
-    
-    // Optionnel : Si vous avez une fonction vocale
-    if (typeof parler === "function") parler("Point " + nom);
-}
-
-
-// --- LE DESSINATEUR GÉNÉRAL ---
-
-function dessinerAngleDroit(sommet, versPoint) {
-    // Petite fonction pour dessiner le carré de l'angle droit
-    ctx.save();
-    ctx.strokeStyle = activeColor;
-    // Logique simplifiée pour le carré...
-    ctx.restore();
-}
-// --- FONCTION ANNULER MISE À JOUR ---
-function undo() {
-    // 1. Si une sélection est en cours (points en rouge), on l'annule d'abord
-    if (selection.length > 0) {
-        selection = [];
-    } 
-    // 2. Sinon, on enlève le dernier élément tracé (segment, angle, etc.)
-    else if (elements.length > 0) {
-        elements.pop();
-    } 
-    // 3. Sinon, on enlève le dernier point créé
-    else if (points.length > 0) {
-        points.pop();
-    }
     refreshCanvas();
 }
 
-// Fonction pour le sélecteur de couleurs HTML
+// --- GESTION DES COULEURS ---
 function setCouleur(hex) {
-    couleurActive = hex; 
-    activeColor = hex; // Pour être sûr de couvrir les deux noms
+    couleurActive = hex;
     console.log("Couleur active :", hex);
 }
 
-
-function changerCouleur(hex) {
-    activeColor = hex;
-    // On met à jour visuellement les boutons de couleur si nécessaire
-    console.log("Couleur active :", hex);
-}
-
-// Calcule le milieu entre deux points
+// --- LOGIQUE DE CALCUL ---
 const milieu = (p1, p2) => ({ x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 });
 
-// Calcule la distance entre deux points
-const distance = (p1, p2) => Math.hypot(p1.x - p2.x, p1.y - p2.y);
-
-// Calcule la projection d'un point P sur la droite (AB) - Utile pour la Hauteur
 function projectionPointSurDroite(P, A, B) {
     const v = { x: B.x - A.x, y: B.y - A.y };
     const u = { x: P.x - A.x, y: P.y - A.y };
     const dot = u.x * v.x + u.y * v.y;
     const lenSq = v.x * v.x + v.y * v.y;
-    const param = dot / lenSq;
+    const param = (lenSq !== 0) ? dot / lenSq : 0;
     return { x: A.x + param * v.x, y: A.y + param * v.y };
 }
 
-// Calcule un point très loin pour simuler une droite infinie
-function pointsDroiteInfinie(A, B) {
-    const dx = B.x - A.x;
-    const dy = B.y - A.y;
-    // Si A et B sont le même point, on évite l'erreur
-    if (dx === 0 && dy === 0) return { p1: A, p2: { x: A.x + 1, y: A.y } };
-    
-    return {
-        p1: { x: A.x - dx * 100, y: A.y - dy * 100 },
-        p2: { x: A.x + dx * 100, y: A.y + dy * 100 }
-    };
+// --- SYSTÈME DE NOMMAGE ---
+function genererNomPoint() {
+    const n = points.length;
+    return n < 26 ? String.fromCharCode(65 + n) : String.fromCharCode(65 + (n % 26)) + Math.floor(n / 26);
 }
+
+// --- ENTRÉE UTILISATEUR (LE CŒUR) ---
 function handleInput(x, y) {
+    // MODE CRÉATION DE POINT
     if (mode === 'point') {
-        const index = points.length;
-        const label = index < 26 ? String.fromCharCode(65 + index) : String.fromCharCode(65 + (index % 26)) + Math.floor(index / 26);
-        points.push({ x: x, y: y, label: label, color: couleurActive });
+        points.push({ x: x, y: y, label: genererNomPoint(), color: couleurActive });
         refreshCanvas();
         return;
     }
 
-    // Détection d'un point existant (rayon de 20px)
+    // DÉTECTION D'UN POINT EXISTANT
     const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
-    
-    if (!pProche) return; // Si on clique dans le vide, on ne fait rien
+    if (!pProche) return;
 
-    // --- LOGIQUE DE SÉLECTION ---
-    // On autorise de cliquer sur un point déjà dans la sélection (ex: A -> B -> A)
-    // SAUF si c'est exactement le même point que le clic précédent (double-clic)
+    // SÉCURITÉ DOUBLE CLIC
     if (selection.length > 0 && selection[selection.length - 1] === pProche) return;
 
+    // AJOUT À LA SÉLECTION ET ALLUMAGE ROUGE IMMÉDIAT
     selection.push(pProche);
-    refreshCanvas(); // <-- CRUCIAL : On redessine tout de suite pour allumer le point en ROUGE
+    refreshCanvas(); 
 
     const nb = selection.length;
 
-    // --- CAS À 2 POINTS (Segment, Droite, Cercle, Milieu, Médiatrice) ---
-    if (nb === 2) {
+    // LOGIQUE 2 POINTS
+    const modesAuto2 = ['segment', 'droite', 'cercle', 'milieu', 'mediatrice'];
+    if (nb === 2 && modesAuto2.includes(mode)) {
         const [p1, p2] = selection;
-        
-        if (['segment', 'droite', 'cercle'].includes(mode)) {
-            elements.push({ type: mode, p1, p2, color: couleurActive });
-            selection = []; // On vide seulement pour ces modes
-        } else if (mode === 'milieu') {
-            points.push({ x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2, label: "M"+points.length, color: couleurActive });
-            selection = [];
+        if (mode === 'milieu') {
+            points.push({ x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2, label: genererNomPoint(), color: couleurActive });
         } else if (mode === 'mediatrice') {
             const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
             const dx = p2.x - p1.x, dy = p2.y - p1.y;
             elements.push({ type: 'mediatrice', p1: {x: mx, y: my}, p2: {x: mx - dy, y: my + dx}, color: couleurActive });
-            selection = [];
+        } else {
+            elements.push({ type: mode, p1, p2, color: couleurActive });
         }
-        // Pour Parallèle et Perpendiculaire, on NE VIDE PAS la sélection ici (on attend le 3ème point)
+        selection = []; // Retour au noir
+        refreshCanvas();
+        return;
     }
 
-    // --- CAS À 3 POINTS (Parallèle, Perpendiculaire, Hauteur, Bissectrice) ---
+    // LOGIQUE 3 POINTS
     if (nb === 3) {
-        const [p1, p2, p3] = selection; 
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
+        const [p1, p2, p3] = selection;
+        const dx = p2.x - p1.x, dy = p2.y - p1.y;
 
-        // Sécurité : éviter une direction nulle
-        if (dx === 0 && dy === 0) {
-            selection.pop();
-            return;
-        }
+        if (dx === 0 && dy === 0) { selection.pop(); return; }
 
         if (mode === 'parallele' || mode === 'para') {
-            // Direction (p1, p2), passage par p3 (p3 peut être p1 ou p2)
             elements.push({ type: 'parallele', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
-        }
+        } 
         else if (mode === 'perpendiculaire' || mode === 'perp' || mode === 'hauteur') {
-            // Vecteur perpendiculaire (-dy, dx)
-            const pTarget = { x: p3.x - dy, y: p3.y + dx };
             const isH = (mode === 'hauteur');
-            elements.push({ type: isH ? 'droite' : 'perpendiculaire', p1: p3, p2: pTarget, color: couleurActive, isHauteur: isH });
+            // Pour la hauteur, p1 et p2 forment la base, p3 est le sommet
+            const pBase = isH ? projectionPointSurDroite(p3, p1, p2) : { x: p3.x - dy, y: p3.y + dx };
+            elements.push({ type: isH ? 'segment' : 'perpendiculaire', p1: p3, p2: pBase, color: couleurActive, isHauteur: isH });
         }
-        else if (mode === 'bissectrice' || mode === 'angle') {
-            elements.push({ type: mode, p1, p2, p3, color: couleurActive });
+        else if (mode === 'mediane') {
+            elements.push({ type: 'segment', p1: p3, p2: milieu(p1, p2), color: couleurActive });
         }
         
-        selection = []; // Tracé terminé, on éteint les points rouges
+        selection = []; // Retour au noir
+        refreshCanvas();
     }
-    
-    refreshCanvas(); // Mise à jour finale
 }
 
+// --- DESSIN ---
 function refreshCanvas() {
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Dessin des éléments (segments, droites...)
     elements.forEach(el => {
         ctx.beginPath();
         ctx.strokeStyle = el.color || "#000";
@@ -2219,7 +2155,6 @@ function refreshCanvas() {
             ctx.moveTo(el.p1.x, el.p1.y);
             ctx.lineTo(el.p2.x, el.p2.y);
         } else {
-            // Logique de tracé infini avec ux, uy... (votre code actuel est bon)
             const dx = el.p2.x - el.p1.x, dy = el.p2.y - el.p1.y;
             const dist = Math.hypot(dx, dy);
             if (dist > 0) {
@@ -2232,20 +2167,24 @@ function refreshCanvas() {
         ctx.setLineDash([]);
     });
 
-    // Dessin des points
     points.forEach(p => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
-        
-        // --- COULEUR DE SÉLECTION ---
         const estRouge = selection.some(sel => sel === p);
         ctx.fillStyle = estRouge ? "#ff4757" : (p.color || "#0f172a");
-        
         ctx.fill();
         ctx.fillStyle = "#0f172a";
         ctx.font = "bold 15px Arial";
         ctx.fillText(p.label, p.x + 12, p.y - 12);
     });
+}
+
+// --- ACTIONS ---
+function undo() {
+    if (selection.length > 0) { selection = []; } 
+    else if (elements.length > 0) { elements.pop(); } 
+    else if (points.length > 0) { points.pop(); }
+    refreshCanvas();
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
