@@ -2130,25 +2130,32 @@ function refreshCanvas() {
         ctx.strokeStyle = el.color;
         ctx.lineWidth = 2;
 
-        // --- TRACÉS FINIS ---
+        // --- TRACÉS FINIS (Conservés) ---
         if (el.type === 'segment' || el.type === 'mediane') {
             ctx.moveTo(el.p1.x, el.p1.y);
             ctx.lineTo(el.p2.x, el.p2.y);
         } 
         
-        // --- TRACÉS INFINIS ---
+        // --- TRACÉS INFINIS (AMÉLIORÉS) ---
         else if (['droite', 'mediatrice', 'parallele', 'perpendiculaire'].includes(el.type) || el.isHauteur) {
             const dx = el.p2.x - el.p1.x;
             const dy = el.p2.y - el.p1.y;
-            
-            if (el.isHauteur) ctx.setLineDash([5, 5]); 
+            const dist = Math.hypot(dx, dy); // Distance réelle entre les deux points
 
-            // On multiplie par 100 pour garantir que la droite traverse tout l'écran
-            ctx.moveTo(el.p1.x - dx * 100, el.p1.y - dy * 100);
-            ctx.lineTo(el.p2.x + dx * 100, el.p2.y + dy * 100);
+            if (dist > 0) { // Sécurité pour éviter la division par zéro
+                if (el.isHauteur) ctx.setLineDash([5, 5]); 
+
+                // NORMALISATION : On crée un vecteur de longueur 1 (ux, uy) 
+                // puis on l'étend à 2000 pixels pour traverser tout l'écran.
+                const ux = (dx / dist) * 2000;
+                const uy = (dy / dist) * 2000;
+
+                ctx.moveTo(el.p1.x - ux, el.p1.y - uy);
+                ctx.lineTo(el.p1.x + ux, el.p1.y + uy);
+            }
         }
 
-        // --- CAS SPÉCIFIQUES ---
+        // --- CAS SPÉCIFIQUES (Conservés à 100%) ---
         else if (el.type === 'bissectrice') {
             const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
             const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
@@ -2162,14 +2169,12 @@ function refreshCanvas() {
             ctx.arc(el.p1.x, el.p1.y, rayon, 0, Math.PI * 2);
         }
         else if (el.type === 'angle') {
-            // ... (Code de l'angle conservé car fonctionnel)
             const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
             const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
             ctx.save();
             ctx.globalAlpha = 0.3; ctx.fillStyle = el.color;
             ctx.moveTo(el.p2.x, el.p2.y); ctx.arc(el.p2.x, el.p2.y, 40, a1, a3);
             ctx.fill(); ctx.restore();
-            // Affichage du texte
             let midA = (a1 + a3) / 2;
             if (Math.abs(a3 - a1) > Math.PI) midA += Math.PI;
             let deg = Math.round(Math.abs((a3 - a1) * 180 / Math.PI));
@@ -2182,7 +2187,6 @@ function refreshCanvas() {
         ctx.setLineDash([]); 
     });
 
-    // --- DESSIN DES POINTS ---
     points.forEach(p => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
@@ -2204,7 +2208,7 @@ function handleInput(x, y) {
     const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
     if (!pProche) return;
 
-    // Logique de sélection : on accepte un point déjà choisi seulement si on a déjà une base de 2 points
+    // Mise à jour de la sélection pour autoriser le clic sur un point déjà choisi (pour l'ancrage)
     if (!selection.includes(pProche) || selection.length >= 2) {
         selection.push(pProche);
     }
@@ -2212,11 +2216,8 @@ function handleInput(x, y) {
     refreshCanvas();
     const nb = selection.length;
 
-    // --- CAS 2 POINTS ---
     if (nb === 2) {
         const [p1, p2] = selection;
-        
-        // Sécurité : Si l'utilisateur clique deux fois sur le même point pour un segment/droite
         if (p1 === p2) { selection.pop(); return; } 
 
         if (mode === 'milieu') {
@@ -2227,7 +2228,7 @@ function handleInput(x, y) {
             const my = (p1.y + p2.y) / 2;
             const dx = p2.x - p1.x;
             const dy = p2.y - p1.y;
-            // On stocke la médiatrice comme une droite passant par le milieu avec un vecteur perp (-dy, dx)
+            // On utilise la même logique p1/p2 pour que refreshCanvas puisse l'étendre
             elements.push({ type: 'mediatrice', p1: {x: mx, y: my}, p2: {x: mx - dy, y: my + dx}, color: couleurActive });
             selection = [];
         } else if (['segment', 'droite', 'cercle'].includes(mode)) {
@@ -2236,23 +2237,17 @@ function handleInput(x, y) {
         }
     }
 
-    // --- CAS 3 POINTS ---
     if (nb === 3) {
         const [p1, p2, p3] = selection; 
-        // p1, p2 = la droite de référence | p3 = le point de passage (peut être égal à p1 ou p2)
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
 
         if (mode === 'parallele') {
-            const dx = p2.x - p1.x;
-            const dy = p2.y - p1.y;
-            // Translation de la direction (p1p2) au point p3
+            // On définit la droite par son point d'ancrage p3 et un point de direction
             elements.push({ type: 'parallele', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
         }
         else if (mode === 'perpendiculaire' || mode === 'hauteur') {
-            const dx = p2.x - p1.x;
-            const dy = p2.y - p1.y;
-            // Vecteur perpendiculaire (-dy, dx)
             const pTarget = { x: p3.x - dy, y: p3.y + dx };
-            
             if (mode === 'hauteur') {
                 elements.push({ type: 'droite', p1: p3, p2: pTarget, color: couleurActive, isHauteur: true });
             } else {
