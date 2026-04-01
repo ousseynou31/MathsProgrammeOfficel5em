@@ -2009,7 +2009,6 @@ function changerCouleurTexte(couleur) {
 
 
 
-
 // --- INITIALISATION ---
 function ouvrirGeometrie() {
     document.getElementById('geo-container').style.display = 'flex';
@@ -2038,17 +2037,15 @@ function fermerGeometrie() {
 
 function setMode(m) {
     mode = m;
-    selection = []; // On vide la sélection quand on change d'outil pour débloquer
+    selection = []; 
     document.querySelectorAll('.btn-ui-geo').forEach(b => b.classList.remove('active'));
     if (document.getElementById('btn-' + m)) document.getElementById('btn-' + m).classList.add('active');
     if (document.getElementById('msg-geo')) document.getElementById('msg-geo').innerText = m.toUpperCase();
     refreshCanvas();
 }
 
-// --- GESTION DES COULEURS ---
 function setCouleur(hex) {
     couleurActive = hex;
-    console.log("Couleur active :", hex);
 }
 
 // --- LOGIQUE DE CALCUL ---
@@ -2063,53 +2060,49 @@ function projectionPointSurDroite(P, A, B) {
     return { x: A.x + param * v.x, y: A.y + param * v.y };
 }
 
-// --- SYSTÈME DE NOMMAGE ---
 function genererNomPoint() {
     const n = points.length;
     return n < 26 ? String.fromCharCode(65 + n) : String.fromCharCode(65 + (n % 26)) + Math.floor(n / 26);
 }
 
-// --- ENTRÉE UTILISATEUR (LE CŒUR) ---
+// --- ENTRÉE UTILISATEUR (CORRIGÉ) ---
 function handleInput(x, y) {
-    // MODE CRÉATION DE POINT
     if (mode === 'point') {
         points.push({ x: x, y: y, label: genererNomPoint(), color: couleurActive });
         refreshCanvas();
         return;
     }
 
-    // DÉTECTION D'UN POINT EXISTANT
     const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
     if (!pProche) return;
 
-    // SÉCURITÉ DOUBLE CLIC
     if (selection.length > 0 && selection[selection.length - 1] === pProche) return;
 
-    // AJOUT À LA SÉLECTION ET ALLUMAGE ROUGE IMMÉDIAT
+    // ALLUMAGE IMMÉDIAT
     selection.push(pProche);
     refreshCanvas(); 
 
     const nb = selection.length;
 
-    // LOGIQUE 2 POINTS
-    const modesAuto2 = ['segment', 'droite', 'cercle', 'milieu', 'mediatrice'];
-    if (nb === 2 && modesAuto2.includes(mode)) {
+    // LOGIQUE 2 POINTS (Segment, Droite, Cercle, Milieu, Médiatrice)
+    const modes2 = ['segment', 'droite', 'cercle', 'milieu', 'mediatrice'];
+    if (nb === 2 && modes2.includes(mode)) {
         const [p1, p2] = selection;
         if (mode === 'milieu') {
             points.push({ x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2, label: genererNomPoint(), color: couleurActive });
         } else if (mode === 'mediatrice') {
             const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
             const dx = p2.x - p1.x, dy = p2.y - p1.y;
-            elements.push({ type: 'mediatrice', p1: {x: mx, y: my}, p2: {x: mx - dy, y: my + dx}, color: couleurActive });
+            elements.push({ type: 'droite', p1: {x: mx, y: my}, p2: {x: mx - dy, y: my + dx}, color: couleurActive });
         } else {
             elements.push({ type: mode, p1, p2, color: couleurActive });
         }
-        selection = []; // Retour au noir
+        selection = []; 
         refreshCanvas();
         return;
     }
 
-    // LOGIQUE 3 POINTS
+    // LOGIQUE 3 POINTS (Parallèle, Perp, Hauteur, Bissectrice, Médiane, Angle)
     if (nb === 3) {
         const [p1, p2, p3] = selection;
         const dx = p2.x - p1.x, dy = p2.y - p1.y;
@@ -2117,24 +2110,27 @@ function handleInput(x, y) {
         if (dx === 0 && dy === 0) { selection.pop(); return; }
 
         if (mode === 'parallele' || mode === 'para') {
-            elements.push({ type: 'parallele', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
+            elements.push({ type: 'droite', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
         } 
         else if (mode === 'perpendiculaire' || mode === 'perp' || mode === 'hauteur') {
             const isH = (mode === 'hauteur');
-            // Pour la hauteur, p1 et p2 forment la base, p3 est le sommet
-            const pBase = isH ? projectionPointSurDroite(p3, p1, p2) : { x: p3.x - dy, y: p3.y + dx };
-            elements.push({ type: isH ? 'segment' : 'perpendiculaire', p1: p3, p2: pBase, color: couleurActive, isHauteur: isH });
+            // Vecteur perpendiculaire à (p1p2) passant par p3
+            const pTarget = { x: p3.x - dy, y: p3.y + dx };
+            elements.push({ type: 'droite', p1: p3, p2: pTarget, color: couleurActive, isHauteur: isH });
         }
         else if (mode === 'mediane') {
             elements.push({ type: 'segment', p1: p3, p2: milieu(p1, p2), color: couleurActive });
         }
+        else if (mode === 'bissectrice' || mode === 'angle') {
+            elements.push({ type: mode, p1, p2, p3, color: couleurActive });
+        }
         
-        selection = []; // Retour au noir
+        selection = []; 
         refreshCanvas();
     }
 }
 
-// --- DESSIN ---
+// --- DESSIN (CORRIGÉ) ---
 function refreshCanvas() {
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2145,24 +2141,41 @@ function refreshCanvas() {
         ctx.beginPath();
         ctx.strokeStyle = el.color || "#000";
         ctx.lineWidth = 2;
-        if (el.isHauteur) ctx.setLineDash([5, 5]);
+        
+        // GESTION DES POINTILLÉS POUR LA HAUTEUR
+        if (el.isHauteur) ctx.setLineDash([8, 6]);
+        else ctx.setLineDash([]);
 
         if (el.type === 'segment') {
             ctx.moveTo(el.p1.x, el.p1.y);
             ctx.lineTo(el.p2.x, el.p2.y);
-        } else {
-            const dx = el.p2.x - el.p1.x, dy = el.p2.y - el.p1.y;
-            const dist = Math.hypot(dx, dy);
-            if (dist > 0) {
-                const ux = (dx / dist) * 5000, uy = (dy / dist) * 5000;
-                ctx.moveTo(el.p1.x - ux, el.p1.y - uy);
-                ctx.lineTo(el.p1.x + ux, el.p1.y + uy);
-            }
+            ctx.stroke();
+        } 
+        else if (el.type === 'cercle') {
+            const r = Math.hypot(el.p2.x - el.p1.x, el.p2.y - el.p1.y);
+            ctx.arc(el.p1.x, el.p1.y, r, 0, Math.PI * 2);
+            ctx.stroke();
         }
-        ctx.stroke();
-        ctx.setLineDash([]);
+        else if (el.type === 'bissectrice') {
+            // Calcul de la bissectrice de l'angle formé par p1-p2-p3 (p2 est le sommet)
+            const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
+            const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
+            const angleBis = a1 + (a3 - a1) / 2;
+            const target = { x: el.p2.x + Math.cos(angleBis), y: el.p2.y + Math.sin(angleBis) };
+            tracerLigneInfinie(el.p2, target);
+        }
+        else if (el.type === 'angle') {
+            // Trace juste les deux segments de l'angle
+            ctx.moveTo(el.p1.x, el.p1.y); ctx.lineTo(el.p2.x, el.p2.y);
+            ctx.lineTo(el.p3.x, el.p3.y);
+            ctx.stroke();
+        }
+        else { // Droites, Parallèles, Perpendiculaires, Médiatrices
+            tracerLigneInfinie(el.p1, el.p2);
+        }
     });
 
+    // DESSIN DES POINTS
     points.forEach(p => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
@@ -2175,7 +2188,18 @@ function refreshCanvas() {
     });
 }
 
-// --- ACTIONS ---
+// Fonction utilitaire pour tracer les lignes infinies
+function tracerLigneInfinie(A, B) {
+    const dx = B.x - A.x, dy = B.y - A.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 0) {
+        const ux = (dx / dist) * 5000, uy = (dy / dist) * 5000;
+        ctx.moveTo(A.x - ux, A.y - uy);
+        ctx.lineTo(A.x + ux, A.y + uy);
+        ctx.stroke();
+    }
+}
+
 function undo() {
     if (selection.length > 0) { selection = []; } 
     else if (elements.length > 0) { elements.pop(); } 
