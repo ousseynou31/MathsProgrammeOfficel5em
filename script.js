@@ -2127,85 +2127,95 @@ function pointsDroiteInfinie(A, B) {
         p2: { x: A.x + dx * 100, y: A.y + dy * 100 }
     };
 }
-function refreshCanvas() {
-    if (!ctx || !canvas) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+function handleInput(x, y) {
+    if (mode === 'point') {
+        const index = points.length;
+        const label = index < 26 ? String.fromCharCode(65 + index) : String.fromCharCode(65 + (index % 26)) + Math.floor(index / 26);
+        points.push({ x: x, y: y, label: label, color: couleurActive });
+        refreshCanvas();
+        return;
+    }
 
-    elements.forEach(el => {
-        ctx.beginPath();
-        ctx.strokeStyle = el.color;
-        ctx.lineWidth = 2;
+    // Trouver le point sous le clic
+    const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
+    
+    if (!pProche) {
+        // Optionnel : ne vider la sélection que si on clique vraiment loin de tout
+        // selection = []; 
+        refreshCanvas();
+        return;
+    }
 
-        // --- TRACÉS FINIS ---
-        if (el.type === 'segment' || el.type === 'mediane') {
-            ctx.moveTo(el.p1.x, el.p1.y);
-            ctx.lineTo(el.p2.x, el.p2.y);
-        } 
+    // --- CORRECTION : CAS PARTICULIERS ---
+    // On autorise de sélectionner un point déjà présent (ex: pour une parallèle passant par lui-même)
+    // Mais on empêche juste de cliquer deux fois DE SUITE sur le même point (double-clic accidentel)
+    if (selection.length > 0 && selection[selection.length - 1] === pProche) {
+        return; 
+    }
+
+    // On ajoute le point et on rafraîchit immédiatement pour l'allumer en ROUGE
+    selection.push(pProche);
+    refreshCanvas(); 
+
+    const nb = selection.length;
+
+    // --- LOGIQUE 2 POINTS (Segment, Milieu, Médiatrice...) ---
+    if (nb === 2) {
+        const [p1, p2] = selection;
         
-        // --- TRACÉS INFINIS (Robustesse augmentée) ---
-        else if (['droite', 'mediatrice', 'parallele', 'perpendiculaire'].includes(el.type) || el.isHauteur) {
-            const dx = el.p2.x - el.p1.x;
-            const dy = el.p2.y - el.p1.y;
-            const dist = Math.hypot(dx, dy);
+        if (mode === 'milieu') {
+            points.push({ x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2, label: "M"+points.length, color: couleurActive });
+            selection = [];
+        } else if (mode === 'mediatrice') {
+            const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            elements.push({ type: 'mediatrice', p1: {x: mx, y: my}, p2: {x: mx - dy, y: my + dx}, color: couleurActive });
+            selection = [];
+        } else if (['segment', 'droite', 'cercle'].includes(mode)) {
+            elements.push({ type: mode, p1, p2, color: couleurActive });
+            selection = [];
+        }
+        // Note : Si le mode est 'para' ou 'perp', on ne vide pas la sélection à 2 points, on attend le 3ème.
+    }
 
-            if (dist > 0) {
-                if (el.isHauteur) ctx.setLineDash([5, 5]); 
+    // --- LOGIQUE 3 POINTS (Parallèle, Perpendiculaire, Angle...) ---
+    if (nb === 3) {
+        const [p1, p2, p3] = selection; 
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
 
-                // Utilisation d'une constante de 5000 pour une couverture totale du plan
-                const ux = (dx / dist) * 5000;
-                const uy = (dy / dist) * 5000;
+        // Sécurité : si p1 et p2 sont identiques, la direction est impossible
+        if (dx === 0 && dy === 0) {
+            selection.pop(); // On retire le point invalide
+            return;
+        }
 
-                ctx.moveTo(el.p1.x - ux, el.p1.y - uy);
-                ctx.lineTo(el.p1.x + ux, el.p1.y + uy);
+        if (mode === 'parallele' || mode === 'para') {
+            // p1, p2 = direction | p3 = point de passage
+            elements.push({ type: 'parallele', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
+        }
+        else if (mode === 'perpendiculaire' || mode === 'perp' || mode === 'hauteur') {
+            // Vecteur perpendiculaire (-dy, dx)
+            const pTarget = { x: p3.x - dy, y: p3.y + dx };
+            if (mode === 'hauteur') {
+                elements.push({ type: 'droite', p1: p3, p2: pTarget, color: couleurActive, isHauteur: true });
+            } else {
+                elements.push({ type: 'perpendiculaire', p1: p3, p2: pTarget, color: couleurActive });
             }
         }
-
-        // --- CAS SPÉCIFIQUES ---
-        else if (el.type === 'bissectrice') {
-            const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
-            const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
-            let bisAngle = (a1 + a3) / 2;
-            if (Math.abs(a3 - a1) > Math.PI) bisAngle += Math.PI;
-            ctx.moveTo(el.p2.x, el.p2.y);
-            ctx.lineTo(el.p2.x + Math.cos(bisAngle) * 5000, el.p2.y + Math.sin(bisAngle) * 5000);
+        else if (mode === 'mediane') {
+            const M = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+            elements.push({ type: 'mediane', p1: p3, p2: M, color: couleurActive });
         }
-        else if (el.type === 'cercle') {
-            const rayon = Math.hypot(el.p2.x - el.p1.x, el.p2.y - el.p1.y);
-            ctx.arc(el.p1.x, el.p1.y, rayon, 0, Math.PI * 2);
-        }
-        else if (el.type === 'angle') {
-            const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
-            const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
-            ctx.save();
-            ctx.globalAlpha = 0.3; ctx.fillStyle = el.color;
-            ctx.moveTo(el.p2.x, el.p2.y); ctx.arc(el.p2.x, el.p2.y, 40, a1, a3);
-            ctx.fill(); ctx.restore();
-            let midA = (a1 + a3) / 2;
-            if (Math.abs(a3 - a1) > Math.PI) midA += Math.PI;
-            let deg = Math.round(Math.abs((a3 - a1) * 180 / Math.PI));
-            if (deg > 180) deg = 360 - deg;
-            ctx.fillStyle = el.color; ctx.font = "bold 12px Arial"; ctx.textAlign = "center";
-            ctx.fillText(deg + "°", el.p2.x + Math.cos(midA) * 25, el.p2.y + Math.sin(midA) * 25);
+        else if (mode === 'angle' || mode === 'bissectrice') {
+            elements.push({ type: mode, p1, p2, p3, color: couleurActive });
         }
         
-        ctx.stroke();
-        ctx.setLineDash([]); 
-    });
-
-    // Dessin des points avec étiquettes optimisées
-    points.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = selection.includes(p) ? "#ff4757" : (p.color || "#0f172a");
-        ctx.fill();
-        ctx.fillStyle = "#0f172a"; ctx.font = "bold 15px Arial";
-        // Petit décalage intelligent du texte
-        ctx.fillText(p.label, p.x + 10, p.y - 10);
-    });
+        selection = []; // On vide la sélection une fois l'élément créé
+    }
+    
+    refreshCanvas(); // Dernier rafraîchissement pour éteindre le rouge après création
 }
-
 function handleInput(x, y) {
     if (mode === 'point') {
         const index = points.length;
@@ -2216,19 +2226,22 @@ function handleInput(x, y) {
     }
 
     const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
+    
     if (!pProche) {
-        // Si on clique dans le vide, on désélectionne tout pour éviter les bugs
-        selection = [];
+        selection = []; // On vide la sélection si on clique dans le vide
         refreshCanvas();
         return;
-    };
-
-    // Empêcher de sélectionner deux fois exactement le même point pour le même élément
-    if (!selection.includes(pProche)) {
-        selection.push(pProche);
     }
-    
-    refreshCanvas();
+
+    // --- CORRECTIONS DES SÉLECTIONS ---
+    // On n'ajoute le point que si ce n'est pas un double-clic sur le DERNIER point choisi
+    if (selection.length > 0 && selection[selection.length - 1] === pProche) {
+        return; 
+    }
+
+    selection.push(pProche);
+    refreshCanvas(); // Le point s'allumera en rouge ici
+
     const nb = selection.length;
 
     // --- LOGIQUE 2 POINTS ---
@@ -2247,19 +2260,21 @@ function handleInput(x, y) {
             elements.push({ type: mode, p1, p2, color: couleurActive });
             selection = [];
         }
+        // Si on est dans un mode qui demande 3 points, on ne vide PAS la sélection ici
     }
 
-    // --- LOGIQUE 3 POINTS (Parallèles et Perpendiculaires) ---
+    // --- LOGIQUE 3 POINTS (Parallèles, Perpendiculaires, Bissectrices) ---
     if (nb === 3) {
         const [p1, p2, p3] = selection; 
         const dx = p2.x - p1.x;
         const dy = p2.y - p1.y;
 
-        // Note : p1 et p2 définissent la direction, p3 est le point d'attache
         if (mode === 'parallele' || mode === 'para') {
+            // p1 et p2 donnent la direction, p3 est le point où passe la droite
             elements.push({ type: 'parallele', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
         }
         else if (mode === 'perpendiculaire' || mode === 'perp' || mode === 'hauteur') {
+            // p1 et p2 donnent la direction, p3 est l'ancrage
             const pTarget = { x: p3.x - dy, y: p3.y + dx };
             if (mode === 'hauteur') {
                 elements.push({ type: 'droite', p1: p3, p2: pTarget, color: couleurActive, isHauteur: true });
@@ -2274,7 +2289,7 @@ function handleInput(x, y) {
         else if (mode === 'angle' || mode === 'bissectrice') {
             elements.push({ type: mode, p1, p2, p3, color: couleurActive });
         }
-        selection = [];
+        selection = []; // On vide après le 3ème point
     }
     refreshCanvas();
 }
