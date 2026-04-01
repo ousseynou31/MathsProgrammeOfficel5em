@@ -2006,13 +2006,7 @@ function changerCouleurTexte(couleur) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 
-// --- VARIABLES GLOBALES (À déclarer une seule fois en haut) ---
-let canvas, ctx;
-let points = [];
-let elements = [];
-let selection = [];
-let mode = 'point';
-let couleurActive = '#0f172a';
+
 
 // --- INITIALISATION ---
 function ouvrirGeometrie() {
