@@ -2017,11 +2017,19 @@ function ouvrirGeometrie() {
             ctx = canvas.getContext('2d');
             canvas.width = area.clientWidth;
             canvas.height = area.clientHeight;
+
+            // --- AJOUT CRUCIAL : Écouter le clic sur le canvas ---
+            canvas.onpointerdown = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                handleInput(x, y);
+            };
+
             refreshCanvas();
         }
     }, 400);
 }
-
 function setMode(m) {
     mode = m;
     document.querySelectorAll('.btn-ui-geo').forEach(b => b.classList.remove('active'));
@@ -2201,7 +2209,6 @@ function refreshCanvas() {
 function handleInput(x, y) {
     if (mode === 'point') {
         const index = points.length;
-        // Gestion des noms au-delà de Z (A, B... Z, A1, B1...)
         const label = index < 26 ? String.fromCharCode(65 + index) : String.fromCharCode(65 + (index % 26)) + Math.floor(index / 26);
         points.push({ x: x, y: y, label: label, color: couleurActive });
         refreshCanvas();
@@ -2209,19 +2216,25 @@ function handleInput(x, y) {
     }
 
     const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
-    if (!pProche) return;
+    if (!pProche) {
+        // Si on clique dans le vide, on désélectionne tout pour éviter les bugs
+        selection = [];
+        refreshCanvas();
+        return;
+    };
 
-    if (!selection.includes(pProche) || selection.length >= 2) {
+    // Empêcher de sélectionner deux fois exactement le même point pour le même élément
+    if (!selection.includes(pProche)) {
         selection.push(pProche);
     }
     
     refreshCanvas();
     const nb = selection.length;
 
+    // --- LOGIQUE 2 POINTS ---
     if (nb === 2) {
         const [p1, p2] = selection;
-        if (p1 === p2) { selection.pop(); return; } 
-
+        
         if (mode === 'milieu') {
             points.push({ x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2, label: "M"+points.length, color: couleurActive });
             selection = [];
@@ -2236,18 +2249,19 @@ function handleInput(x, y) {
         }
     }
 
+    // --- LOGIQUE 3 POINTS (Parallèles et Perpendiculaires) ---
     if (nb === 3) {
         const [p1, p2, p3] = selection; 
         const dx = p2.x - p1.x;
         const dy = p2.y - p1.y;
 
-        if (mode === 'parallele') {
+        // Note : p1 et p2 définissent la direction, p3 est le point d'attache
+        if (mode === 'parallele' || mode === 'para') {
             elements.push({ type: 'parallele', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
         }
-        else if (mode === 'perpendiculaire' || mode === 'hauteur') {
+        else if (mode === 'perpendiculaire' || mode === 'perp' || mode === 'hauteur') {
             const pTarget = { x: p3.x - dy, y: p3.y + dx };
             if (mode === 'hauteur') {
-                // On garde le type 'hauteur' pour la dashline automatique
                 elements.push({ type: 'droite', p1: p3, p2: pTarget, color: couleurActive, isHauteur: true });
             } else {
                 elements.push({ type: 'perpendiculaire', p1: p3, p2: pTarget, color: couleurActive });
@@ -2255,7 +2269,6 @@ function handleInput(x, y) {
         }
         else if (mode === 'mediane') {
             const M = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-            // On enregistre comme 'mediane' pour la cohérence sémantique
             elements.push({ type: 'mediane', p1: p3, p2: M, color: couleurActive });
         }
         else if (mode === 'angle' || mode === 'bissectrice') {
