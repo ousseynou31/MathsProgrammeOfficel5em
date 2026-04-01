@@ -2130,39 +2130,38 @@ function refreshCanvas() {
         ctx.strokeStyle = el.color;
         ctx.lineWidth = 2;
 
-        // --- TRACÉS FINIS (Conservés) ---
+        // --- TRACÉS FINIS ---
         if (el.type === 'segment' || el.type === 'mediane') {
             ctx.moveTo(el.p1.x, el.p1.y);
             ctx.lineTo(el.p2.x, el.p2.y);
         } 
         
-        // --- TRACÉS INFINIS (AMÉLIORÉS) ---
+        // --- TRACÉS INFINIS (Robustesse augmentée) ---
         else if (['droite', 'mediatrice', 'parallele', 'perpendiculaire'].includes(el.type) || el.isHauteur) {
             const dx = el.p2.x - el.p1.x;
             const dy = el.p2.y - el.p1.y;
-            const dist = Math.hypot(dx, dy); // Distance réelle entre les deux points
+            const dist = Math.hypot(dx, dy);
 
-            if (dist > 0) { // Sécurité pour éviter la division par zéro
+            if (dist > 0) {
                 if (el.isHauteur) ctx.setLineDash([5, 5]); 
 
-                // NORMALISATION : On crée un vecteur de longueur 1 (ux, uy) 
-                // puis on l'étend à 2000 pixels pour traverser tout l'écran.
-                const ux = (dx / dist) * 2000;
-                const uy = (dy / dist) * 2000;
+                // Utilisation d'une constante de 5000 pour une couverture totale du plan
+                const ux = (dx / dist) * 5000;
+                const uy = (dy / dist) * 5000;
 
                 ctx.moveTo(el.p1.x - ux, el.p1.y - uy);
                 ctx.lineTo(el.p1.x + ux, el.p1.y + uy);
             }
         }
 
-        // --- CAS SPÉCIFIQUES (Conservés à 100%) ---
+        // --- CAS SPÉCIFIQUES ---
         else if (el.type === 'bissectrice') {
             const a1 = Math.atan2(el.p1.y - el.p2.y, el.p1.x - el.p2.x);
             const a3 = Math.atan2(el.p3.y - el.p2.y, el.p3.x - el.p2.x);
             let bisAngle = (a1 + a3) / 2;
             if (Math.abs(a3 - a1) > Math.PI) bisAngle += Math.PI;
             ctx.moveTo(el.p2.x, el.p2.y);
-            ctx.lineTo(el.p2.x + Math.cos(bisAngle) * 2000, el.p2.y + Math.sin(bisAngle) * 2000);
+            ctx.lineTo(el.p2.x + Math.cos(bisAngle) * 5000, el.p2.y + Math.sin(bisAngle) * 5000);
         }
         else if (el.type === 'cercle') {
             const rayon = Math.hypot(el.p2.x - el.p1.x, el.p2.y - el.p1.y);
@@ -2187,19 +2186,23 @@ function refreshCanvas() {
         ctx.setLineDash([]); 
     });
 
+    // Dessin des points avec étiquettes optimisées
     points.forEach(p => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
         ctx.fillStyle = selection.includes(p) ? "#ff4757" : (p.color || "#0f172a");
         ctx.fill();
         ctx.fillStyle = "#0f172a"; ctx.font = "bold 15px Arial";
-        ctx.fillText(p.label, p.x + 12, p.y - 12);
+        // Petit décalage intelligent du texte
+        ctx.fillText(p.label, p.x + 10, p.y - 10);
     });
 }
 
 function handleInput(x, y) {
     if (mode === 'point') {
-        const label = String.fromCharCode(65 + (points.length % 26));
+        const index = points.length;
+        // Gestion des noms au-delà de Z (A, B... Z, A1, B1...)
+        const label = index < 26 ? String.fromCharCode(65 + index) : String.fromCharCode(65 + (index % 26)) + Math.floor(index / 26);
         points.push({ x: x, y: y, label: label, color: couleurActive });
         refreshCanvas();
         return;
@@ -2208,7 +2211,6 @@ function handleInput(x, y) {
     const pProche = points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
     if (!pProche) return;
 
-    // Mise à jour de la sélection pour autoriser le clic sur un point déjà choisi (pour l'ancrage)
     if (!selection.includes(pProche) || selection.length >= 2) {
         selection.push(pProche);
     }
@@ -2224,11 +2226,8 @@ function handleInput(x, y) {
             points.push({ x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2, label: "M"+points.length, color: couleurActive });
             selection = [];
         } else if (mode === 'mediatrice') {
-            const mx = (p1.x + p2.x) / 2;
-            const my = (p1.y + p2.y) / 2;
-            const dx = p2.x - p1.x;
-            const dy = p2.y - p1.y;
-            // On utilise la même logique p1/p2 pour que refreshCanvas puisse l'étendre
+            const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
             elements.push({ type: 'mediatrice', p1: {x: mx, y: my}, p2: {x: mx - dy, y: my + dx}, color: couleurActive });
             selection = [];
         } else if (['segment', 'droite', 'cercle'].includes(mode)) {
@@ -2243,12 +2242,12 @@ function handleInput(x, y) {
         const dy = p2.y - p1.y;
 
         if (mode === 'parallele') {
-            // On définit la droite par son point d'ancrage p3 et un point de direction
             elements.push({ type: 'parallele', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
         }
         else if (mode === 'perpendiculaire' || mode === 'hauteur') {
             const pTarget = { x: p3.x - dy, y: p3.y + dx };
             if (mode === 'hauteur') {
+                // On garde le type 'hauteur' pour la dashline automatique
                 elements.push({ type: 'droite', p1: p3, p2: pTarget, color: couleurActive, isHauteur: true });
             } else {
                 elements.push({ type: 'perpendiculaire', p1: p3, p2: pTarget, color: couleurActive });
@@ -2256,7 +2255,8 @@ function handleInput(x, y) {
         }
         else if (mode === 'mediane') {
             const M = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-            elements.push({ type: 'segment', p1: p3, p2: M, color: couleurActive });
+            // On enregistre comme 'mediane' pour la cohérence sémantique
+            elements.push({ type: 'mediane', p1: p3, p2: M, color: couleurActive });
         }
         else if (mode === 'angle' || mode === 'bissectrice') {
             elements.push({ type: mode, p1, p2, p3, color: couleurActive });
