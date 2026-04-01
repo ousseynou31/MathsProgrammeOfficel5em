@@ -6,12 +6,14 @@ console.log("🚀 Moteur prêt : adminEnCours =", window.adminEnCours);
 // =========================================================
 // 1. DÉCLARATIONS GLOBALES (UNE SEULE FOIS ICI)
 // =========================================================
-let canvas, ctx;
-let points = [];
-let elements = []; 
-let selection = []; 
-let mode = 'point';
-let couleurActive = '#0f172a'; // Noir/Bleu nuit par défaut
+if (typeof canvas === 'undefined') {
+    var canvas, ctx;
+    var points = [];
+    var elements = [];
+    var selection = [];
+    var mode = 'point';
+    var couleurActive = '#0f172a';
+}
 
 // 1. CONFIGURATION FIREBASE 
 const firebaseConfig = {
