@@ -2051,6 +2051,7 @@ function genererNomPoint() {
 
 
 const obtenirMilieu = (p1, p2) => ({ x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 });
+
 // --- ENTRÉE UTILISATEUR (VERSION FINALE ANTI-SUPERPOSITION) ---
 function handleInput(x, y) {
     // 1. DÉTECTION PRÉALABLE : Existe-t-il un point très proche du clic ?
@@ -2251,13 +2252,7 @@ function redo() {
     refreshCanvas();
 }
 
-function renommerPoint(p) {
-    const nouveauNom = prompt("Modifier le nom du point :", p.label);
-    if (nouveauNom !== null && nouveauNom.trim() !== "") {
-        p.label = nouveauNom.trim().toUpperCase(); 
-        refreshCanvas();
-    }
-}
+
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
