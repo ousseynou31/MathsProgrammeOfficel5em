@@ -15,6 +15,7 @@ if (typeof canvas === 'undefined') {
     var couleurActive = '#0f172a';
     var historiqueRedo = []; // <--- NOUVELLE VARIABLE
     var dernierClicTemps = 0; // Pour détecter le double-clic
+    var timerClic = null;
 }
 
 // 1. CONFIGURATION FIREBASE 
@@ -2053,63 +2054,68 @@ const obtenirMilieu = (p1, p2) => ({ x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 
 // --- ENTRÉE UTILISATEUR (LOGIQUE UNIFIÉE) ---
 // --- ENTRÉE UTILISATEUR (VERSION FINALE ANTI-SUPERPOSITION) ---
 // --- FONCTION DE SAISIE COMPLÈTE (NOMMER, ANTI-SUPERPOSITION, REDO) ---
+// --- VARIABLES GLOBALES À VÉRIFIER ---
+// var timerClic = null; // Ajoutez ceci dans vos variables globales en haut du script
+
 function handleInput(x, y) {
     const maintenant = Date.now();
-    
-    // 1. DÉTECTION PRÉALABLE : Existe-t-il un point proche du clic ?
     const pExistant = points.find(p => Math.hypot(p.x - x, p.y - y) < 15);
 
-    // --- LOGIQUE DOUBLE-CLIC (RENOMMER UN POINT) ---
-    // Si on double-clique sur un point existant (moins de 300ms entre deux clics)
+    // --- LOGIQUE DOUBLE-CLIC (RENOMMER) ---
     if (pExistant && (maintenant - dernierClicTemps < 300)) {
+        // 1. On annule l'action du premier clic
+        clearTimeout(timerClic);
+        dernierClicTemps = 0; 
+
+        // 2. On ouvre la fenêtre de renommage
         const nouveauNom = prompt("Entrez le nouveau nom du point :", pExistant.label);
         if (nouveauNom !== null && nouveauNom.trim() !== "") {
             pExistant.label = nouveauNom.trim().toUpperCase();
-            selection = []; // On vide la sélection pour éviter de tracer un objet par erreur
+            selection = []; 
             refreshCanvas();
-            return;
         }
+        return;
     }
+    
     dernierClicTemps = maintenant;
 
-    // Dès qu'on commence une nouvelle action, on vide l'historique Redo
+    // --- LOGIQUE CLIC SIMPLE (AVEC DÉLAI POUR ATTENDRE UN ÉVENTUEL DOUBLE-CLIC) ---
+    // On décale l'exécution du clic simple de 200ms
+    clearTimeout(timerClic);
+    timerClic = setTimeout(() => {
+        executerActionSimple(x, y, pExistant);
+    }, 250);
+}
+
+// On déplace toute votre logique actuelle dans cette sous-fonction
+function executerActionSimple(x, y, pExistant) {
     historiqueRedo = [];
 
-    // --- MODE POINT : Création ---
+    // --- MODE POINT ---
     if (mode === 'point') {
-        if (pExistant) return; // Sécurité : on ne fait rien si un point est déjà là
-
+        if (pExistant) return;
         points.push({ x: x, y: y, label: genererNomPoint(), color: couleurActive });
         refreshCanvas();
         return;
     }
 
-    // --- AUTRES MODES : Sélection de points ---
+    // --- AUTRES MODES ---
     const pProche = pExistant || points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
-    
-    if (!pProche) { 
-        selection = []; 
-        refreshCanvas(); 
-        return; 
-    }
+    if (!pProche) { selection = []; refreshCanvas(); return; }
 
-    // ANTI-DOUBLE CLIC : Empêche de sélectionner deux fois de suite le MÊME point pour un outil
     if (selection.length > 0 && selection[selection.length - 1] === pProche) return;
 
     selection.push(pProche);
-    refreshCanvas(); // Allumage rouge immédiat pour le feedback
+    refreshCanvas();
 
     const nb = selection.length;
 
-    // --- LOGIQUE 2 POINTS (Milieu, Médiatrice, Segment, Droite, Cercle) ---
+    // LOGIQUE 2 POINTS
     const modes2 = ['segment', 'droite', 'cercle', 'milieu', 'mediatrice'];
     if (nb === 2 && modes2.includes(mode)) {
         const [p1, p2] = selection;
-        
         if (mode === 'milieu') {
-            const mx = (p1.x + p2.x) / 2;
-            const my = (p1.y + p2.y) / 2;
-            // Vérification : ne pas créer le milieu s'il existe déjà physiquement un point ici
+            const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
             if (!points.find(p => Math.hypot(p.x - mx, p.y - my) < 5)) {
                 points.push({ x: mx, y: my, label: genererNomPoint(), color: couleurActive });
             }
@@ -2121,23 +2127,20 @@ function handleInput(x, y) {
         else {
             elements.push({ type: mode, p1, p2, color: couleurActive });
         }
-        
-        selection = []; 
-        setTimeout(refreshCanvas, 50); // Petit délai pour voir l'allumage avant l'extinction
+        selection = [];
+        setTimeout(refreshCanvas, 50);
         return;
     }
 
-    // --- LOGIQUE 3 POINTS (Parallèle, Perpendiculaire, Médiane, Angle) ---
+    // LOGIQUE 3 POINTS
     if (nb === 3) {
         const [p1, p2, p3] = selection;
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
+        const dx = p2.x - p1.x, dy = p2.y - p1.y;
 
         if (mode === 'parallele' || mode === 'para') {
             elements.push({ type: 'droite', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
         } 
         else if (mode === 'perpendiculaire' || mode === 'perp' || mode === 'hauteur') {
-            // Vecteur perpendiculaire
             elements.push({ type: 'droite', p1: p3, p2: { x: p3.x - dy, y: p3.y + dx }, color: couleurActive, isHauteur: (mode === 'hauteur') });
         }
         else if (mode === 'mediane') {
@@ -2147,8 +2150,7 @@ function handleInput(x, y) {
         else if (mode === 'bissectrice' || mode === 'angle') {
             elements.push({ type: mode, p1, p2, p3, color: couleurActive });
         }
-        
-        selection = []; 
+        selection = [];
         setTimeout(refreshCanvas, 50);
     }
 }
