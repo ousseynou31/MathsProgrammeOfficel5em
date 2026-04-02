@@ -14,6 +14,7 @@ if (typeof canvas === 'undefined') {
     var mode = 'point';
     var couleurActive = '#0f172a';
     var historiqueRedo = []; // <--- NOUVELLE VARIABLE
+    var dernierClicTemps = 0; // Pour détecter le double-clic
 }
 
 // 1. CONFIGURATION FIREBASE 
@@ -2051,13 +2052,30 @@ const obtenirMilieu = (p1, p2) => ({ x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 
 
 // --- ENTRÉE UTILISATEUR (LOGIQUE UNIFIÉE) ---
 // --- ENTRÉE UTILISATEUR (VERSION FINALE ANTI-SUPERPOSITION) ---
+// --- FONCTION DE SAISIE COMPLÈTE (NOMMER, ANTI-SUPERPOSITION, REDO) ---
 function handleInput(x, y) {
-    historiqueRedo = [];
-    // 1. DÉTECTION PRÉALABLE : Existe-t-il un point très proche du clic ?
-    // Rayon de 15px pour la création, 20px pour la sélection
+    const maintenant = Date.now();
+    
+    // 1. DÉTECTION PRÉALABLE : Existe-t-il un point proche du clic ?
     const pExistant = points.find(p => Math.hypot(p.x - x, p.y - y) < 15);
 
-    // MODE POINT : Empêche la création si un point est déjà là
+    // --- LOGIQUE DOUBLE-CLIC (RENOMMER UN POINT) ---
+    // Si on double-clique sur un point existant (moins de 300ms entre deux clics)
+    if (pExistant && (maintenant - dernierClicTemps < 300)) {
+        const nouveauNom = prompt("Entrez le nouveau nom du point :", pExistant.label);
+        if (nouveauNom !== null && nouveauNom.trim() !== "") {
+            pExistant.label = nouveauNom.trim().toUpperCase();
+            selection = []; // On vide la sélection pour éviter de tracer un objet par erreur
+            refreshCanvas();
+            return;
+        }
+    }
+    dernierClicTemps = maintenant;
+
+    // Dès qu'on commence une nouvelle action, on vide l'historique Redo
+    historiqueRedo = [];
+
+    // --- MODE POINT : Création ---
     if (mode === 'point') {
         if (pExistant) return; // Sécurité : on ne fait rien si un point est déjà là
 
@@ -2066,7 +2084,7 @@ function handleInput(x, y) {
         return;
     }
 
-    // AUTRES MODES : On cherche un point à sélectionner
+    // --- AUTRES MODES : Sélection de points ---
     const pProche = pExistant || points.find(p => Math.hypot(p.x - x, p.y - y) < 20);
     
     if (!pProche) { 
@@ -2075,15 +2093,15 @@ function handleInput(x, y) {
         return; 
     }
 
-    // ANTI-DOUBLE CLIC : Empêche de sélectionner deux fois de suite le MÊME point
+    // ANTI-DOUBLE CLIC : Empêche de sélectionner deux fois de suite le MÊME point pour un outil
     if (selection.length > 0 && selection[selection.length - 1] === pProche) return;
 
     selection.push(pProche);
-    refreshCanvas(); // Feedback visuel immédiat (Allumage rouge)
+    refreshCanvas(); // Allumage rouge immédiat pour le feedback
 
     const nb = selection.length;
 
-    // LOGIQUE 2 POINTS
+    // --- LOGIQUE 2 POINTS (Milieu, Médiatrice, Segment, Droite, Cercle) ---
     const modes2 = ['segment', 'droite', 'cercle', 'milieu', 'mediatrice'];
     if (nb === 2 && modes2.includes(mode)) {
         const [p1, p2] = selection;
@@ -2091,13 +2109,13 @@ function handleInput(x, y) {
         if (mode === 'milieu') {
             const mx = (p1.x + p2.x) / 2;
             const my = (p1.y + p2.y) / 2;
-            // Vérification finale : ne pas créer le milieu s'il existe déjà physiquement
+            // Vérification : ne pas créer le milieu s'il existe déjà physiquement un point ici
             if (!points.find(p => Math.hypot(p.x - mx, p.y - my) < 5)) {
                 points.push({ x: mx, y: my, label: genererNomPoint(), color: couleurActive });
             }
         } 
         else if (mode === 'mediatrice') {
-            const m = obtenirMilieu(p1, p2);
+            const m = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
             elements.push({ type: 'droite', p1: m, p2: {x: m.x - (p2.y - p1.y), y: m.y + (p2.x - p1.x)}, color: couleurActive });
         } 
         else {
@@ -2105,11 +2123,11 @@ function handleInput(x, y) {
         }
         
         selection = []; 
-        setTimeout(refreshCanvas, 50); // Laisse le point allumé un court instant
+        setTimeout(refreshCanvas, 50); // Petit délai pour voir l'allumage avant l'extinction
         return;
     }
 
-    // LOGIQUE 3 POINTS (Parallèle, Perpendiculaire, Médiane, Angle)
+    // --- LOGIQUE 3 POINTS (Parallèle, Perpendiculaire, Médiane, Angle) ---
     if (nb === 3) {
         const [p1, p2, p3] = selection;
         const dx = p2.x - p1.x;
@@ -2119,11 +2137,11 @@ function handleInput(x, y) {
             elements.push({ type: 'droite', p1: p3, p2: { x: p3.x + dx, y: p3.y + dy }, color: couleurActive });
         } 
         else if (mode === 'perpendiculaire' || mode === 'perp' || mode === 'hauteur') {
-            // Vecteur normal (dx, dy) -> (-dy, dx) pour la perpendiculaire
+            // Vecteur perpendiculaire
             elements.push({ type: 'droite', p1: p3, p2: { x: p3.x - dy, y: p3.y + dx }, color: couleurActive, isHauteur: (mode === 'hauteur') });
         }
         else if (mode === 'mediane') {
-            const mBase = obtenirMilieu(p1, p2);
+            const mBase = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
             elements.push({ type: 'segment', p1: p3, p2: mBase, color: couleurActive });
         }
         else if (mode === 'bissectrice' || mode === 'angle') {
@@ -2247,6 +2265,14 @@ function redo() {
     }
     
     refreshCanvas();
+}
+
+function renommerPoint(p) {
+    const nouveauNom = prompt("Modifier le nom du point :", p.label);
+    if (nouveauNom !== null && nouveauNom.trim() !== "") {
+        p.label = nouveauNom.trim().toUpperCase(); 
+        refreshCanvas();
+    }
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
