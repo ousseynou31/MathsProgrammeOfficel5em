@@ -13,6 +13,7 @@ if (typeof canvas === 'undefined') {
     var selection = [];
     var mode = 'point';
     var couleurActive = '#0f172a';
+    var historiqueRedo = []; // <--- NOUVELLE VARIABLE
 }
 
 // 1. CONFIGURATION FIREBASE 
@@ -2051,6 +2052,7 @@ const obtenirMilieu = (p1, p2) => ({ x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 
 // --- ENTRÉE UTILISATEUR (LOGIQUE UNIFIÉE) ---
 // --- ENTRÉE UTILISATEUR (VERSION FINALE ANTI-SUPERPOSITION) ---
 function handleInput(x, y) {
+    historiqueRedo = [];
     // 1. DÉTECTION PRÉALABLE : Existe-t-il un point très proche du clic ?
     // Rayon de 15px pour la création, 20px pour la sélection
     const pExistant = points.find(p => Math.hypot(p.x - x, p.y - y) < 15);
@@ -2219,9 +2221,31 @@ function tracerLigneInfinie(A, B) {
 }
 
 function undo() {
-    if (selection.length > 0) { selection = []; } 
-    else if (elements.length > 0) { elements.pop(); } 
-    else if (points.length > 0) { points.pop(); }
+    if (selection.length > 0) { 
+        selection = []; 
+    } 
+    else if (elements.length > 0) { 
+        // On prend le dernier élément et on le met dans l'historique Redo
+        historiqueRedo.push({ type: 'element', data: elements.pop() }); 
+    } 
+    else if (points.length > 0) { 
+        // On prend le dernier point et on le met dans l'historique Redo
+        historiqueRedo.push({ type: 'point', data: points.pop() }); 
+    }
+    refreshCanvas();
+}
+
+function redo() {
+    if (historiqueRedo.length === 0) return; // Rien à rétablir
+
+    const action = historiqueRedo.pop(); // On récupère la dernière action annulée
+
+    if (action.type === 'element') {
+        elements.push(action.data);
+    } else if (action.type === 'point') {
+        points.push(action.data);
+    }
+    
     refreshCanvas();
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
