@@ -2261,52 +2261,58 @@ function redo() {
 }
 
 function creerChampSaisieFlottant(point) {
-    // 1. On nettoie si un ancien champ existe déjà
+    console.log("Tentative d'affichage pour le point :", point.label); // DEBUG
+
+    // 1. Supprimer l'ancien champ s'il existe
     const ancien = document.getElementById('input-nommer-flottant');
     if (ancien) ancien.remove();
 
-    // 2. Création de l'élément de saisie
+    // 2. Création de l'input
     const input = document.createElement('input');
     input.id = 'input-nommer-flottant';
     input.type = 'text';
-    input.value = point.label; // Affiche le nom actuel (ex: "A")
+    input.value = point.label;
     
-    // 3. Positionnement précis sur le canvas
+    // 3. STYLE CRUCIAL (Position fixe par rapport au Canvas)
     const rect = canvas.getBoundingClientRect();
-    input.style.position = 'absolute';
-    // On place l'input pile au-dessus du point (x, y)
-    input.style.left = (rect.left + window.scrollX + point.x - 25) + 'px';
-    input.style.top = (rect.top + window.scrollY + point.y - 35) + 'px';
     
-    // 4. Style pour que ce soit joli et visible
-    input.style.width = '60px';
-    input.style.height = '25px';
-    input.style.textAlign = 'center';
-    input.style.fontSize = '14px';
-    input.style.fontWeight = 'bold';
-    input.style.border = '2px solid #0f172a';
-    input.style.borderRadius = '4px';
-    input.style.zIndex = '2000';
-    input.style.background = 'white';
+    // On calcule la position exacte
+    const posX = rect.left + point.x;
+    const posY = rect.top + point.y;
+
+    Object.assign(input.style, {
+        position: 'fixed', // 'fixed' est plus fiable que 'absolute' ici
+        left: (posX - 30) + 'px',
+        top: (posY - 40) + 'px',
+        width: '60px',
+        height: '25px',
+        zIndex: '10000', // Très haut pour passer devant tout
+        textAlign: 'center',
+        fontSize: '16px',
+        border: '2px solid #2563eb',
+        borderRadius: '4px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        outline: 'none'
+    });
 
     document.body.appendChild(input);
-    
-    // 5. Focus automatique pour pouvoir taper tout de suite
-    input.focus();
-    input.select();
+    console.log("Input ajouté au document à la position :", posX, posY); // DEBUG
 
-    // 6. Validation avec la touche "Entrée"
+    // 4. Focus et Sélection
+    setTimeout(() => {
+        input.focus();
+        input.select();
+    }, 10);
+
+    // 5. Actions clavier
     input.onkeydown = function(e) {
         if (e.key === 'Enter') {
-            const nouveauNom = input.value.trim().toUpperCase();
-            if (nouveauNom !== "") {
-                point.label = nouveauNom;
-            }
+            let v = input.value.trim().toUpperCase();
+            if (v) point.label = v;
             input.remove();
-            setMode('point'); // On repasse en mode dessin automatiquement
+            setMode('point'); // On revient au mode par défaut
             refreshCanvas();
         }
-        // Annuler avec "Echap"
         if (e.key === 'Escape') {
             input.remove();
             setMode('point');
@@ -2314,9 +2320,9 @@ function creerChampSaisieFlottant(point) {
         }
     };
 
-    // 7. Supprimer le champ si l'élève clique ailleurs
+    // 6. Fermeture automatique si on clique ailleurs
     input.onblur = function() {
-        setTimeout(() => { if(input) input.remove(); }, 100);
+        setTimeout(() => { if(input.parentNode) input.remove(); }, 200);
     };
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
