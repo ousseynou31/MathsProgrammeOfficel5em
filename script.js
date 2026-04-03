@@ -2465,7 +2465,7 @@ window.addEventListener('mousedown', function(e) {
         grille.style.display = 'none';
     }
 });
-    / Fermer le menu si on clique ailleurs
+   // Fermer le menu si on clique ailleurs
 window.addEventListener('mousedown', function(e) {
     const panel = document.getElementById('panel-parametres');
     const btn = document.getElementById('btn-options');
