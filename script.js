@@ -2468,7 +2468,7 @@ window.addEventListener('mousedown', function(e) {
    // Fermer le menu si on clique ailleurs
 window.addEventListener('mousedown', function(e) {
     const panel = document.getElementById('panel-parametres');
-    const btn = document.getElementById('btn-options');
+    const btn = document.getElementById('btn-options'); 
     if (panel && !panel.contains(e.target) && e.target !== btn) {
         panel.style.display = 'none';
     }
