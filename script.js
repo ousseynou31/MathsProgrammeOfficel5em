@@ -2375,7 +2375,9 @@ function effacerTableau() {
 
 function toggleMenuParametres() {
     const panel = document.getElementById('panel-parametres');
-    // On utilise bien des guillemets ici, pas de slashs / /
+    if (!panel) return; // Sécurité si l'élément n'existe pas
+    
+    // On utilise des guillemets, JAMAIS de slashs / /
     if (panel.style.display === "none" || panel.style.display === "") {
         panel.style.display = "block";
     } else {
