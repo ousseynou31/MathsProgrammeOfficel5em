@@ -2358,11 +2358,6 @@ function selectionnerCouleur(nouvelleCouleur) {
     }
 }
 
-// Afficher/Masquer le menu
-function toggleMenuParametres() {
-    const panel = document.getElementById('panel-parametres');
-    panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
-}
 
 // Action : Effacer complètement le tableau
 function effacerTableau() {
@@ -2378,26 +2373,30 @@ function effacerTableau() {
     }
 }
 
-// Action : Changer la couleur de fond du Canvas
-function changerFond(couleur) {
-    canvas.style.backgroundColor = couleur;
+function toggleMenuParametres() {
+    const panel = document.getElementById('panel-parametres');
+    // On utilise bien des guillemets ici, pas de slashs / /
+    if (panel.style.display === "none" || panel.style.display === "") {
+        panel.style.display = "block";
+    } else {
+        panel.style.display = "none";
+    }
+}
+
+function changerFond(c) {
+    canvas.style.backgroundColor = c;
+    // On ferme le menu après le choix
+    document.getElementById('panel-parametres').style.display = "none";
     
-    // Astuce : Si le fond est noir ou vert foncé, on change peut-être 
-    // la couleur par défaut pour qu'elle soit visible (ex: blanc)
-    if (couleur === '#1a1a1a' || couleur === '#166534') {
-        couleurActive = '#ffffff';
-        if(document.getElementById('apercu-couleur')) {
-            document.getElementById('apercu-couleur').style.background = '#ffffff';
-        }
+    // Adaptation auto de la couleur du tracé
+    if (c !== '#ffffff') {
+        couleurActive = '#ffffff'; 
     } else {
         couleurActive = '#0f172a';
-        if(document.getElementById('apercu-couleur')) {
-            document.getElementById('apercu-couleur').style.background = '#0f172a';
-        }
     }
-    
-    refreshCanvas();
-    toggleMenuParametres();
+    if (document.getElementById('apercu-couleur')) {
+        document.getElementById('apercu-couleur').style.background = couleurActive;
+    }
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
