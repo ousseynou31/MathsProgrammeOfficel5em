@@ -2385,19 +2385,38 @@ function toggleMenuParametres() {
     }
 }
 
-function changerFond(c) {
-    canvas.style.backgroundColor = c;
-    // On ferme le menu après le choix
-    document.getElementById('panel-parametres').style.display = "none";
-    
-    // Adaptation auto de la couleur du tracé
-    if (c !== '#ffffff') {
-        couleurActive = '#ffffff'; 
+function changerFond(couleurHex) {
+    const monCanvas = document.getElementById('geoCanvas');
+    const panel = document.getElementById('panel-parametres');
+
+    if (monCanvas) {
+        // 1. Applique la couleur au fond du canvas
+        monCanvas.style.backgroundColor = couleurHex;
+        
+        // 2. IMPORTANT : On adapte la couleur de tracé (couleurActive)
+        // Si le fond est sombre (Noir ou Vert), on passe en BLANC
+        if (couleurHex === '#1a1a1a' || couleurHex === '#166534') {
+            couleurActive = '#ffffff'; 
+        } else {
+            // Sinon (fond blanc), on passe en BLEU FONCÉ ou NOIR
+            couleurActive = '#0f172a';
+        }
+
+        // 3. Met à jour le petit carré d'aperçu pour que l'utilisateur voit le changement
+        const apercu = document.getElementById('apercu-couleur');
+        if (apercu) {
+            apercu.style.backgroundColor = couleurActive;
+        }
+
+        // 4. Ferme le menu automatiquement après le choix
+        if (panel) panel.style.display = 'none';
+
+        // 5. Redessine tout le contenu pour qu'il apparaisse avec la nouvelle couleur
+        refreshCanvas();
+        
+        console.log("Fond changé en : " + couleurHex + " | Tracé : " + couleurActive);
     } else {
-        couleurActive = '#0f172a';
-    }
-    if (document.getElementById('apercu-couleur')) {
-        document.getElementById('apercu-couleur').style.background = couleurActive;
+        console.error("Erreur : Le canvas 'geoCanvas' est introuvable.");
     }
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
