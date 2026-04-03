@@ -2425,10 +2425,13 @@ function changerFond(couleur) {
 }
 
 function ouvrirOutilTriangle() {
-    // Affiche la fenêtre modale
-    document.getElementById('modalTriangle').style.display = 'flex';
-    // Réinitialise les labels au cas où
-    majLabels(); 
+    const modal = document.getElementById('modalTriangle');
+    if (modal) {
+        modal.style.setProperty('display', 'flex', 'important'); // Le 'important' force l'affichage
+        majLabels(); // Met à jour AB, BC, etc.
+    } else {
+        console.error("Erreur : La fenêtre modalTriangle n'existe pas dans le HTML !");
+    }
 }
 
 function fermerModalTriangle() {
