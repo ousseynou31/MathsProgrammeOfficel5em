@@ -2261,36 +2261,52 @@ function redo() {
 }
 
 function creerChampSaisieFlottant(point) {
-    // Supprimer un ancien champ s'il existe
-    const ancien = document.getElementById('input-nommer');
+    // 1. On nettoie si un ancien champ existe déjà
+    const ancien = document.getElementById('input-nommer-flottant');
     if (ancien) ancien.remove();
 
-    // Créer l'input
+    // 2. Création de l'élément de saisie
     const input = document.createElement('input');
-    input.id = 'input-nommer';
+    input.id = 'input-nommer-flottant';
     input.type = 'text';
-    input.value = point.label;
+    input.value = point.label; // Affiche le nom actuel (ex: "A")
     
-    // Style pour qu'il flotte sur le canvas
+    // 3. Positionnement précis sur le canvas
     const rect = canvas.getBoundingClientRect();
     input.style.position = 'absolute';
-    input.style.left = (rect.left + point.x) + 'px';
-    input.style.top = (rect.top + point.y - 25) + 'px'; // Juste au dessus du point
-    input.style.width = '50px';
-    input.style.zIndex = '1000';
+    // On place l'input pile au-dessus du point (x, y)
+    input.style.left = (rect.left + window.scrollX + point.x - 25) + 'px';
+    input.style.top = (rect.top + window.scrollY + point.y - 35) + 'px';
+    
+    // 4. Style pour que ce soit joli et visible
+    input.style.width = '60px';
+    input.style.height = '25px';
+    input.style.textAlign = 'center';
+    input.style.fontSize = '14px';
+    input.style.fontWeight = 'bold';
+    input.style.border = '2px solid #0f172a';
+    input.style.borderRadius = '4px';
+    input.style.zIndex = '2000';
+    input.style.background = 'white';
 
     document.body.appendChild(input);
+    
+    // 5. Focus automatique pour pouvoir taper tout de suite
     input.focus();
     input.select();
 
-    // Valider avec Entrée
+    // 6. Validation avec la touche "Entrée"
     input.onkeydown = function(e) {
         if (e.key === 'Enter') {
-            point.label = input.value.trim().toUpperCase();
+            const nouveauNom = input.value.trim().toUpperCase();
+            if (nouveauNom !== "") {
+                point.label = nouveauNom;
+            }
             input.remove();
-            setMode('point'); // Repasse en mode point automatiquement
+            setMode('point'); // On repasse en mode dessin automatiquement
             refreshCanvas();
         }
+        // Annuler avec "Echap"
         if (e.key === 'Escape') {
             input.remove();
             setMode('point');
@@ -2298,9 +2314,9 @@ function creerChampSaisieFlottant(point) {
         }
     };
 
-    // Supprimer si on clique ailleurs
+    // 7. Supprimer le champ si l'élève clique ailleurs
     input.onblur = function() {
-        input.remove();
+        setTimeout(() => { if(input) input.remove(); }, 100);
     };
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
