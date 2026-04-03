@@ -2424,12 +2424,15 @@ function changerFond(couleur) {
     }
 }
 
-// Fonction pour ouvrir la fenêtre au clic du bouton
 function ouvrirOutilTriangle() {
+    // Affiche la fenêtre modale
     document.getElementById('modalTriangle').style.display = 'flex';
+    // Réinitialise les labels au cas où
+    majLabels(); 
 }
 
 function fermerModalTriangle() {
+    // Cache la fenêtre
     document.getElementById('modalTriangle').style.display = 'none';
 }
 
