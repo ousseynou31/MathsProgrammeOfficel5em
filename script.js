@@ -2357,6 +2357,48 @@ function selectionnerCouleur(nouvelleCouleur) {
         refreshCanvas();
     }
 }
+
+// Afficher/Masquer le menu
+function toggleMenuParametres() {
+    const panel = document.getElementById('panel-parametres');
+    panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+}
+
+// Action : Effacer complètement le tableau
+function effacerTableau() {
+    if (confirm("Voulez-vous vraiment tout effacer ? Cette action est irréversible.")) {
+        points = [];
+        elements = [];
+        selection = [];
+        historiqueRedo = [];
+        // Réinitialiser les noms (optionnel, pour repartir de 'A')
+        nomIndex = 0; 
+        refreshCanvas();
+        toggleMenuParametres(); // Fermer le menu
+    }
+}
+
+// Action : Changer la couleur de fond du Canvas
+function changerFond(couleur) {
+    canvas.style.backgroundColor = couleur;
+    
+    // Astuce : Si le fond est noir ou vert foncé, on change peut-être 
+    // la couleur par défaut pour qu'elle soit visible (ex: blanc)
+    if (couleur === '#1a1a1a' || couleur === '#166534') {
+        couleurActive = '#ffffff';
+        if(document.getElementById('apercu-couleur')) {
+            document.getElementById('apercu-couleur').style.background = '#ffffff';
+        }
+    } else {
+        couleurActive = '#0f172a';
+        if(document.getElementById('apercu-couleur')) {
+            document.getElementById('apercu-couleur').style.background = '#0f172a';
+        }
+    }
+    
+    refreshCanvas();
+    toggleMenuParametres();
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -2422,6 +2464,14 @@ window.addEventListener('mousedown', function(e) {
     const apercu = document.getElementById('apercu-couleur');
     if (grille && !grille.contains(e.target) && e.target !== apercu) {
         grille.style.display = 'none';
+    }
+});
+    / Fermer le menu si on clique ailleurs
+window.addEventListener('mousedown', function(e) {
+    const panel = document.getElementById('panel-parametres');
+    const btn = document.getElementById('btn-options');
+    if (panel && !panel.contains(e.target) && e.target !== btn) {
+        panel.style.display = 'none';
     }
 });
     // 8. ÉCOUTEUR TECHNIQUE POUR LE TABLEAU DE GÉOMÉTRIE
