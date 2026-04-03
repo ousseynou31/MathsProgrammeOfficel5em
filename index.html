@@ -464,31 +464,38 @@
        <button id="btn-nommer" class="btn-ui-geo" onclick="setMode('nommer')">
     🏷️ <span class="label">Nommer</span>
 </button>
-       <div id="grille-couleurs" 
-     style="display: none; 
-            position: absolute; 
-            top: 45px; 
-            left: 0; 
-            background: white; 
-            border: 2px solid #0f172a; 
-            padding: 10px; 
-            display: grid; 
-            grid-template-columns: repeat(3, 30px); 
-            gap: 8px; 
-            z-index: 10000; /* Valeur très haute pour passer devant le Canvas */
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); /* Ombre pour bien la détacher du fond */
-            border-radius: 8px;">
+      <div style="position: relative; display: inline-block; vertical-align: middle;">
     
-    <div onclick="selectionnerCouleur('#0f172a')" style="width:30px; height:30px; background:#0f172a; cursor:pointer; border-radius:4px;"></div>
-    <div onclick="selectionnerCouleur('#ef4444')" style="width:30px; height:30px; background:#ef4444; cursor:pointer; border-radius:4px;"></div>
-    <div onclick="selectionnerCouleur('#22c55e')" style="width:30px; height:30px; background:#22c55e; cursor:pointer; border-radius:4px;"></div>
-    <div onclick="selectionnerCouleur('#3b82f6')" style="width:30px; height:30px; background:#3b82f6; cursor:pointer; border-radius:4px;"></div>
-    <div onclick="selectionnerCouleur('#f59e0b')" style="width:30px; height:30px; background:#f59e0b; cursor:pointer; border-radius:4px;"></div>
-    <div onclick="selectionnerCouleur('#a855f7')" style="width:30px; height:30px; background:#a855f7; cursor:pointer; border-radius:4px;"></div>
-    <div onclick="selectionnerCouleur('#ec4899')" style="width:30px; height:30px; background:#ec4899; cursor:pointer; border-radius:4px;"></div>
-    <div onclick="selectionnerCouleur('#06b6d4')" style="width:30px; height:30px; background:#06b6d4; cursor:pointer; border-radius:4px;"></div>
-    
-    <input type="color" onchange="selectionnerCouleur(this.value)" style="width:30px; height:30px; cursor:pointer; border:1px solid #ccc; background:none; padding:0;">
+    <div id="apercu-couleur" onclick="toggleGrilleCouleurs()" 
+         style="width: 35px; height: 35px; background: #0f172a; border: 3px solid #ccc; border-radius: 4px; cursor: pointer;">
+    </div>
+
+    <div id="grille-couleurs" 
+         style="display: none; 
+                position: absolute; 
+                top: 40px; /* Juste en dessous du bouton */
+                left: 0; 
+                background: white; 
+                border: 2px solid #0f172a; 
+                padding: 10px; 
+                grid-template-columns: repeat(3, 30px); 
+                gap: 8px; 
+                z-index: 99999; /* Priorité maximale */
+                box-shadow: 0 10px 25px rgba(0,0,0,0.4); 
+                border-radius: 8px;
+                min-width: 110px;">
+        
+        <div onclick="selectionnerCouleur('#0f172a')" style="width:30px; height:30px; background:#0f172a; cursor:pointer; border-radius:4px;"></div>
+        <div onclick="selectionnerCouleur('#ef4444')" style="width:30px; height:30px; background:#ef4444; cursor:pointer; border-radius:4px;"></div>
+        <div onclick="selectionnerCouleur('#22c55e')" style="width:30px; height:30px; background:#22c55e; cursor:pointer; border-radius:4px;"></div>
+        <div onclick="selectionnerCouleur('#3b82f6')" style="width:30px; height:30px; background:#3b82f6; cursor:pointer; border-radius:4px;"></div>
+        <div onclick="selectionnerCouleur('#f59e0b')" style="width:30px; height:30px; background:#f59e0b; cursor:pointer; border-radius:4px;"></div>
+        <div onclick="selectionnerCouleur('#a855f7')" style="width:30px; height:30px; background:#a855f7; cursor:pointer; border-radius:4px;"></div>
+        <div onclick="selectionnerCouleur('#ec4899')" style="width:30px; height:30px; background:#ec4899; cursor:pointer; border-radius:4px;"></div>
+        <div onclick="selectionnerCouleur('#06b6d4')" style="width:30px; height:30px; background:#06b6d4; cursor:pointer; border-radius:4px;"></div>
+        
+        <input type="color" onchange="selectionnerCouleur(this.value)" style="width:30px; height:30px; cursor:pointer; border:1px solid #ccc; background:none; padding:0;">
+    </div>
 </div>
         
         <div style="flex: 1; text-align: center;">
