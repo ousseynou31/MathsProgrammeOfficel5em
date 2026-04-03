@@ -2261,71 +2261,88 @@ function redo() {
 }
 
 function creerChampSaisieFlottant(point) {
-    console.log("Tentative d'affichage pour le point :", point.label); // DEBUG
-
-    // 1. Supprimer l'ancien champ s'il existe
+    // 1. Nettoyage
     const ancien = document.getElementById('input-nommer-flottant');
     if (ancien) ancien.remove();
 
-    // 2. Création de l'input
+    // 2. Création
     const input = document.createElement('input');
     input.id = 'input-nommer-flottant';
     input.type = 'text';
     input.value = point.label;
     
-    // 3. STYLE CRUCIAL (Position fixe par rapport au Canvas)
+    // Configuration pour MOBILE
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('autocapitalize', 'characters'); // Force les majuscules sur mobile
+    input.setAttribute('inputmode', 'text'); // Indique au téléphone d'ouvrir le clavier texte
+
+    // 3. Style
     const rect = canvas.getBoundingClientRect();
-    
-    // On calcule la position exacte
-    const posX = rect.left + point.x;
-    const posY = rect.top + point.y;
+    const posX = rect.left + window.scrollX + point.x;
+    const posY = rect.top + window.scrollY + point.y;
 
     Object.assign(input.style, {
-        position: 'fixed', // 'fixed' est plus fiable que 'absolute' ici
+        position: 'absolute',
         left: (posX - 30) + 'px',
-        top: (posY - 40) + 'px',
-        width: '60px',
-        height: '25px',
-        zIndex: '10000', // Très haut pour passer devant tout
+        top: (posY - 45) + 'px',
+        width: '70px',
+        height: '30px',
+        zIndex: '100000',
         textAlign: 'center',
-        fontSize: '16px',
+        fontSize: '18px', // Taille > 16px évite le zoom automatique forcé sur iPhone
         border: '2px solid #2563eb',
-        borderRadius: '4px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        outline: 'none'
+        borderRadius: '6px',
+        background: 'white',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
     });
 
     document.body.appendChild(input);
-    console.log("Input ajouté au document à la position :", posX, posY); // DEBUG
 
-    // 4. Focus et Sélection
+    // --- LE SECRET POUR MOBILE ---
+    // On utilise un délai très court pour laisser le temps au navigateur de valider le clic
+    // avant de demander le focus.
     setTimeout(() => {
         input.focus();
-        input.select();
-    }, 10);
+        input.setSelectionRange(0, input.value.length); // Sélectionne tout le texte
+    }, 50);
 
-    // 5. Actions clavier
+    // 4. Validation
     input.onkeydown = function(e) {
         if (e.key === 'Enter') {
-            let v = input.value.trim().toUpperCase();
-            if (v) point.label = v;
-            input.remove();
-            setMode('point'); // On revient au mode par défaut
-            refreshCanvas();
+            validerNom(input, point);
         }
         if (e.key === 'Escape') {
-            input.remove();
-            setMode('point');
-            refreshCanvas();
+            annulerNom(input);
         }
     };
 
-    // 6. Fermeture automatique si on clique ailleurs
+    // 5. Gestion du "Perte de focus" (Blur)
+    // Sur mobile, cliquer sur "OK" ou "Terminé" déclenche le blur.
     input.onblur = function() {
-        setTimeout(() => { if(input.parentNode) input.remove(); }, 200);
+        // On attend un peu pour voir si ce n'est pas un changement accidentel
+        setTimeout(() => {
+            if (document.getElementById('input-nommer-flottant')) {
+                validerNom(input, point);
+            }
+        }, 100);
     };
 }
 
+// Fonctions utilitaires pour éviter les répétitions
+function validerNom(input, point) {
+    let v = input.value.trim().toUpperCase();
+    if (v) point.label = v;
+    input.remove();
+    setMode('point'); 
+    refreshCanvas();
+}
+
+function annulerNom(input) {
+    input.remove();
+    setMode('point');
+    refreshCanvas();
+}
 function toggleGrilleCouleurs() {
     const grille = document.getElementById('grille-couleurs');
     
