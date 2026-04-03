@@ -2325,6 +2325,32 @@ function creerChampSaisieFlottant(point) {
         setTimeout(() => { if(input.parentNode) input.remove(); }, 200);
     };
 }
+function toggleGrilleCouleurs() {
+    const grille = document.getElementById('grille-couleurs');
+    // Si la grille est cachée, on l'affiche, sinon on la cache
+    if (grille.style.display === 'none' || grille.style.display === '') {
+        grille.style.display = 'grid';
+    } else {
+        grille.style.display = 'none';
+    }
+}
+
+function selectionnerCouleur(nouvelleCouleur) {
+    // 1. On met à jour la variable globale utilisée pour les tracés
+    couleurActive = nouvelleCouleur;
+    
+    // 2. On change la couleur du carré d'aperçu
+    document.getElementById('apercu-couleur').style.background = nouvelleCouleur;
+    
+    // 3. On cache la grille
+    document.getElementById('grille-couleurs').style.display = 'none';
+
+    // 4. Facultatif : Si des points sont sélectionnés, on change leur couleur
+    if (selection.length > 0) {
+        selection.forEach(p => p.color = couleurActive);
+        refreshCanvas();
+    }
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -2384,6 +2410,14 @@ window.addEventListener('load', async () => {
         changerTheme(themeSauve);
     }
 
+    // Fermer la grille si on clique ailleurs sur l'écran
+window.addEventListener('mousedown', function(e) {
+    const grille = document.getElementById('grille-couleurs');
+    const apercu = document.getElementById('apercu-couleur');
+    if (grille && !grille.contains(e.target) && e.target !== apercu) {
+        grille.style.display = 'none';
+    }
+});
     // 8. ÉCOUTEUR TECHNIQUE POUR LE TABLEAU DE GÉOMÉTRIE
     // On utilise 'pointerdown' pour gérer à la fois la souris et le tactile (doigt/stylet)
     document.addEventListener('pointerdown', (e) => {
