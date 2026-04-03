@@ -2423,6 +2423,33 @@ function changerFond(couleur) {
         refreshCanvas();
     }
 }
+
+// Fonction pour ouvrir la fenêtre au clic du bouton
+function ouvrirOutilTriangle() {
+    document.getElementById('modalTriangle').style.display = 'flex';
+}
+
+function fermerModalTriangle() {
+    document.getElementById('modalTriangle').style.display = 'none';
+}
+
+// Mise à jour dynamique des labels si l'élève change les noms A, B, C
+document.getElementById('nomA').oninput = majLabels;
+document.getElementById('nomB').oninput = majLabels;
+document.getElementById('nomC').oninput = majLabels;
+
+function majLabels() {
+    const a = document.getElementById('nomA').value || "A";
+    const b = document.getElementById('nomB').value || "B";
+    const c = document.getElementById('nomC').value || "C";
+    
+    document.getElementById('labelAB').innerText = `Segment ${a}${b} :`;
+    document.getElementById('labelBC').innerText = `Segment ${b}${c} :`;
+    document.getElementById('labelAC').innerText = `Segment ${a}${c} :`;
+    document.getElementById('labelAngA').innerText = `Angle ${a} :`;
+    document.getElementById('labelAngB').innerText = `Angle ${b} :`;
+    document.getElementById('labelAngC').innerText = `Angle ${c} :`;
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
