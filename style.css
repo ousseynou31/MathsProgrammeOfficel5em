@@ -1030,6 +1030,12 @@ body { overflow: hidden; }
     touch-action: none; /* Empêche le navigateur de scroller quand on dessine */
     cursor: crosshair;
 }
+#geoCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* Ne mettez pas de background-color ici, laissez le JS s'en charger */
+}
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
