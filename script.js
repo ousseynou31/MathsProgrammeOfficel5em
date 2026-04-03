@@ -2328,14 +2328,15 @@ function creerChampSaisieFlottant(point) {
 
 function toggleGrilleCouleurs() {
     const grille = document.getElementById('grille-couleurs');
-    // On vérifie si elle est cachée
+    
+    // Si la grille est actuellement cachée (display 'none')
     if (grille.style.display === 'none' || grille.style.display === '') {
-        grille.style.display = 'grid'; // On force l'affichage en GRILLE
-        grille.style.zIndex = '10000'; // Double sécurité
+        grille.style.display = 'grid'; // On utilise 'grid' pour que les colonnes fonctionnent
     } else {
         grille.style.display = 'none';
     }
 }
+
 function selectionnerCouleur(nouvelleCouleur) {
     // 1. On met à jour la variable globale utilisée pour les tracés
     couleurActive = nouvelleCouleur;
