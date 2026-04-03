@@ -503,37 +503,30 @@
         </div>
 
 
-        <div class="menu-parametres-container" style="position: relative; display: inline-block; margin-right: 25px;">
+       <div id="container-options" style="position: relative; display: inline-block; margin-right: 35px; vertical-align: middle;">
     <button id="btn-options" onclick="toggleMenuParametres()" 
-            style="background: none; border: none; font-size: 24px; cursor: pointer; padding: 0 10px; color: #0f172a;">
+            style="background: none; border: none; font-size: 26px; cursor: pointer; color: #0f172a;">
         ⋮
     </button>
 
     <div id="panel-parametres" 
-         style="display: none; position: absolute; right: 0; top: 40px; background: white; 
-                border: 1px solid #ccc; border-radius: 8px; width: 180px; z-index: 100000; 
-                box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden;">
+         style="display: none; position: absolute; right: 0; top: 45px; background: white; 
+                border: 2px solid #0f172a; border-radius: 8px; width: 180px; z-index: 100000; 
+                box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
         
-        <div class="item-menu" onclick="effacerTableau()" 
-             style="padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; color: #ef4444;">
-            🗑️ <span>Effacer tout</span>
+        <div onclick="effacerTableau()" style="padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; color: #ef4444; font-weight: bold;">
+            🗑️ Effacer tout
         </div>
 
-        <div style="padding: 12px; background: #f8fafc; font-size: 13px; font-weight: bold; color: #64748b;">
-            COULEUR DU TABLEAU
-        </div>
+        <div style="padding: 8px; font-size: 11px; color: #64748b; background: #f1f5f9;">COULEUR DU FOND</div>
         
         <div style="display: flex; justify-content: space-around; padding: 10px;">
-            <div onclick="changerFond('#ffffff')" 
-                 style="width: 30px; height: 30px; background: #ffffff; border: 2px solid #ccc; border-radius: 4px; cursor: pointer;" title="Blanc"></div>
-            <div onclick="changerFond('#1a1a1a')" 
-                 style="width: 30px; height: 30px; background: #1a1a1a; border: 2px solid #555; border-radius: 4px; cursor: pointer;" title="Noir"></div>
-            <div onclick="changerFond('#166534')" 
-                 style="width: 30px; height: 30px; background: #166534; border: 2px solid #064e3b; border-radius: 4px; cursor: pointer;" title="Vert"></div>
+            <div onclick="changerFond('#ffffff')" style="width: 30px; height: 30px; background: white; border: 1px solid #ccc; cursor: pointer;"></div>
+            <div onclick="changerFond('#1a1a1a')" style="width: 30px; height: 30px; background: #1a1a1a; border: 1px solid #ccc; cursor: pointer;"></div>
+            <div onclick="changerFond('#166534')" style="width: 30px; height: 30px; background: #166534; border: 1px solid #ccc; cursor: pointer;"></div>
         </div>
     </div>
 </div>
-
 
         
         <div style="width: 70px;"></div> </div>
