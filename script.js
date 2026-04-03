@@ -2450,6 +2450,94 @@ function majLabels() {
     document.getElementById('labelAngB').innerText = `Angle ${b} :`;
     document.getElementById('labelAngC').innerText = `Angle ${c} :`;
 }
+function genererTriangle() {
+    // 1. Récupération des noms
+    const nA = document.getElementById('nomA').value || "A";
+    const nB = document.getElementById('nomB').value || "B";
+    const nC = document.getElementById('nomC').value || "C";
+
+    // 2. Récupération des valeurs numériques
+    const ab = parseFloat(document.getElementById('valAB').value);
+    const bc = parseFloat(document.getElementById('valBC').value);
+    const ac = parseFloat(document.getElementById('valAC').value);
+    const angA = parseFloat(document.getElementById('valAngA').value);
+    const angB = parseFloat(document.getElementById('valAngB').value);
+
+    // Facteur d'échelle (1 cm = 40 pixels pour que ce soit visible)
+    const echelle = 40;
+    
+    // Position de départ (Centre du canvas)
+    let x0 = canvas.width / 2 - (ab * echelle / 2 || 100);
+    let y0 = canvas.height / 2 + 50;
+
+    let pA, pB, pC;
+
+    // --- CAS 1 : SSS (3 côtés connus) ---
+    if (!isNaN(ab) && !isNaN(bc) && !isNaN(ac)) {
+        if (ab + bc <= ac || ab + ac <= bc || bc + ac <= ab) {
+            alert("Inégalité triangulaire non respectée !"); return;
+        }
+        // Calcul de l'angle A via Al-Kashi : cos(A) = (b² + c² - a²) / 2bc
+        const cosA = (ac**2 + ab**2 - bc**2) / (2 * ac * ab);
+        const angleRadA = Math.acos(cosA);
+
+        pA = { x: x0, y: y0, label: nA, color: couleurActive };
+        pB = { x: x0 + ab * echelle, y: y0, label: nB, color: couleurActive };
+        pC = { 
+            x: x0 + ac * echelle * Math.cos(angleRadA), 
+            y: y0 - ac * echelle * Math.sin(angleRadA), 
+            label: nC, color: couleurActive 
+        };
+    }
+    // --- CAS 2 : SAS (2 côtés + 1 angle) ---
+    else if (!isNaN(ab) && !isNaN(ac) && !isNaN(angA)) {
+        const angleRadA = angA * (Math.PI / 180);
+        pA = { x: x0, y: y0, label: nA, color: couleurActive };
+        pB = { x: x0 + ab * echelle, y: y0, label: nB, color: couleurActive };
+        pC = { 
+            x: x0 + ac * echelle * Math.cos(angleRadA), 
+            y: y0 - ac * echelle * Math.sin(angleRadA), 
+            label: nC, color: couleurActive 
+        };
+    }
+    // --- CAS 3 : ASA (1 côté + 2 angles) ---
+    else if (!isNaN(ab) && !isNaN(angA) && !isNaN(angB)) {
+        const radA = angA * (Math.PI / 180);
+        const radB = angB * (Math.PI / 180);
+        const radC = Math.PI - (radA + radB);
+        
+        if (radC <= 0) { alert("La somme des angles doit être < 180°"); return; }
+        
+        // Loi des sinus pour trouver AC : AC / sin(B) = AB / sin(C)
+        const longueurAC = (ab * Math.sin(radB)) / Math.sin(radC);
+
+        pA = { x: x0, y: y0, label: nA, color: couleurActive };
+        pB = { x: x0 + ab * echelle, y: y0, label: nB, color: couleurActive };
+        pC = { 
+            x: x0 + longueurAC * echelle * Math.cos(radA), 
+            y: y0 - longueurAC * echelle * Math.sin(radA), 
+            label: nC, color: couleurActive 
+        };
+    } else {
+        alert("Veuillez remplir au moins 3 mesures valides (ex: 3 côtés OU 2 côtés + 1 angle).");
+        return;
+    }
+
+    // --- INJECTION DANS L'APPLICATION ---
+    // On ajoute les points
+    points.push(pA, pB, pC);
+
+    // On ajoute les segments
+    elements.push(
+        { type: 'segment', p1: pA, p2: pB, color: couleurActive },
+        { type: 'segment', p2: pB, p1: pC, color: couleurActive },
+        { type: 'segment', p1: pC, p2: pA, color: couleurActive }
+    );
+
+    // Fermeture et Rafraîchissement
+    fermerModalTriangle();
+    refreshCanvas();
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
