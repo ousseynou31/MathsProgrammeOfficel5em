@@ -2148,29 +2148,27 @@ function handleInput(x, y) {
 // --- DESSIN ---
 function refreshCanvas() {
     if (!ctx || !canvas) return;
-
-    // 1. On efface les anciens tracés
-    // On NE redessine PLUS le rectangle blanc (fillRect) pour laisser voir le fond
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 2. On dessine les éléments (segments, cercles, etc.)
+    // AMÉLIORATION : On récupère la couleur du fond définie par le menu
+    // Si aucune n'est définie, on garde "white" par défaut
+    let fondActuel = canvas.style.backgroundColor || "white";
+    ctx.fillStyle = fondActuel; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     elements.forEach(el => {
         ctx.beginPath();
-        
-        // Utilise la couleur de l'élément ou la couleur active du tableau
-        ctx.strokeStyle = el.color || couleurActive; 
+        // On utilise la couleur de l'élément, sinon on adapte le noir au fond
+        ctx.strokeStyle = el.color || (fondActuel === "white" ? "#000" : "#fff");
         ctx.lineWidth = 2;
         ctx.setLineDash(el.isHauteur ? [8, 6] : []);
 
         if (el.type === 'segment') {
-            ctx.moveTo(el.p1.x, el.p1.y); 
-            ctx.lineTo(el.p2.x, el.p2.y); 
-            ctx.stroke();
+            ctx.moveTo(el.p1.x, el.p1.y); ctx.lineTo(el.p2.x, el.p2.y); ctx.stroke();
         } 
         else if (el.type === 'cercle') {
             const r = Math.hypot(el.p2.x - el.p1.x, el.p2.y - el.p1.y);
-            ctx.arc(el.p1.x, el.p1.y, r, 0, Math.PI * 2); 
-            ctx.stroke();
+            ctx.arc(el.p1.x, el.p1.y, r, 0, Math.PI * 2); ctx.stroke();
         }
         else if (el.type === 'angle') {
             dessinerSecteurAngle(el);
@@ -2181,32 +2179,29 @@ function refreshCanvas() {
             const angleBis = a1 + (a3 - a1) / 2;
             tracerLigneInfinie(el.p2, { x: el.p2.x + Math.cos(angleBis), y: el.p2.y + Math.sin(angleBis) });
         }
-        else { 
-            tracerLigneInfinie(el.p1, el.p2); 
-        }
+        else { tracerLigneInfinie(el.p1, el.p2); }
     });
 
-    // 3. On dessine les points
     points.forEach(p => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
         const estSelectionne = selection.includes(p);
         
         if (estSelectionne) {
-            ctx.fillStyle = "#ff4757"; // Rouge pour la sélection
+            ctx.fillStyle = "#ff4757";
             ctx.shadowBlur = 10;
             ctx.shadowColor = "#ff4757";
         } else {
-            // Utilise la couleur du point ou la couleur active (blanc ou noir)
-            ctx.fillStyle = p.color || couleurActive; 
+            // On garde votre logique p.color, sinon on adapte selon le fond
+            ctx.fillStyle = p.color || (fondActuel === "white" ? "#0f172a" : "#ffffff");
             ctx.shadowBlur = 0;
         }
         
         ctx.fill();
         ctx.shadowBlur = 0;
-
-        // Couleur du texte (A, B, C...) adaptée au fond
-        ctx.fillStyle = couleurActive; 
+        
+        // Couleur du nom du point (A, B...) adaptée au fond
+        ctx.fillStyle = (fondActuel === "white" ? "#0f172a" : "#ffffff"); 
         ctx.font = "bold 15px Arial";
         ctx.fillText(p.label, p.x + 12, p.y - 12);
     });
