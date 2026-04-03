@@ -2261,80 +2261,67 @@ function redo() {
 }
 
 function creerChampSaisieFlottant(point) {
-    // 1. Nettoyage
+    // 1. ÉTAPE CRUCIALE : On force le navigateur à perdre tout focus précédent
+    if (document.activeElement) {
+        document.activeElement.blur();
+    }
+
     const ancien = document.getElementById('input-nommer-flottant');
     if (ancien) ancien.remove();
 
-    // 2. Création
     const input = document.createElement('input');
     input.id = 'input-nommer-flottant';
     input.type = 'text';
     input.value = point.label;
     
-    // Configuration pour MOBILE
+    // Configuration Mobile
     input.setAttribute('autocomplete', 'off');
-    input.setAttribute('autocorrect', 'off');
-    input.setAttribute('autocapitalize', 'characters'); // Force les majuscules sur mobile
-    input.setAttribute('inputmode', 'text'); // Indique au téléphone d'ouvrir le clavier texte
+    input.setAttribute('inputmode', 'text');
+    input.setAttribute('autocapitalize', 'characters');
 
-    // 3. Style
+    // Style (on garde le 18px pour éviter le zoom iOS)
     const rect = canvas.getBoundingClientRect();
-    const posX = rect.left + window.scrollX + point.x;
-    const posY = rect.top + window.scrollY + point.y;
-
     Object.assign(input.style, {
         position: 'absolute',
-        left: (posX - 30) + 'px',
-        top: (posY - 45) + 'px',
+        left: (rect.left + window.scrollX + point.x - 35) + 'px',
+        top: (rect.top + window.scrollY + point.y - 45) + 'px',
         width: '70px',
-        height: '30px',
+        height: '35px',
         zIndex: '100000',
+        fontSize: '18px', 
         textAlign: 'center',
-        fontSize: '18px', // Taille > 16px évite le zoom automatique forcé sur iPhone
         border: '2px solid #2563eb',
-        borderRadius: '6px',
         background: 'white',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+        borderRadius: '6px'
     });
 
     document.body.appendChild(input);
 
-    // --- LE SECRET POUR MOBILE ---
-    // On utilise un délai très court pour laisser le temps au navigateur de valider le clic
-    // avant de demander le focus.
+    // 2. ÉTAPE CRUCIALE : Le délai de focus doit être suffisant pour le mobile
+    // 100ms est le "sweet spot" pour que le téléphone valide le changement d'état
     setTimeout(() => {
-        input.focus();
-        input.setSelectionRange(0, input.value.length); // Sélectionne tout le texte
-    }, 50);
+        input.focus({preventScroll: true});
+        input.select();
+        // Force l'apparition du clavier sur certains Android
+        input.click(); 
+    }, 100);
 
-    // 4. Validation
+    // Validation
     input.onkeydown = function(e) {
         if (e.key === 'Enter') {
-            validerNom(input, point);
-        }
-        if (e.key === 'Escape') {
-            annulerNom(input);
+            validerEtFermer(input, point);
         }
     };
 
-    // 5. Gestion du "Perte de focus" (Blur)
-    // Sur mobile, cliquer sur "OK" ou "Terminé" déclenche le blur.
-    input.onblur = function() {
-        // On attend un peu pour voir si ce n'est pas un changement accidentel
-        setTimeout(() => {
-            if (document.getElementById('input-nommer-flottant')) {
-                validerNom(input, point);
-            }
-        }, 100);
-    };
+    // On ne ferme plus au 'blur' immédiatement pour éviter les fermetures accidentelles sur mobile
+    // On valide seulement si l'utilisateur clique vraiment ailleurs ou sur "Entrée"
 }
 
-// Fonctions utilitaires pour éviter les répétitions
-function validerNom(input, point) {
-    let v = input.value.trim().toUpperCase();
+function validerEtFermer(input, point) {
+    const v = input.value.trim().toUpperCase();
     if (v) point.label = v;
     input.remove();
-    setMode('point'); 
+    setMode('point'); // On repasse en mode point
     refreshCanvas();
 }
 
