@@ -2385,38 +2385,33 @@ function toggleMenuParametres() {
     }
 }
 
-function changerFond(couleurHex) {
+function changerFond(couleur) {
     const monCanvas = document.getElementById('geoCanvas');
+    const conteneur = document.getElementById('canvas-area');
     const panel = document.getElementById('panel-parametres');
 
-    if (monCanvas) {
-        // 1. Applique la couleur au fond du canvas
-        monCanvas.style.backgroundColor = couleurHex;
-        
-        // 2. IMPORTANT : On adapte la couleur de tracé (couleurActive)
-        // Si le fond est sombre (Noir ou Vert), on passe en BLANC
-        if (couleurHex === '#1a1a1a' || couleurHex === '#166534') {
-            couleurActive = '#ffffff'; 
-        } else {
-            // Sinon (fond blanc), on passe en BLEU FONCÉ ou NOIR
-            couleurActive = '#0f172a';
-        }
+    // 1. Force la couleur sur le Canvas ET son conteneur
+    if (monCanvas) monCanvas.style.background = couleur;
+    if (conteneur) conteneur.style.background = couleur;
 
-        // 3. Met à jour le petit carré d'aperçu pour que l'utilisateur voit le changement
-        const apercu = document.getElementById('apercu-couleur');
-        if (apercu) {
-            apercu.style.backgroundColor = couleurActive;
-        }
-
-        // 4. Ferme le menu automatiquement après le choix
-        if (panel) panel.style.display = 'none';
-
-        // 5. Redessine tout le contenu pour qu'il apparaisse avec la nouvelle couleur
-        refreshCanvas();
-        
-        console.log("Fond changé en : " + couleurHex + " | Tracé : " + couleurActive);
+    // 2. Ajuste la couleur des futurs dessins (Points, Lignes)
+    // On passe en blanc si le fond est sombre (Noir ou Vert)
+    if (couleur === '#1a1a1a' || couleur === '#166534') {
+        couleurActive = '#ffffff'; 
     } else {
-        console.error("Erreur : Le canvas 'geoCanvas' est introuvable.");
+        couleurActive = '#0f172a'; // Bleu/Noir sur fond blanc
+    }
+
+    // 3. Met à jour l'aperçu visuel du bouton de couleur
+    const apercu = document.getElementById('apercu-couleur');
+    if (apercu) apercu.style.backgroundColor = couleurActive;
+
+    // 4. Ferme le menu
+    if (panel) panel.style.display = 'none';
+
+    // 5. CRUCIAL : Redessine tout pour appliquer la nouvelle couleur active
+    if (typeof refreshCanvas === "function") {
+        refreshCanvas();
     }
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
