@@ -2325,16 +2325,17 @@ function creerChampSaisieFlottant(point) {
         setTimeout(() => { if(input.parentNode) input.remove(); }, 200);
     };
 }
+
 function toggleGrilleCouleurs() {
     const grille = document.getElementById('grille-couleurs');
-    // Si la grille est cachée, on l'affiche, sinon on la cache
+    // On vérifie si elle est cachée
     if (grille.style.display === 'none' || grille.style.display === '') {
-        grille.style.display = 'grid';
+        grille.style.display = 'grid'; // On force l'affichage en GRILLE
+        grille.style.zIndex = '10000'; // Double sécurité
     } else {
         grille.style.display = 'none';
     }
 }
-
 function selectionnerCouleur(nouvelleCouleur) {
     // 1. On met à jour la variable globale utilisée pour les tracés
     couleurActive = nouvelleCouleur;
