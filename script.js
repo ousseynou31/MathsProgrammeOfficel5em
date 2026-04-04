@@ -2656,60 +2656,80 @@ function fermerModalParallelo() {
         modal.style.display = 'none';
     }
 }
+let segmentAssistant = null;
+let pointOrigineRegle = null; // Le point qui servira de "0"
+let pointExtremiteRegle = null; // L'autre point pour donner la direction
 
+function preparerPlacementPoint(mouseX, mouseY) {
+    // 1. Trouver le segment le plus proche du clic
+    segmentAssistant = elements.find(el => {
+        if (el.type !== 'segment') return false;
+        return calculeDistancePointSegment(mouseX, mouseY, el.p1, el.p2) < 15;
+    });
 
-// Petite fonction mathématique utilitaire (isolée elle aussi)
-function calculeDistancePointSegment(x, y, p1, p2) {
-    const A = x - p1.x;
-    const B = y - p1.y;
-    const C = p2.x - p1.x;
-    const D = p2.y - p1.y;
-    const dot = A * C + B * D;
-    const len_sq = C * C + D * D;
-    let param = -1;
-    if (len_sq != 0) param = dot / len_sq;
-    let xx, yy;
-    if (param < 0) { xx = p1.x; yy = p1.y; }
-    else if (param > 1) { xx = p2.x; yy = p2.y; }
-    else { xx = p1.x + param * C; yy = p1.y + param * D; }
-    const dx = x - xx;
-    const dy = y - yy;
-    return Math.sqrt(dx * dx + dy * dy);
-}
-// VARIABLES ISOLÉES
-let assistantActif = false;
-let segmentCible = null;
+    if (segmentAssistant) {
+        // 2. Déterminer quel point est le "0" (le plus proche du clic de l'élève)
+        const d1 = Math.hypot(mouseX - segmentAssistant.p1.x, mouseY - segmentAssistant.p1.y);
+        const d2 = Math.hypot(mouseX - segmentAssistant.p2.x, mouseY - segmentAssistant.p2.y);
+        
+        pointOrigineRegle = (d1 < d2) ? segmentAssistant.p1 : segmentAssistant.p2;
+        pointExtremiteRegle = (d1 < d2) ? segmentAssistant.p2 : segmentAssistant.p1;
 
-function lancerAssistantPlacement() {
-    assistantActif = true;
-    canvas.style.cursor = "crosshair";
-    alert("Cliquez sur le segment pour faire apparaître la règle.");
-}
-
-// CETTE FONCTION DESSINE LA RÈGLE PAR-DESSUS SANS TOUCHER AU RESTE
-function dessinerRegleTemporaire(ctx, p1, p2) {
-    const dx = p2.x - p1.x;
-    const dy = p2.y - p1.y;
-    const distancePix = Math.sqrt(dx * dx + dy * dy);
-    const nbCm = Math.floor(distancePix / 37.8);
-
-    ctx.save();
-    ctx.strokeStyle = "blue";
-    ctx.fillStyle = "blue";
-    ctx.lineWidth = 2;
-
-    for (let i = 0; i <= nbCm; i++) {
-        const ratio = (i * 37.8) / distancePix;
-        const x = p1.x + dx * ratio;
-        const y = p1.y + dy * ratio;
-
-        // Petit trait de règle
-        ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillText(i + "cm", x + 5, y - 5);
+        // 3. Mettre à jour les textes dans le HTML
+        document.getElementById('nomPointRef').innerText = pointOrigineRegle.label;
+        document.getElementById('nomPointRef2').innerText = pointOrigineRegle.label;
+        
+        // 4. Afficher la fenêtre modale
+        document.getElementById('modalPointPrecis').style.display = 'flex';
     }
-    ctx.restore();
+}
+function validerPlacementPoint() {
+    const distanceCm = parseFloat(document.getElementById('distancePrecise').value);
+    const nomPoint = document.getElementById('nomNouveauPoint').value;
+    const direction = document.querySelector('input[name="directionPoint"]:checked').value;
+    
+    if (isNaN(distanceCm) || !nomPoint) return alert("Veuillez remplir tous les champs.");
+
+    const echelle = 37.8; // 1 cm = 37.8 pixels
+    const distancePix = distanceCm * echelle;
+
+    // Calcul du vecteur directionnel (du 0 vers l'autre point)
+    const dx = pointExtremiteRegle.x - pointOrigineRegle.x;
+    const dy = pointExtremiteRegle.y - pointOrigineRegle.y;
+    const longueurSegment = Math.hypot(dx, dy);
+
+    // Vecteur unitaire (longueur 1)
+    const ux = dx / longueurSegment;
+    const uy = dy / longueurSegment;
+
+    // Calcul de la position finale
+    let finalX, finalY;
+    if (direction === "versB") {
+        // On suit la direction du segment
+        finalX = pointOrigineRegle.x + (ux * distancePix);
+        finalY = pointOrigineRegle.y + (uy * distancePix);
+    } else {
+        // On va dans le sens opposé (avant le point 0)
+        finalX = pointOrigineRegle.x - (ux * distancePix);
+        finalY = pointOrigineRegle.y - (uy * distancePix);
+    }
+
+    // AJOUT DU POINT DANS VOTRE TABLEAU HABITUEL
+    points.push({
+        x: finalX,
+        y: finalY,
+        label: nomPoint,
+        color: "red"
+    });
+
+    // Fermeture et rafraîchissement
+    annulerPlacementPoint();
+    if (typeof refreshCanvas === "function") refreshCanvas();
+}
+
+function annulerPlacementPoint() {
+    document.getElementById('modalPointPrecis').style.display = 'none';
+    segmentAssistant = null;
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
