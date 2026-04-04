@@ -2731,6 +2731,16 @@ function annulerPlacementPoint() {
     document.getElementById('modalPointPrecis').style.display = 'none';
     segmentAssistant = null;
 }
+let enModePlacementPoint = false; // Variable pour savoir si on attend un clic
+
+function activerModePlacement() {
+    enModePlacementPoint = true;
+    // On change l'apparence du curseur pour aider l'élève
+    document.getElementById('canvas').style.cursor = "crosshair";
+    
+    // Petite aide visuelle ou message
+    console.log("Mode placement activé : Cliquez sur un segment.");
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -2799,44 +2809,23 @@ window.addEventListener('mousedown', function(e) {
     }
 });
 
-    // =========================================================
-canvas.addEventListener('mousedown', function(e) {
-    if (!assistantActif) return; // Si le bouton n'est pas cliqué, on ne fait rien
+ // =========================================================
+     canvas.addEventListener('mousedown', function(e) {
+    if (enModePlacementPoint) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
 
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+        // On appelle la fonction de détection que nous avons écrite avant
+        preparerPlacementPoint(x, y);
 
-    if (!segmentCible) {
-        // ÉTAPE A : Trouver le segment (on cherche dans votre tableau 'elements')
-        segmentCible = elements.find(el => {
-            if (el.type !== 'segment') return false;
-            // On vérifie si le clic est proche de la ligne
-            return calculeDistancePointSegment(mouseX, mouseY, el.p1, el.p2) < 10;
-        });
-
-        if (segmentCible) {
-            // On dessine la règle immédiatement par-dessus le dessin actuel
-            const ctx = canvas.getContext('2d');
-            dessinerRegleTemporaire(ctx, segmentCible.p1, segmentCible.p2);
-        }
-    } else {
-        // ÉTAPE B : Placer le point M et tout nettoyer
-        const nom = prompt("Nom du point :", "M");
-        if (nom) {
-            // On ajoute le point dans VOTRE tableau habituel 'points'
-            points.push({ x: mouseX, y: mouseY, label: nom, color: "red" });
-        }
-        
-        // NETTOYAGE : On éteint l'assistant et on rafraîchit votre canvas normal
-        assistantActif = false;
-        segmentCible = null;
+        // Une fois la fenêtre ouverte, on peut repasser en mode normal
+        enModePlacementPoint = false;
         canvas.style.cursor = "default";
-        
-        // On appelle votre fonction habituelle pour redessiner proprement
-        if (typeof refreshCanvas === "function") refreshCanvas();
-        else if (typeof dessinerTout === "function") dessinerTout();
+        return; // On arrête ici pour ne pas tracer une ligne par erreur
     }
+    
+    // ... ici le reste de votre code habituel pour tracer ...
 });
 // =========================================================
    // Fermer le menu si on clique ailleurs
