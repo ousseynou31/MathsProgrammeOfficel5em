@@ -2661,26 +2661,34 @@ let pointOrigineRegle = null; // Le point qui servira de "0"
 let pointExtremiteRegle = null; // L'autre point pour donner la direction
 
 function preparerPlacementPoint(mouseX, mouseY) {
-    // 1. Trouver le segment le plus proche du clic
+    console.log("Tentative de détection à :", mouseX, mouseY);
+
+    // On cherche le segment dans votre tableau 'elements'
     segmentAssistant = elements.find(el => {
         if (el.type !== 'segment') return false;
-        return calculeDistancePointSegment(mouseX, mouseY, el.p1, el.p2) < 15;
+        
+        // Calcul simplifié de distance point-segment
+        const d = calculeDistancePointSegment(mouseX, mouseY, el.p1, el.p2);
+        console.log("Distance au segment :", d);
+        return d < 20; // On augmente la zone de clic à 20 pixels
     });
 
     if (segmentAssistant) {
-        // 2. Déterminer quel point est le "0" (le plus proche du clic de l'élève)
+        // Déterminer le point de référence (le 0)
         const d1 = Math.hypot(mouseX - segmentAssistant.p1.x, mouseY - segmentAssistant.p1.y);
         const d2 = Math.hypot(mouseX - segmentAssistant.p2.x, mouseY - segmentAssistant.p2.y);
         
         pointOrigineRegle = (d1 < d2) ? segmentAssistant.p1 : segmentAssistant.p2;
         pointExtremiteRegle = (d1 < d2) ? segmentAssistant.p2 : segmentAssistant.p1;
 
-        // 3. Mettre à jour les textes dans le HTML
         document.getElementById('nomPointRef').innerText = pointOrigineRegle.label;
-        document.getElementById('nomPointRef2').innerText = pointOrigineRegle.label;
         
-        // 4. Afficher la fenêtre modale
-        document.getElementById('modalPointPrecis').style.display = 'flex';
+        // AFFICHAGE FORCÉ
+        const modal = document.getElementById('modalPointPrecis');
+        modal.style.display = 'flex'; 
+        console.log("Fenêtre activée !");
+    } else {
+        alert("Cliquez plus près du trait du segment.");
     }
 }
 function validerPlacementPoint() {
