@@ -1123,6 +1123,40 @@ body { overflow: hidden; }
     border-color: #2563eb; /* Change de couleur quand on clique dedans */
 }
 
+.modal-actions {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    text-align: right; /* Aligne les boutons à droite */
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-annuler {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-valider {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-valider:hover {
+    background-color: #1d4ed8;
+}
+
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
