@@ -1073,7 +1073,55 @@ body { overflow: hidden; }
     box-shadow: 0 20px 50px rgba(0,0,0,0.5); /* Ombre portée pour donner du relief */
     color: #333; /* Texte bien sombre */
 }
+/* Conteneur principal des deux colonnes */
+.sections-saisie {
+    display: flex;
+    justify-content: space-between; /* Espace entre les deux colonnes */
+    gap: 30px; /* Espace de sécurité */
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
 
+/* Style de chaque colonne (verticale) */
+.colonne {
+    flex: 1; /* Chaque colonne prend la moitié de la place */
+    display: flex;
+    flex-direction: column; /* Aligne les éléments de haut en bas */
+    gap: 12px; /* Espace entre chaque champ de saisie */
+}
+
+/* Style des titres de colonnes (Longueurs / Angles) */
+.colonne h4 {
+    margin: 0 0 10px 0;
+    color: #2563eb;
+    font-size: 16px;
+    border-bottom: 2px solid #2563eb;
+    display: inline-block;
+    padding-bottom: 3px;
+}
+
+/* Style des étiquettes (Labels) */
+.colonne label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: -5px; /* Rapproche le label de son input */
+}
+
+/* Style des champs de saisie */
+.colonne input {
+    padding: 10px;
+    border: 1px solid #bdc3c7;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.colonne input:focus {
+    border-color: #2563eb; /* Change de couleur quand on clique dedans */
+}
 
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
