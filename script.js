@@ -2765,6 +2765,47 @@ window.addEventListener('mousedown', function(e) {
         grille.style.display = 'none';
     }
 });
+
+    // =========================================================
+canvas.addEventListener('mousedown', function(e) {
+    if (!assistantActif) return; // Si le bouton n'est pas cliqué, on ne fait rien
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    if (!segmentCible) {
+        // ÉTAPE A : Trouver le segment (on cherche dans votre tableau 'elements')
+        segmentCible = elements.find(el => {
+            if (el.type !== 'segment') return false;
+            // On vérifie si le clic est proche de la ligne
+            return calculeDistancePointSegment(mouseX, mouseY, el.p1, el.p2) < 10;
+        });
+
+        if (segmentCible) {
+            // On dessine la règle immédiatement par-dessus le dessin actuel
+            const ctx = canvas.getContext('2d');
+            dessinerRegleTemporaire(ctx, segmentCible.p1, segmentCible.p2);
+        }
+    } else {
+        // ÉTAPE B : Placer le point M et tout nettoyer
+        const nom = prompt("Nom du point :", "M");
+        if (nom) {
+            // On ajoute le point dans VOTRE tableau habituel 'points'
+            points.push({ x: mouseX, y: mouseY, label: nom, color: "red" });
+        }
+        
+        // NETTOYAGE : On éteint l'assistant et on rafraîchit votre canvas normal
+        assistantActif = false;
+        segmentCible = null;
+        canvas.style.cursor = "default";
+        
+        // On appelle votre fonction habituelle pour redessiner proprement
+        if (typeof refreshCanvas === "function") refreshCanvas();
+        else if (typeof dessinerTout === "function") dessinerTout();
+    }
+});
+// =========================================================
    // Fermer le menu si on clique ailleurs
 window.addEventListener('mousedown', function(e) {
     const panel = document.getElementById('panel-parametres');
