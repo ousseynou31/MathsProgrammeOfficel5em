@@ -2544,6 +2544,42 @@ function genererTriangle() {
     fermerModalTriangle();
     refreshCanvas();
 }
+function exporterPourImpression() {
+    // 1. On crée une fenêtre temporaire pour l'impression
+    const fenetreImpression = window.open('', '_blank');
+    
+    // 2. On récupère l'image du canvas actuel
+    const imageDonnees = canvas.toDataURL("image/png");
+
+    // 3. On construit un document HTML minimaliste et précis
+    fenetreImpression.document.write(`
+        <html>
+            <head>
+                <title>Impression Géométrie Précision</title>
+                <style>
+                    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                    img { 
+                        max-width: 100%; 
+                        /* Force l'affichage à ne pas être lissé pour garder la netteté des traits */
+                        image-rendering: pixelated; 
+                    }
+                    @page { size: A4; margin: 0; }
+                </style>
+            </head>
+            <body>
+                <img src="${imageDonnees}" />
+                <script>
+                    // On attend que l'image soit chargée avant de lancer l'impression
+                    window.onload = function() { 
+                        window.print(); 
+                        window.close(); 
+                    };
+                </script>
+            </body>
+        </html>
+    `);
+    fenetreImpression.document.close();
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
