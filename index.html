@@ -613,38 +613,31 @@
 
    <div id="modalParallelo" class="modal-fond" style="display:none;">
     <div class="modal-contenu">
-        <h3>Construire à partir de vos points</h3>
+        <h3>Nouveau Parallélogramme</h3>
         
-        <div class="groupe-nommage">
-            <p>Utiliser mes points existants :</p>
-            <label>Point 1 :</label>
-            <input type="text" id="pNomA" placeholder="Ex: A" maxlength="2">
-            <label>Point 2 :</label>
-            <input type="text" id="pNomB" placeholder="Ex: B" maxlength="2">
+        <div class="section">
+            <p><strong>1. Nommez vos 4 sommets :</strong></p>
+            <input type="text" id="pNom1" value="A" style="width:30px">
+            <input type="text" id="pNom2" value="B" style="width:30px">
+            <input type="text" id="pNom3" value="C" style="width:30px">
+            <input type="text" id="pNom4" value="D" style="width:30px">
         </div>
 
-        <div class="groupe-nommage">
-            <p>Noms des nouveaux points :</p>
-            <input type="text" id="pNomC" placeholder="C" maxlength="2">
-            <input type="text" id="pNomD" placeholder="D" maxlength="2">
+        <div class="section">
+            <p><strong>2. Mesures des côtés (cm) :</strong></p>
+            <label>Côté [AB] :</label> <input type="number" id="pMesureAB" placeholder="Ex: 6">
+            <label>Côté [BC] :</label> <input type="number" id="pMesureBC" placeholder="Ex: 4">
         </div>
 
-        <div class="sections-saisie">
-            <div class="colonne">
-                <h4>Dimensions (cm)</h4>
-                <label>Distance [BC] :</label>
-                <input type="number" id="pValBC" placeholder="Ex: 5">
-            </div>
-            <div class="colonne">
-                <h4>Inclinaison</h4>
-                <label>Angle (°) :</label>
-                <input type="number" id="pValAngle" placeholder="Défaut: 45°">
-            </div>
+        <div class="section">
+            <p><strong>3. Angle d'inclinaison :</strong></p>
+            <input type="number" id="pAngleSaisi" placeholder="Vide = 45° (Quelconque)">
+            <p><small>(Note : Tapez 90 pour un Rectangle ou un Carré)</small></p>
         </div>
 
         <div class="modal-actions">
-            <button onclick="fermerModalParallelo()" class="btn-annuler">Annuler</button>
-            <button onclick="genererParalleloSurPoints()" class="btn-valider">Tracer la figure</button>
+            <button onclick="fermerModalParallelo()">Annuler</button>
+            <button onclick="creerParalleloComplet()" class="btn-valider">Générer la figure</button>
         </div>
     </div>
 </div>
