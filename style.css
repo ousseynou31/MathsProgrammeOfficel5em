@@ -1184,6 +1184,75 @@ body { overflow: hidden; }
     position: relative;
     z-index: 1000000 !important;
 }
+/* Fond de la fenêtre modale (assombrit l'écran) */
+.modal-fond {
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5); /* Noir transparent */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(3px); /* Flou léger sur le dessin derrière */
+}
+
+/* Boîte de contenu de la fenêtre */
+.modal-contenu {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    width: 320px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    animation: apparitionDouce 0.3s ease-out;
+}
+
+/* Animation d'ouverture */
+@keyframes apparitionDouce {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Style des étiquettes (Labels) */
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #34495e;
+}
+
+/* Style des champs de saisie */
+input[type="text"], input[type="number"] {
+    border: 2px solid #bdc3c7;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: #3498db;
+}
+
+/* Style des boutons radio transformés en "boutons cliquables" */
+input[type="radio"] {
+    margin-right: 5px;
+    transform: scale(1.2);
+}
+
+.modal-actions button {
+    transition: transform 0.1s, opacity 0.2s;
+}
+
+.modal-actions button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.modal-actions button:active {
+    transform: translateY(1px);
+}
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
