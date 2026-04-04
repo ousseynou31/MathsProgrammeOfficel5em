@@ -2627,6 +2627,35 @@ function creerParalleloComplet() {
     refreshCanvas();
     fermerModalParallelo();
 }
+
+function ouvrirOutilParallelo() {
+    // 1. Récupérer les éléments de saisie pour les vider
+    const champs = ['pMesureAB', 'pMesureBC', 'pAngleSaisi'];
+    champs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = ''; // Vide les cases pour une nouvelle saisie
+    });
+
+    // 2. Afficher la fenêtre modale
+    const modal = document.getElementById('modalParallelo');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.style.zIndex = '100000'; // Priorité maximale devant le canvas
+        
+        // Optionnel : Mettre le focus sur le premier champ de nom pour gagner du temps
+        document.getElementById('pNom1').focus();
+    } else {
+        alert("Erreur : La fenêtre de configuration est introuvable.");
+    }
+}
+
+// Fonction pour fermer la fenêtre sans valider
+function fermerModalParallelo() {
+    const modal = document.getElementById('modalParallelo');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
