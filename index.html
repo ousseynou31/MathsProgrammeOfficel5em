@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script> 
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
@@ -502,8 +502,8 @@
             <span style="color: #ffd700; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">Géo-Magie Pro</span>
         </div>
 
-<button onclick="exporterPourImpression()" class="btn-outil" title="Exporter en taille réelle pour impression">
-   🖨️ Imprimer (Taille Réelle)
+<button onclick="telechargerPDF()" class="btn-outil" title="Télécharger la figure en PDF (Taille réelle)">
+   📄 Télécharger PDF (Précision)
 </button>
 <button onclick="ouvrirOutilTriangle()" class="btn-outil" title="Triangle par mesures">
    📐 Triangle Spécifique
