@@ -2657,47 +2657,60 @@ function fermerModalParallelo() {
     }
 }
 
-let modePlacementPoint = false;
-let segmentSelectionne = null;
 
-function activerPlacementPointAssiste() {
-    modePlacementPoint = true;
-    alert("1. Cliquez sur le segment où vous voulez placer le point.");
+// Petite fonction mathématique utilitaire (isolée elle aussi)
+function calculeDistancePointSegment(x, y, p1, p2) {
+    const A = x - p1.x;
+    const B = y - p1.y;
+    const C = p2.x - p1.x;
+    const D = p2.y - p1.y;
+    const dot = A * C + B * D;
+    const len_sq = C * C + D * D;
+    let param = -1;
+    if (len_sq != 0) param = dot / len_sq;
+    let xx, yy;
+    if (param < 0) { xx = p1.x; yy = p1.y; }
+    else if (param > 1) { xx = p2.x; yy = p2.y; }
+    else { xx = p1.x + param * C; yy = p1.y + param * D; }
+    const dx = x - xx;
+    const dy = y - yy;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+// VARIABLES ISOLÉES
+let assistantActif = false;
+let segmentCible = null;
+
+function lancerAssistantPlacement() {
+    assistantActif = true;
+    canvas.style.cursor = "crosshair";
+    alert("Cliquez sur le segment pour faire apparaître la règle.");
 }
 
-// À intégrer dans votre gestionnaire d'événements 'mousedown' ou 'click' du Canvas
-canvas.addEventListener('mousedown', function(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+// CETTE FONCTION DESSINE LA RÈGLE PAR-DESSUS SANS TOUCHER AU RESTE
+function dessinerRegleTemporaire(ctx, p1, p2) {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const distancePix = Math.sqrt(dx * dx + dy * dy);
+    const nbCm = Math.floor(distancePix / 37.8);
 
-    if (modePlacementPoint && !segmentSelectionne) {
-        // ÉTAPE 1 : On cherche le segment sur lequel l'élève a cliqué
-        segmentSelectionne = trouverSegmentLePlusProche(x, y);
-        
-        if (segmentSelectionne) {
-            segmentSelectionne.tempGraduation = true; // On active la règle "fantôme"
-            refreshCanvas();
-            console.log("Segment sélectionné. 2. Cliquez sur la graduation pour placer le point.");
-        }
-    } 
-    else if (modePlacementPoint && segmentSelectionne) {
-        // ÉTAPE 2 : L'élève clique sur la graduation pour poser son point
-        const nomPoint = prompt("Nommez votre nouveau point :", "M");
-        
-        if (nomPoint) {
-            const nouveauPoint = { x: x, y: y, label: nomPoint, color: couleurActive };
-            points.push(nouveauPoint);
-            
-            // --- ACTION CRUCIALE ---
-            segmentSelectionne.tempGraduation = false; // LA RÈGLE S'EFFACE
-            segmentSelectionne = null;
-            modePlacementPoint = false;
-            
-            refreshCanvas();
-        }
+    ctx.save();
+    ctx.strokeStyle = "blue";
+    ctx.fillStyle = "blue";
+    ctx.lineWidth = 2;
+
+    for (let i = 0; i <= nbCm; i++) {
+        const ratio = (i * 37.8) / distancePix;
+        const x = p1.x + dx * ratio;
+        const y = p1.y + dy * ratio;
+
+        // Petit trait de règle
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillText(i + "cm", x + 5, y - 5);
     }
-});
+    ctx.restore();
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
