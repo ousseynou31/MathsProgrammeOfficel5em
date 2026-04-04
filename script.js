@@ -2470,7 +2470,7 @@ function genererTriangle() {
     const angB = parseFloat(document.getElementById('valAngB').value);
 
     // Facteur d'échelle (1 cm = 40 pixels pour que ce soit visible)
-    const echelle = 40;
+    const echelle = 37.8;
     
     // Position de départ (Centre du canvas)
     let x0 = canvas.width / 2 - (ab * echelle / 2 || 100);
