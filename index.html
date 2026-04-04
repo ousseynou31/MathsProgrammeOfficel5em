@@ -578,34 +578,31 @@
             <input type="text" id="nomC" value="C" maxlength="2">
         </div>
 
-        <div class="sections-saisie">
-            <div class="colonne">
-                <h4>Longueurs (cm)</h4>
-                <label id="labelAB">Segment AB :</label>
-                <input type="number" id="valAB" placeholder="Non renseigné" step="0.1">
-                <label id="labelBC">Segment BC :</label>
-                <input type="number" id="valBC" placeholder="Non renseigné" step="0.1">
-                <label id="labelAC">Segment AC :</label>
-                <input type="number" id="valAC" placeholder="Non renseigné" step="0.1">
-            </div>
-            <div class="colonne">
-                <h4>Angles (degrés)</h4>
-                <label id="labelAngA">Angle Â :</label>
-                <input type="number" id="valAngA" placeholder="Ex: 60" min="1" max="179">
-                <label id="labelAngB">Angle B̂ :</label>
-                <input type="number" id="valAngB" placeholder="Ex: 45" min="1" max="179">
-                <label id="labelAngC">Angle Ĉ :</label>
-                <input type="number" id="valAngC" placeholder="Ex: 75" min="1" max="179">
-            </div>
-        </div>
+       <div class="sections-saisie">
+    <div class="colonne">
+        <h4>Côtés (cm)</h4>
+        <label id="labelAB">Segment AB :</label>
+        <input type="number" id="valAB" placeholder="Ex: 5">
+        
+        <label id="labelBC">Segment BC :</label>
+        <input type="number" id="valBC" placeholder="Ex: 4">
+        
+        <label id="labelAC">Segment AC :</label>
+        <input type="number" id="valAC" placeholder="Ex: 6">
+    </div>
 
-        <div class="modal-actions">
-            <button onclick="fermerModalTriangle()" class="btn-annuler">Annuler</button>
-            <button onclick="genererTriangle()" class="btn-valider">Tracer le Triangle</button>
-        </div>
+    <div class="colonne">
+        <h4>Angles (°)</h4>
+        <label id="labelAngA">Angle Â :</label>
+        <input type="number" id="valAngA" placeholder="Ex: 60">
+        
+        <label id="labelAngB">Angle B̂ :</label>
+        <input type="number" id="valAngB" placeholder="Ex: 45">
+        
+        <label id="labelAngC">Angle Ĉ :</label>
+        <input type="number" id="valAngC" placeholder="Ex: 75">
     </div>
 </div>
-
 </body>
 </html>
 
