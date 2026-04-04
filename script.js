@@ -2578,72 +2578,54 @@ async function telechargerPDF() {
     doc.save("mon-triangle-geometrique.pdf");
 }
 
-function genererParalleloSurPoints() {
-    const nomA = document.getElementById('pNomA').value;
-    const nomB = document.getElementById('pNomB').value;
+function creerParalleloComplet() {
+    const echelle = 37.8; // Précision millimètre
     
-    // 1. CHERCHER LES POINTS EXISTANTS
-    // On cherche dans votre tableau 'points' ceux qui portent ces noms
-    const pA = points.find(p => p.label === nomA);
-    const pB = points.find(p => p.label === nomB);
+    // Récupération des noms
+    const n1 = document.getElementById('pNom1').value || "A";
+    const n2 = document.getElementById('pNom2').value || "B";
+    const n3 = document.getElementById('pNom3').value || "C";
+    const n4 = document.getElementById('pNom4').value || "D";
 
-    if (!pA || !pB) {
-        alert("Erreur : Je ne trouve pas les points '" + nomA + "' ou '" + nomB + "' sur votre feuille !");
-        return;
-    }
+    // Récupération des mesures
+    const distAB = parseFloat(document.getElementById('pMesureAB').value) || 5;
+    const distBC = parseFloat(document.getElementById('pMesureBC').value) || 5;
+    const angleDeg = parseFloat(document.getElementById('pAngleSaisi').value) || 45;
+    const angleRad = angleDeg * (Math.PI / 180);
 
-    // 2. CALCULS GÉOMÉTRIQUES
-    const echelle = 37.8;
-    const bcCm = parseFloat(document.getElementById('pValBC').value) || 5;
-    const angleDeg = parseFloat(document.getElementById('pValAngle').value) || 45;
+    // Points de départ (centrés)
+    const startX = 150;
+    const startY = 250;
+
+    // Calcul des coordonnées
+    const pt1 = { x: startX, y: startY, label: n1, color: couleurActive };
+    const pt2 = { x: startX + (distAB * echelle), y: startY, label: n2, color: couleurActive };
     
-    // Calcul de l'angle du segment AB existant (pour suivre l'inclinaison de l'élève)
-    const angleBase = Math.atan2(pB.y - pA.y, pB.x - pA.x);
-    const angleTotal = angleBase - (angleDeg * Math.PI / 180);
-
-    // 3. CRÉATION DES POINTS MANQUANTS (C et D)
-    const pC = {
-        x: pB.x + (bcCm * echelle) * Math.cos(angleTotal),
-        y: pB.y + (bcCm * echelle) * Math.sin(angleTotal),
-        label: document.getElementById('pNomC').value || "C",
-        color: couleurActive
+    // Le point 3 (C) est placé selon l'angle par rapport à B
+    const pt3 = { 
+        x: pt2.x + (distBC * echelle * Math.cos(angleRad)), 
+        y: pt2.y - (distBC * echelle * Math.sin(angleRad)), 
+        label: n3, color: couleurActive 
     };
 
-    const pD = {
-        x: pA.x + (pC.x - pB.x),
-        y: pA.y + (pC.y - pB.y),
-        label: document.getElementById('pNomD').value || "D",
-        color: couleurActive
+    // Le point 4 (D) ferme la figure (A + vecteur BC)
+    const pt4 = { 
+        x: pt1.x + (pt3.x - pt2.x), 
+        y: pt1.y + (pt3.y - pt2.y), 
+        label: n4, color: couleurActive 
     };
 
-    // 4. INJECTION ET TRACÉ
-    points.push(pC, pD);
+    // Enregistrement dans l'application
+    points.push(pt1, pt2, pt3, pt4);
     elements.push(
-        { type: 'segment', p1: pA, p2: pB, color: couleurActive },
-        { type: 'segment', p1: pB, p2: pC, color: couleurActive },
-        { type: 'segment', p1: pC, p2: pD, color: couleurActive },
-        { type: 'segment', p1: pD, p2: pA, color: couleurActive }
+        { type: 'segment', p1: pt1, p2: pt2, color: couleurActive },
+        { type: 'segment', p1: pt2, p2: pt3, color: couleurActive },
+        { type: 'segment', p1: pt3, p2: pt4, color: couleurActive },
+        { type: 'segment', p1: pt4, p2: pt1, color: couleurActive }
     );
 
     refreshCanvas();
     fermerModalParallelo();
-}
-function ouvrirOutilParallelo() {
-    const modal = document.getElementById('modalParallelo');
-    
-    if (modal) {
-        // 1. On force l'affichage
-        modal.style.display = 'flex'; 
-        
-        // 2. On s'assure qu'il est tout en haut de la pile (devant le canvas)
-        modal.style.zIndex = '100000'; 
-        
-        // 3. On vérifie dans la console si ça a marché
-        console.log("La fenêtre a reçu l'ordre de s'afficher.");
-    } else {
-        console.error("ERREUR : Impossible de trouver 'modalParallelo'. Vérifiez l'ID dans votre HTML.");
-        alert("La fenêtre de saisie est introuvable dans le code.");
-    }
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
