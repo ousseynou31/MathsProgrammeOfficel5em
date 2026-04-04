@@ -2577,6 +2577,57 @@ async function telechargerPDF() {
     // 6. Téléchargement automatique
     doc.save("mon-triangle-geometrique.pdf");
 }
+
+function genererParalleloSurPoints() {
+    const nomA = document.getElementById('pNomA').value;
+    const nomB = document.getElementById('pNomB').value;
+    
+    // 1. CHERCHER LES POINTS EXISTANTS
+    // On cherche dans votre tableau 'points' ceux qui portent ces noms
+    const pA = points.find(p => p.label === nomA);
+    const pB = points.find(p => p.label === nomB);
+
+    if (!pA || !pB) {
+        alert("Erreur : Je ne trouve pas les points '" + nomA + "' ou '" + nomB + "' sur votre feuille !");
+        return;
+    }
+
+    // 2. CALCULS GÉOMÉTRIQUES
+    const echelle = 37.8;
+    const bcCm = parseFloat(document.getElementById('pValBC').value) || 5;
+    const angleDeg = parseFloat(document.getElementById('pValAngle').value) || 45;
+    
+    // Calcul de l'angle du segment AB existant (pour suivre l'inclinaison de l'élève)
+    const angleBase = Math.atan2(pB.y - pA.y, pB.x - pA.x);
+    const angleTotal = angleBase - (angleDeg * Math.PI / 180);
+
+    // 3. CRÉATION DES POINTS MANQUANTS (C et D)
+    const pC = {
+        x: pB.x + (bcCm * echelle) * Math.cos(angleTotal),
+        y: pB.y + (bcCm * echelle) * Math.sin(angleTotal),
+        label: document.getElementById('pNomC').value || "C",
+        color: couleurActive
+    };
+
+    const pD = {
+        x: pA.x + (pC.x - pB.x),
+        y: pA.y + (pC.y - pB.y),
+        label: document.getElementById('pNomD').value || "D",
+        color: couleurActive
+    };
+
+    // 4. INJECTION ET TRACÉ
+    points.push(pC, pD);
+    elements.push(
+        { type: 'segment', p1: pA, p2: pB, color: couleurActive },
+        { type: 'segment', p1: pB, p2: pC, color: couleurActive },
+        { type: 'segment', p1: pC, p2: pD, color: couleurActive },
+        { type: 'segment', p1: pD, p2: pA, color: couleurActive }
+    );
+
+    refreshCanvas();
+    fermerModalParallelo();
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
