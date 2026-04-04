@@ -2628,6 +2628,23 @@ function genererParalleloSurPoints() {
     refreshCanvas();
     fermerModalParallelo();
 }
+function ouvrirOutilParallelo() {
+    const modal = document.getElementById('modalParallelo');
+    
+    if (modal) {
+        // 1. On force l'affichage
+        modal.style.display = 'flex'; 
+        
+        // 2. On s'assure qu'il est tout en haut de la pile (devant le canvas)
+        modal.style.zIndex = '100000'; 
+        
+        // 3. On vérifie dans la console si ça a marché
+        console.log("La fenêtre a reçu l'ordre de s'afficher.");
+    } else {
+        console.error("ERREUR : Impossible de trouver 'modalParallelo'. Vérifiez l'ID dans votre HTML.");
+        alert("La fenêtre de saisie est introuvable dans le code.");
+    }
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
