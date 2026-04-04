@@ -2818,22 +2818,19 @@ window.addEventListener('mousedown', function(e) {
 });
 
  // =========================================================
-     canvas.addEventListener('mousedown', function(e) {
+    canvas.addEventListener('mousedown', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
     if (enModePlacementPoint) {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        // On appelle la fonction de détection que nous avons écrite avant
-        preparerPlacementPoint(x, y);
-
-        // Une fois la fenêtre ouverte, on peut repasser en mode normal
-        enModePlacementPoint = false;
+        // C'EST CET APPEL QUI DÉCLENCHE TOUT
+        preparerPlacementPoint(x, y); 
+        enModePlacementPoint = false; 
         canvas.style.cursor = "default";
-        return; // On arrête ici pour ne pas tracer une ligne par erreur
+        return; // Important pour ne pas exécuter d'autres outils en même temps
     }
-    
-    // ... ici le reste de votre code habituel pour tracer ...
+    // ... reste de votre code
 });
 // =========================================================
    // Fermer le menu si on clique ailleurs
