@@ -2656,6 +2656,48 @@ function fermerModalParallelo() {
         modal.style.display = 'none';
     }
 }
+
+let modePlacementPoint = false;
+let segmentSelectionne = null;
+
+function activerPlacementPointAssiste() {
+    modePlacementPoint = true;
+    alert("1. Cliquez sur le segment où vous voulez placer le point.");
+}
+
+// À intégrer dans votre gestionnaire d'événements 'mousedown' ou 'click' du Canvas
+canvas.addEventListener('mousedown', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (modePlacementPoint && !segmentSelectionne) {
+        // ÉTAPE 1 : On cherche le segment sur lequel l'élève a cliqué
+        segmentSelectionne = trouverSegmentLePlusProche(x, y);
+        
+        if (segmentSelectionne) {
+            segmentSelectionne.tempGraduation = true; // On active la règle "fantôme"
+            refreshCanvas();
+            console.log("Segment sélectionné. 2. Cliquez sur la graduation pour placer le point.");
+        }
+    } 
+    else if (modePlacementPoint && segmentSelectionne) {
+        // ÉTAPE 2 : L'élève clique sur la graduation pour poser son point
+        const nomPoint = prompt("Nommez votre nouveau point :", "M");
+        
+        if (nomPoint) {
+            const nouveauPoint = { x: x, y: y, label: nomPoint, color: couleurActive };
+            points.push(nouveauPoint);
+            
+            // --- ACTION CRUCIALE ---
+            segmentSelectionne.tempGraduation = false; // LA RÈGLE S'EFFACE
+            segmentSelectionne = null;
+            modePlacementPoint = false;
+            
+            refreshCanvas();
+        }
+    }
+});
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
