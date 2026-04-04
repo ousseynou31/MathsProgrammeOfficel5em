@@ -2544,41 +2544,38 @@ function genererTriangle() {
     fermerModalTriangle();
     refreshCanvas();
 }
-function exporterPourImpression() {
-    // 1. On crée une fenêtre temporaire pour l'impression
-    const fenetreImpression = window.open('', '_blank');
-    
-    // 2. On récupère l'image du canvas actuel
-    const imageDonnees = canvas.toDataURL("image/png");
 
-    // 3. On construit un document HTML minimaliste et précis
-    fenetreImpression.document.write(`
-        <html>
-            <head>
-                <title>Impression Géométrie Précision</title>
-                <style>
-                    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-                    img { 
-                        max-width: 100%; 
-                        /* Force l'affichage à ne pas être lissé pour garder la netteté des traits */
-                        image-rendering: pixelated; 
-                    }
-                    @page { size: A4; margin: 0; }
-                </style>
-            </head>
-            <body>
-                <img src="${imageDonnees}" />
-                <script>
-                    // On attend que l'image soit chargée avant de lancer l'impression
-                    window.onload = function() { 
-                        window.print(); 
-                        window.close(); 
-                    };
-                </script>
-            </body>
-        </html>
-    `);
-    fenetreImpression.document.close();
+async function telechargerPDF() {
+    const { jsPDF } = window.jspdf;
+    
+    // 1. Créer un document A4 (Portrait, millimètres)
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    // 2. Capturer le canvas actuel en image
+    const imageDonnees = canvas.toDataURL("image/png");
+    
+    // 3. Calculer les dimensions pour que l'échelle soit respectée
+    // Si votre 'echelle' dans le code est de 37.8 pixels/cm (norme web)
+    // alors 1 pixel = 0.2645 mm sur le papier.
+    const ratioPixelMm = 0.2645; 
+    const largeurMm = canvas.width * ratioPixelMm;
+    const hauteurMm = canvas.height * ratioPixelMm;
+
+    // 4. Ajouter l'image au PDF (centrée sur la page A4 de 210mm)
+    const xCentrage = (210 - largeurMm) / 2;
+    const yCentrage = 20; // Marge du haut
+
+    doc.setFontSize(12);
+    doc.text("Figure Géométrique de Précision", 10, 10);
+    doc.addImage(imageDonnees, 'PNG', xCentrage, yCentrage, largeurMm, hauteurMm);
+    
+    // 5. Ajouter une petite note pour l'élève en bas de page
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text("Note : Pour vérifier avec votre règle, imprimez ce PDF en 'Taille Réelle' (100%).", 10, 280);
+
+    // 6. Téléchargement automatique
+    doc.save("mon-triangle-geometrique.pdf");
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
