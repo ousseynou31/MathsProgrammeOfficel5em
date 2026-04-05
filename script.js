@@ -2842,29 +2842,16 @@ window.addEventListener('mousedown', function(e) {
 });
 
  // =========================================================
-// On récupère précisément le canvas de géométrie
-const canvasGeo = document.getElementById('geoCanvas');
-
-if (canvasGeo) {
-    canvasGeo.addEventListener('mousedown', function(e) {
-        if (enModePlacementPoint) {
-            const rect = canvasGeo.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            console.log("📍 Clic sur geoCanvas détecté à :", x, y);
-            
-            // On lance la fonction qui doit ouvrir la fenêtre
-            preparerPlacementPoint(x, y);
-
-            // On désactive le mode immédiatement
-            enModePlacementPoint = false;
-            canvasGeo.style.cursor = "default";
-            
-            e.stopPropagation();
-        }
-    }, true);
-}
+// On force l'attachement du bouton au script
+document.addEventListener('DOMContentLoaded', () => {
+    const curseur = document.getElementById('curseurZoom');
+    if (curseur) {
+        curseur.addEventListener('input', function() {
+            // On appelle la fonction de zoom avec la valeur du curseur
+            appliquerZoomDirect(this.value);
+        });
+    }
+});
 // =========================================================
    // Fermer le menu si on clique ailleurs
 window.addEventListener('mousedown', function(e) {
