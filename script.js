@@ -2738,6 +2738,41 @@ function ajouterPointDirect() {
     
     console.log(`Point ${nomNouveau} placé à ${distanceCm}cm de ${nomRef}`);
 }
+let zoomActuel = 1;
+
+function appliquerZoomDirect(valeur) {
+    zoomActuel = parseFloat(valeur);
+    const canvas = document.getElementById('geoCanvas');
+    const label = document.getElementById('labelZoom');
+
+    // 1. Mise à jour du texte (ex: 25% ou 500%)
+    label.innerText = Math.round(zoomActuel * 100) + "%";
+
+    // 2. Application du zoom visuel (CSS Transform)
+    // On garde l'origine en haut à gauche pour ne pas perdre le dessin
+    canvas.style.transformOrigin = "0 0";
+    canvas.style.transform = `scale(${zoomActuel})`;
+
+    // 3. Ajustement automatique du conteneur
+    // Cela permet de faire défiler le canvas si on zoom trop fort (scrollbars)
+    if (canvas.parentElement) {
+        canvas.parentElement.style.overflow = "auto";
+    }
+}
+
+// Fonction pour les boutons + et -
+function changerZoom(facteur) {
+    let nouveauZoom;
+    if (facteur > 1) nouveauZoom = zoomActuel + 0.25; // On augmente de 25%
+    else nouveauZoom = zoomActuel - 0.25; // On diminue de 25%
+    
+    // Limites de sécurité
+    if (nouveauZoom < 0.25) nouveauZoom = 0.25;
+    if (nouveauZoom > 5) nouveauZoom = 5;
+    
+    document.getElementById('curseurZoom').value = nouveauZoom;
+    appliquerZoomDirect(nouveauZoom);
+}
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
