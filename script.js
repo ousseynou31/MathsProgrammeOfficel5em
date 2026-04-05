@@ -2825,19 +2825,22 @@ window.addEventListener('mousedown', function(e) {
 });
 
  // =========================================================
-    canvas.addEventListener('mousedown', function(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+   // Trouvez votre fonction canvas.onclick ou addEventListener('mousedown')
+canvas.addEventListener('mousedown', function(event) {
+    // Si le bouton bleu a été cliqué juste avant
+    if (enModePlacementPoint === true) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
 
-    if (enModePlacementPoint) {
-        // C'EST CET APPEL QUI DÉCLENCHE TOUT
-        preparerPlacementPoint(x, y); 
-        enModePlacementPoint = false; 
+        // APPEL CRUCIAL : C'est ici que le lien se fait
+        preparerPlacementPoint(x, y);
+
+        // On désactive le mode pour ne pas ouvrir la fenêtre en boucle
+        enModePlacementPoint = false;
         canvas.style.cursor = "default";
-        return; // Important pour ne pas exécuter d'autres outils en même temps
+        return; // On stoppe ici pour ne pas dessiner un point normal
     }
-    // ... reste de votre code
 });
 // =========================================================
    // Fermer le menu si on clique ailleurs
