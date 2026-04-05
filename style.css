@@ -1065,6 +1065,14 @@ body { overflow: hidden; }
     z-index: 9999; /* FORCE LE PREMIER PLAN ABSOLU */
 }
 
+.modal-contenu {
+    background: white; 
+    padding: 30px; 
+    border-radius: 15px; 
+    width: 500px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5); /* Ombre portée pour donner du relief */
+    color: #333; /* Texte bien sombre */
+}
 /* Conteneur principal des deux colonnes */
 .sections-saisie {
     display: flex;
@@ -1148,6 +1156,65 @@ body { overflow: hidden; }
 .btn-valider:hover {
     background-color: #1d4ed8;
 }
+/* Cette classe doit recouvrir TOUT l'écran pour bloquer l'arrière-plan */
+.modal-fond {
+    position: fixed !important; /* Force la position par rapport à l'écran */
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important; /* Toute la largeur */
+    height: 100vh !important; /* Toute la hauteur */
+    background-color: rgba(0, 0, 0, 0.8) !important; /* Fond noir très sombre */
+    
+    /* Centrage absolu */
+    display: none; 
+    justify-content: center;
+    align-items: center;
+    
+    /* PRIORITÉ MAXIMALE */
+    z-index: 999999 !important; 
+}
+
+/* La boîte blanche contenant le formulaire */
+.modal-contenu {
+    background-color: white !important;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    border: 2px solid #2563eb;
+    position: relative;
+    z-index: 1000000 !important;
+}
+/* Fond de la fenêtre modale (assombrit l'écran) */
+.modal-fond {
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5); /* Noir transparent */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(3px); /* Flou léger sur le dessin derrière */
+}
+
+/* Boîte de contenu de la fenêtre */
+.modal-contenu {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    width: 320px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    animation: apparitionDouce 0.3s ease-out;
+}
+
+/* Animation d'ouverture */
+@keyframes apparitionDouce {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
 
 /* Style des étiquettes (Labels) */
 .form-group label {
@@ -1186,38 +1253,17 @@ input[type="radio"] {
 .modal-actions button:active {
     transform: translateY(1px);
 }
-/* Une seule définition propre pour le fond */
 .modal-fond {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    background-color: rgba(0, 0, 0, 0.7) !important;
-    backdrop-filter: blur(3px);
-    
-    /* C'est le JS qui passera de 'none' à 'flex' */
-    display: none; 
-    
+    position: fixed;
+    z-index: 10000; /* Augmenté pour passer devant TOUT */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: none; /* Vérifiez qu'il est en 'none' par défaut */
     justify-content: center;
     align-items: center;
-    z-index: 999999 !important; /* Priorité maximale */
-}
-
-/* La boîte de dialogue */
-.modal-contenu {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    width: 400px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    border: 2px solid #2563eb;
-    animation: apparitionDouce 0.3s ease-out;
-}
-
-@keyframes apparitionDouce {
-    from { transform: scale(0.8); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    background: rgba(0,0,0,0.6);
 }
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
 /* --- MODULE GÉO-MAGIE : STRUCTURE PRINCIPALE --- */
