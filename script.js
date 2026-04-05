@@ -2661,34 +2661,43 @@ let pointOrigineRegle = null; // Le point qui servira de "0"
 let pointExtremiteRegle = null; // L'autre point pour donner la direction
 
 function preparerPlacementPoint(mouseX, mouseY) {
-    console.log("Tentative de détection à :", mouseX, mouseY);
+    console.log("Clic à :", mouseX, mouseY);
 
-    // On cherche le segment dans votre tableau 'elements'
-    segmentAssistant = elements.find(el => {
-        if (el.type !== 'segment') return false;
+    // ÉTAPE 1 : Trouver le segment (Vérifiez bien que votre tableau s'appelle 'elements')
+    let trouve = null;
+    for (let i = 0; i < elements.length; i++) {
+        let el = elements[i];
+        if (el.type === 'segment') {
+            let d = calculeDistancePointSegment(mouseX, mouseY, el.p1, el.p2);
+            if (d < 30) { trouve = el; break; }
+        }
+    }
+
+    if (!trouve) {
+        alert("Le clic est trop loin du segment. Cliquez pile sur le trait.");
+        return;
+    }
+
+    // ÉTAPE 2 : Définir le point de départ (le 0)
+    segmentAssistant = trouve;
+    let d1 = Math.hypot(mouseX - trouve.p1.x, mouseY - trouve.p1.y);
+    let d2 = Math.hypot(mouseX - trouve.p2.x, mouseY - trouve.p2.y);
+    
+    pointOrigineRegle = (d1 < d2) ? trouve.p1 : trouve.p2;
+    pointExtremiteRegle = (d1 < d2) ? trouve.p2 : trouve.p1;
+
+    // ÉTAPE 3 : Forcer l'affichage (On utilise le style direct pour éviter les conflits CSS)
+    let modal = document.getElementById('modalPointPrecis');
+    if (modal) {
+        modal.style.display = "flex"; // On force l'affichage en flex
         
-        // Calcul simplifié de distance point-segment
-        const d = calculeDistancePointSegment(mouseX, mouseY, el.p1, el.p2);
-        console.log("Distance au segment :", d);
-        return d < 20; // On augmente la zone de clic à 20 pixels
-    });
-
-    if (segmentAssistant) {
-        // Déterminer le point de référence (le 0)
-        const d1 = Math.hypot(mouseX - segmentAssistant.p1.x, mouseY - segmentAssistant.p1.y);
-        const d2 = Math.hypot(mouseX - segmentAssistant.p2.x, mouseY - segmentAssistant.p2.y);
-        
-        pointOrigineRegle = (d1 < d2) ? segmentAssistant.p1 : segmentAssistant.p2;
-        pointExtremiteRegle = (d1 < d2) ? segmentAssistant.p2 : segmentAssistant.p1;
-
+        // On remplit les textes
         document.getElementById('nomPointRef').innerText = pointOrigineRegle.label;
-        
-        // AFFICHAGE FORCÉ
-        const modal = document.getElementById('modalPointPrecis');
-        modal.style.display = 'flex'; 
-        console.log("Fenêtre activée !");
+        if(document.getElementById('nomPointRef2')) {
+            document.getElementById('nomPointRef2').innerText = pointOrigineRegle.label;
+        }
     } else {
-        alert("Cliquez plus près du trait du segment.");
+        alert("ERREUR CRITIQUE : L'élément 'modalPointPrecis' n'existe pas dans votre HTML.");
     }
 }
 function validerPlacementPoint() {
@@ -2825,23 +2834,25 @@ window.addEventListener('mousedown', function(e) {
 });
 
  // =========================================================
-   // Trouvez votre fonction canvas.onclick ou addEventListener('mousedown')
-canvas.addEventListener('mousedown', function(event) {
-    // Si le bouton bleu a été cliqué juste avant
-    if (enModePlacementPoint === true) {
+  // On force l'écouteur d'événement sur le canvas
+document.getElementById('canvas').addEventListener('mousedown', function(e) {
+    if (enModePlacementPoint) {
         const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
 
-        // APPEL CRUCIAL : C'est ici que le lien se fait
+        console.log("Mode placement actif, envoi vers preparerPlacementPoint...");
         preparerPlacementPoint(x, y);
 
-        // On désactive le mode pour ne pas ouvrir la fenêtre en boucle
+        // On réinitialise après le clic
         enModePlacementPoint = false;
         canvas.style.cursor = "default";
-        return; // On stoppe ici pour ne pas dessiner un point normal
+        
+        // Empêche d'autres fonctions de se lancer en même temps
+        e.stopPropagation();
+        e.preventDefault();
     }
-});
+}, true); // Le 'true' ici est très important, il donne la priorité à ce clic
 // =========================================================
    // Fermer le menu si on clique ailleurs
 window.addEventListener('mousedown', function(e) {
