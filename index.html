@@ -502,19 +502,6 @@
             <span style="color: #ffd700; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">Géo-Magie Pro</span>
         </div>
 
-        <div id="zone-zoom" style="background: #f8fafc; padding: 12px; border: 2px solid #2563eb; border-radius: 10px; display: inline-block; margin: 10px;">
-    <button onclick="changerZoom(0.5)" style="padding: 5px 10px; cursor: pointer;">➖</button>
-    
-    <input type="range" id="curseurZoom" min="0.25" max="5" step="0.25" value="1" 
-           oninput="appliquerZoomDirect(this.value)" style="width: 200px; margin: 0 10px; vertical-align: middle;">
-    
-    <button onclick="changerZoom(2)" style="padding: 5px 10px; cursor: pointer;">➕</button>
-    
-    <span id="labelZoom" style="font-weight: bold; margin-left: 10px; color: #1e40af;">100%</span>
-    
-    <button onclick="appliquerZoomDirect(1)" style="margin-left:15px; font-size: 0.8em; cursor: pointer;">Réinitialiser (1:1)</button>
-</div>
-
     <div id="outil-point-distance" style="background: #f1f5f9; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
     <strong>📍 Placer un point :</strong>
     <input type="text" id="p_nom" placeholder="Nom (ex: M)" style="width:50px;">
