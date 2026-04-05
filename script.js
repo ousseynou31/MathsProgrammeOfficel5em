@@ -2864,7 +2864,7 @@ window.addEventListener('mousedown', function(e) {
         if (typeof handleInput === "function") {
             handleInput(x, y);
         }
-    });
+    }); 
     
     console.log("✅ Système Diouf Maths 5ème prêt (Interface & Géométrie OK).");
 });
