@@ -502,9 +502,14 @@
             <span style="color: #ffd700; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">Géo-Magie Pro</span>
         </div>
 
-      <button id="btnPlacementPrecis" onclick="activerModePlacement()" class="btn-outil" style="background-color: #3498db; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-   📍 Placer un point (Distance CM)
-</button>
+    <div id="outil-point-distance" style="background: #f1f5f9; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+    <strong>📍 Placer un point :</strong>
+    <input type="text" id="p_nom" placeholder="Nom (ex: M)" style="width:50px;">
+    à <input type="number" id="p_dist" placeholder="Distance" style="width:60px;"> cm 
+    de <input type="text" id="p_ref" placeholder="Réf (ex: A)" style="width:50px;">
+    vers <input type="text" id="p_dir" placeholder="Vers (ex: B)" style="width:50px;">
+    <button onclick="ajouterPointDirect()" style="background:#2563eb; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Placer</button>
+</div>
 <button onclick="ouvrirOutilParallelo()" class="btn-outil" title="Générer un parallélogramme, rectangle ou carré">
     ▱ Parallélogramme
 </button>
@@ -647,58 +652,7 @@
 </div>
 
 
- <div id="modalPointPrecis" class="modal-fond" style="display:none; position: fixed; inset: 0; z-index: 999999; background: rgba(0,0,0,0.7); align-items: center; justify-content: center;">
-    <div class="modal-contenu" style="background: white; padding: 20px; border-radius: 10px; width: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
-        <h3 style="margin-top:0; color:#2c3e50;">📏 Placer un point précisément</h3>
-        
-        <div style="background:#f8f9fa; padding:10px; border-radius:5px; margin-bottom:15px;">
-            <p style="font-size: 0.9em; margin:0;">
-                Référence : <strong>Point <span id="nomPointRef">A</span> (0 cm)</strong>
-            </p>
-        </div>
 
-        <div class="form-group" style="margin-bottom:15px;">
-            <label><strong>Nom du nouveau point :</strong></label><br>
-            <input type="text" id="nomNouveauPoint" value="M" style="width:60px; padding:5px; text-align:center;">
-        </div>
-
-        <div class="form-group" style="margin-bottom:15px;">
-            <label><strong>Distance exacte (en cm) :</strong></label><br>
-            <input type="number" id="distancePrecise" step="0.1" value="2.0" style="width:100px; padding:5px;">
-        </div>
-
-        <div class="form-group" style="margin-bottom:20px;">
-            <label><strong>Direction par rapport à <span id="nomPointRef2">A</span> :</strong></label>
-            <div style="margin-top:10px;">
-                <label style="cursor:pointer; background:#e9ecef; padding:8px; border-radius:4px; margin-right:5px;">
-                    <input type="radio" name="directionPoint" value="versB" checked> Vers le segment
-                </label>
-                <label style="cursor:pointer; background:#e9ecef; padding:8px; border-radius:4px;">
-                    <input type="radio" name="directionPoint" value="opposeB"> À l'extérieur
-                </label>
-            </div>
-        </div>
-
-        <div class="modal-actions" style="text-align:right; border-top:1px solid #eee; padding-top:15px;">
-            <button onclick="annulerPlacementPoint()" style="background:#bdc3c7; border:none; padding:10px 15px; border-radius:4px; cursor:pointer;">Annuler</button>
-            <button onclick="validerPlacementPoint()" style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:4px; cursor:pointer; font-weight:bold; margin-left:10px;">Placer le point</button>
-        </div>
-    </div>
-</div>
-
-<div id="modalParallelo" class="modal-fond" style="display:none; position: fixed; inset: 0; z-index: 999998; background: rgba(0,0,0,0.7); align-items: center; justify-content: center;">
-    <div class="modal-contenu" style="background: white; padding: 20px; border-radius: 10px; width: 350px;">
-        <div class="section">
-            <p><strong>3. Angle d'inclinaison :</strong></p>
-            <input type="number" id="pAngleSaisi" placeholder="Vide = 45°">
-            <p><small>(Note : 90 pour Rectangle/Carré)</small></p>
-        </div>
-        <div class="modal-actions" style="text-align:right;">
-            <button onclick="fermerModalParallelo()">Annuler</button>
-            <button onclick="creerParalleloComplet()" class="btn-valider">Générer la figure</button>
-        </div>
-    </div>
-</div>  
 </body>
 </html>
 
