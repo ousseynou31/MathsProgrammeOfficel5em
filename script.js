@@ -2700,70 +2700,43 @@ function preparerPlacementPoint(mouseX, mouseY) {
         alert("ERREUR CRITIQUE : L'élément 'modalPointPrecis' n'existe pas dans votre HTML.");
     }
 }
-function validerPlacementPoint() {
-    const distanceCm = parseFloat(document.getElementById('distancePrecise').value);
-    const nomPoint = document.getElementById('nomNouveauPoint').value;
-    const direction = document.querySelector('input[name="directionPoint"]:checked').value;
-    
-    if (isNaN(distanceCm) || !nomPoint) return alert("Veuillez remplir tous les champs.");
+function ajouterPointDirect() {
+    // 1. Récupérer les valeurs
+    const nomNouveau = document.getElementById('p_nom').value.toUpperCase();
+    const distanceCm = parseFloat(document.getElementById('p_dist').value);
+    const nomRef = document.getElementById('p_ref').value.toUpperCase();
+    const nomVers = document.getElementById('p_dir').value.toUpperCase();
 
-    const echelle = 37.8; // 1 cm = 37.8 pixels
-    const distancePix = distanceCm * echelle;
+    // 2. Trouver les points de référence dans votre tableau existant
+    const PA = points.find(p => p.label === nomRef);
+    const PB = points.find(p => p.label === nomVers);
 
-    // Calcul du vecteur directionnel (du 0 vers l'autre point)
-    const dx = pointExtremiteRegle.x - pointOrigineRegle.x;
-    const dy = pointExtremiteRegle.y - pointOrigineRegle.y;
-    const longueurSegment = Math.hypot(dx, dy);
-
-    // Vecteur unitaire (longueur 1)
-    const ux = dx / longueurSegment;
-    const uy = dy / longueurSegment;
-
-    // Calcul de la position finale
-    let finalX, finalY;
-    if (direction === "versB") {
-        // On suit la direction du segment
-        finalX = pointOrigineRegle.x + (ux * distancePix);
-        finalY = pointOrigineRegle.y + (uy * distancePix);
-    } else {
-        // On va dans le sens opposé (avant le point 0)
-        finalX = pointOrigineRegle.x - (ux * distancePix);
-        finalY = pointOrigineRegle.y - (uy * distancePix);
+    if (!PA || !PB || isNaN(distanceCm)) {
+        alert("Erreur : Vérifiez les noms des points (A, B...) et la distance.");
+        return;
     }
 
-    // AJOUT DU POINT DANS VOTRE TABLEAU HABITUEL
-    points.push({
-        x: finalX,
-        y: finalY,
-        label: nomPoint,
-        color: "red"
-    });
-
-    // Fermeture et rafraîchissement
-    annulerPlacementPoint();
-    if (typeof refreshCanvas === "function") refreshCanvas();
-}
-
-function annulerPlacementPoint() {
-    document.getElementById('modalPointPrecis').style.display = 'none';
-    segmentAssistant = null;
-}
-let enModePlacementPoint = false; // Variable pour savoir si on attend un clic
-
-function activerModePlacement() {
-    enModePlacementPoint = true;
-    // On change l'apparence du curseur pour aider l'élève
-    document.getElementById('canvas').style.cursor = "crosshair";
+    // 3. Calcul mathématique simple (Vecteur)
+    const echelle = 37.8; // 1cm = 37.8px
+    const dPix = distanceCm * echelle;
     
-    // Petite aide visuelle ou message
-    console.log("Mode placement activé : Cliquez sur un segment.");
-}
-function calculeDistancePointSegment(x, y, p1, p2) {
-    const l2 = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-    if (l2 === 0) return Math.hypot(x - p1.x, y - p1.y);
-    let t = ((x - p1.x) * (p2.x - p1.x) + (y - p1.y) * (p2.y - p1.y)) / (l2 * l2);
-    t = Math.max(0, Math.min(1, t));
-    return Math.hypot(x - (p1.x + t * (p2.x - p1.x)), y - (p1.y + t * (p2.y - p1.y)));
+    const AB = Math.hypot(PB.x - PA.x, PB.y - PA.y);
+    const ux = (PB.x - PA.x) / AB;
+    const uy = (PB.y - PA.y) / AB;
+
+    // 4. Créer le nouveau point
+    const nouveauPoint = {
+        x: PA.x + (ux * dPix),
+        y: PA.y + (uy * dPix),
+        label: nomNouveau,
+        color: "red"
+    };
+
+    // 5. Ajouter et rafraîchir
+    points.push(nouveauPoint);
+    if (typeof refreshCanvas === "function") refreshCanvas();
+    
+    console.log(`Point ${nomNouveau} placé à ${distanceCm}cm de ${nomRef}`);
 }
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
