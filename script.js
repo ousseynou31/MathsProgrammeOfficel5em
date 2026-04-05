@@ -2834,25 +2834,33 @@ window.addEventListener('mousedown', function(e) {
 });
 
  // =========================================================
-  // On force l'écouteur d'événement sur le canvas
-document.getElementById('canvas').addEventListener('mousedown', function(e) {
-    if (enModePlacementPoint) {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+const monCanvas = document.getElementById('geoCanvas') || document.getElementById('canvas');
 
-        console.log("Mode placement actif, envoi vers preparerPlacementPoint...");
-        preparerPlacementPoint(x, y);
+if (monCanvas) {
+    monCanvas.addEventListener('mousedown', function(e) {
+        if (enModePlacementPoint) {
+            // Utilisation de monCanvas pour être sûr d'avoir le bon ID
+            const rect = monCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
 
-        // On réinitialise après le clic
-        enModePlacementPoint = false;
-        canvas.style.cursor = "default";
-        
-        // Empêche d'autres fonctions de se lancer en même temps
-        e.stopPropagation();
-        e.preventDefault();
-    }
-}, true); // Le 'true' ici est très important, il donne la priorité à ce clic
+            console.log("📍 Système Diouf : Mode placement détecté à", x, y);
+            
+            // Appel de la fonction de détection
+            preparerPlacementPoint(x, y);
+
+            // Réinitialisation immédiate
+            enModePlacementPoint = false;
+            monCanvas.style.cursor = "default";
+            
+            // On stoppe la propagation pour ne pas déclencher d'autres outils (ex: tracer segment)
+            e.stopPropagation();
+            e.preventDefault();
+        }
+    }, true); 
+} else {
+    console.error("❌ Erreur : Impossible de trouver le Canvas (ni 'geoCanvas' ni 'canvas').");
+}
 // =========================================================
    // Fermer le menu si on clique ailleurs
 window.addEventListener('mousedown', function(e) {
