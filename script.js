@@ -2834,32 +2834,28 @@ window.addEventListener('mousedown', function(e) {
 });
 
  // =========================================================
-const monCanvas = document.getElementById('geoCanvas') || document.getElementById('canvas');
+// On récupère précisément le canvas de géométrie
+const canvasGeo = document.getElementById('geoCanvas');
 
-if (monCanvas) {
-    monCanvas.addEventListener('mousedown', function(e) {
+if (canvasGeo) {
+    canvasGeo.addEventListener('mousedown', function(e) {
         if (enModePlacementPoint) {
-            // Utilisation de monCanvas pour être sûr d'avoir le bon ID
-            const rect = monCanvas.getBoundingClientRect();
+            const rect = canvasGeo.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
-            console.log("📍 Système Diouf : Mode placement détecté à", x, y);
+            console.log("📍 Clic sur geoCanvas détecté à :", x, y);
             
-            // Appel de la fonction de détection
+            // On lance la fonction qui doit ouvrir la fenêtre
             preparerPlacementPoint(x, y);
 
-            // Réinitialisation immédiate
+            // On désactive le mode immédiatement
             enModePlacementPoint = false;
-            monCanvas.style.cursor = "default";
+            canvasGeo.style.cursor = "default";
             
-            // On stoppe la propagation pour ne pas déclencher d'autres outils (ex: tracer segment)
             e.stopPropagation();
-            e.preventDefault();
         }
-    }, true); 
-} else {
-    console.error("❌ Erreur : Impossible de trouver le Canvas (ni 'geoCanvas' ni 'canvas').");
+    }, true);
 }
 // =========================================================
    // Fermer le menu si on clique ailleurs
