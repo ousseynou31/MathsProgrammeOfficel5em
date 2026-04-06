@@ -2894,66 +2894,45 @@ function sauvegarderLocalement(rapport) {
     localStorage.setItem('suivi_pedagogique', JSON.stringify(historique.slice(0, 50))); // On garde les 50 derniers
 }
 
-/**
- * Ouvre l'Espace Parent proprement
- */
 function ouvrirEspaceParent() {
     const tel = localStorage.getItem('user_tel_id');
     const modal = document.getElementById('modal-parent');
     const corpsTable = document.getElementById('corps-table-suivi');
 
-    if (!tel) return alert("❌ Identifiez-vous d'abord.");
+    if (!tel) return alert("Identifiez l'élève d'abord.");
 
-    // ÉTAPE A : On force l'affichage via la classe CSS
-    modal.classList.add('actif'); 
-    
-    // ÉTAPE B : Nettoyage et message d'attente
-    corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Chargement des données...</td></tr>";
+    // 1. On affiche la fenêtre immédiatement en plein écran (flex)
+    modal.style.display = "flex";
+    corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Chargement...</td></tr>";
 
-    // ÉTAPE C : Récupération Firebase
-    database.ref('clients/' + tel + '/suivi_parent').limitToLast(30).once('value', (snapshot) => {
+    // 2. Récupération Firebase
+    database.ref('clients/' + tel + '/suivi_parent').limitToLast(20).once('value', (snapshot) => {
         corpsTable.innerHTML = "";
-        let listeRapports = [];
+        let rapports = [];
+        snapshot.forEach(child => { rapports.unshift(child.val()); });
 
-        snapshot.forEach(child => {
-            listeRapports.unshift(child.val());
-        });
-
-        if (listeRapports.length === 0) {
-            corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun devoir enregistré.</td></tr>";
+        if (rapports.length === 0) {
+            corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun résultat.</td></tr>";
         } else {
-            // Stats
-            document.getElementById('parent-derniere-note').innerText = listeRapports[0].note;
-            document.getElementById('parent-temps-total').innerText = listeRapports[0].duree;
+            document.getElementById('parent-derniere-note').innerText = rapports[0].note;
+            document.getElementById('parent-temps-total').innerText = rapports[0].duree;
 
-            // Tableau
-            listeRapports.forEach(r => {
+            rapports.forEach(r => {
                 corpsTable.innerHTML += `
                     <tr>
                         <td>${r.date}<br><small>${r.heure}</small></td>
                         <td><strong>${r.chapitre}</strong></td>
                         <td><span class="badge-note" style="background:${r.couleur_status}">${r.note}</span></td>
-                        <td>
-                            <strong>${r.appreciation}</strong>
-                            <span class="conseil-parent">💡 ${r.recommandation}</span>
-                        </td>
+                        <td>${r.appreciation}<br><small>💡 ${r.recommandation}</small></td>
                     </tr>`;
             });
         }
     });
 }
 
-/**
- * Ferme la fenêtre modale
- */
 function fermerEspaceParent() {
-    const modal = document.getElementById('modal-parent');
-    
-    // On retire la classe actif pour que le "display: none" du CSS reprenne le dessus
-    modal.classList.remove('actif');
-    
-    // Sécurité supplémentaire : on s'assure que le style en ligne ne bloque rien
-    modal.style.display = "none";
+    // On force la disparition totale
+    document.getElementById('modal-parent').style.display = "none";
 }
 // ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
