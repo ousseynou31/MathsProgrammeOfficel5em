@@ -1337,35 +1337,38 @@ input[type="radio"] {
 //  ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
+/* État de base : La fenêtre est totalement invisible et désactivée */
 .modal-systeme {
-    display: none; /* Caché par défaut */
+    display: none; 
     position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
     z-index: 99999;
-    background: rgba(0,0,0,0.8);
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    
+    /* On prépare le centrage, mais il ne s'active pas encore */
     align-items: center;
     justify-content: center;
 }
 
-/* C'est cette classe qui déclenche l'affichage en plein écran */
+/* L'ÉTAT ACTIF : C'est ici qu'on force l'affichage en plein écran */
 .modal-systeme.actif {
     display: flex !important;
 }
-/* La boîte blanche contenant les notes */
+
+/* On s'assure que le contenu blanc ne dépasse pas */
 .modal-content-parent {
     background: #f8fafc;
-    width: 95%;           /* Presque toute la largeur sur mobile */
-    max-width: 850px;     /* Mais pas trop large sur PC */
-    max-height: 90vh;     /* Pas plus haut que l'écran */
+    width: 95%;
+    max-width: 900px;
+    max-height: 90vh;
     border-radius: 20px;
     padding: 25px;
-    position: relative;   /* Important pour le bouton fermer */
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-    overflow-y: auto;     /* Permet de scroller si bcp de notes */
-    
-    /* On annule les marges automatiques qui pourraient gêner */
-    margin: 0 auto !important; 
+    overflow-y: auto; /* Scroll interne si trop de notes */
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
 }
 
 .header-parent { display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
