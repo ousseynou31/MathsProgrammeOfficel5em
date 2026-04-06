@@ -2439,22 +2439,43 @@ function fermerModalTriangle() {
     document.getElementById('modalTriangle').style.display = 'none';
 }
 
-// Mise à jour dynamique des labels si l'élève change les noms A, B, C
-document.getElementById('nomA').oninput = majLabels;
-document.getElementById('nomB').oninput = majLabels;
-document.getElementById('nomC').oninput = majLabels;
+// =========================================================
+// MISE À JOUR DYNAMIQUE DES LABELS (VERSION SÉCURISÉE)
+// =========================================================
+
+// On récupère les champs de saisie des noms
+const inA = document.getElementById('nomA');
+const inB = document.getElementById('nomB');
+const inC = document.getElementById('nomC');
+
+// On n'active l'écouteur que si l'élément existe vraiment dans la page
+if (inA) inA.oninput = majLabels;
+if (inB) inB.oninput = majLabels;
+if (inC) inC.oninput = majLabels;
 
 function majLabels() {
-    const a = document.getElementById('nomA').value || "A";
-    const b = document.getElementById('nomB').value || "B";
-    const c = document.getElementById('nomC').value || "C";
+    // Récupération des valeurs avec sécurité (au cas où un champ manque)
+    const valA = document.getElementById('nomA')?.value || "A";
+    const valB = document.getElementById('nomB')?.value || "B";
+    const valC = document.getElementById('nomC')?.value || "C";
     
-    document.getElementById('labelAB').innerText = `Segment ${a}${b} :`;
-    document.getElementById('labelBC').innerText = `Segment ${b}${c} :`;
-    document.getElementById('labelAC').innerText = `Segment ${a}${c} :`;
-    document.getElementById('labelAngA').innerText = `Angle ${a} :`;
-    document.getElementById('labelAngB').innerText = `Angle ${b} :`;
-    document.getElementById('labelAngC').innerText = `Angle ${c} :`;
+    // Mise à jour des textes des labels avec vérification d'existence
+    const elementsLabels = {
+        'labelAB': `Segment [${valA}${valB}] :`,
+        'labelBC': `Segment [${valB}${valC}] :`,
+        'labelAC': `Segment [${valA}${valC}] :`,
+        'labelAngA': `Angle ${valA}̂ :`,
+        'labelAngB': `Angle ${valB}̂ :`,
+        'labelAngC': `Angle ${valC}̂ :`
+    };
+
+    // On boucle sur les labels pour les mettre à jour seulement s'ils existent
+    for (let id in elementsLabels) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerText = elementsLabels[id];
+        }
+    }
 }
 function genererTriangle() {
     // 1. Récupération des noms
