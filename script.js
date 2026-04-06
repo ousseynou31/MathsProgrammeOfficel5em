@@ -2899,31 +2899,36 @@ function ouvrirEspaceParent() {
     const modal = document.getElementById('modal-parent');
     const corpsTable = document.getElementById('corps-table-suivi');
 
-    if (!tel) return alert("Identifiez l'élève d'abord.");
+    if (!tel) return alert("❌ Identifiez l'élève d'abord.");
 
-    // 1. On affiche la fenêtre immédiatement en plein écran (flex)
-    modal.style.display = "flex";
-    corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Chargement...</td></tr>";
+    // FORCE LE PLEIN ÉCRAN
+    modal.style.setProperty('display', 'flex', 'important');
 
-    // 2. Récupération Firebase
+    corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px; color:#60a5fa;'>Chargement des données...</td></tr>";
+
     database.ref('clients/' + tel + '/suivi_parent').limitToLast(20).once('value', (snapshot) => {
         corpsTable.innerHTML = "";
         let rapports = [];
         snapshot.forEach(child => { rapports.unshift(child.val()); });
 
         if (rapports.length === 0) {
-            corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun résultat.</td></tr>";
+            corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px; color:#94a3b8;'>Aucun rapport trouvé.</td></tr>";
         } else {
             document.getElementById('parent-derniere-note').innerText = rapports[0].note;
             document.getElementById('parent-temps-total').innerText = rapports[0].duree;
 
             rapports.forEach(r => {
                 corpsTable.innerHTML += `
-                    <tr>
-                        <td>${r.date}<br><small>${r.heure}</small></td>
-                        <td><strong>${r.chapitre}</strong></td>
-                        <td><span class="badge-note" style="background:${r.couleur_status}">${r.note}</span></td>
-                        <td>${r.appreciation}<br><small>💡 ${r.recommandation}</small></td>
+                    <tr style="border-bottom: 1px solid #334155;">
+                        <td style="padding: 12px; font-size:0.9em; color:#94a3b8;">${r.date}<br>${r.heure}</td>
+                        <td style="padding: 12px; font-weight:bold; color:#f8fafc;">${r.chapitre}</td>
+                        <td style="padding: 12px; text-align:center;">
+                            <span style="background:${r.couleur_status}; color:white; padding:5px 10px; border-radius:6px; font-weight:bold;">${r.note}</span>
+                        </td>
+                        <td style="padding: 12px; font-size:0.9em;">
+                            <b style="color:#4ade80;">${r.appreciation}</b><br>
+                            <span style="color:#fbbf24;">💡 ${r.recommandation}</span>
+                        </td>
                     </tr>`;
             });
         }
@@ -2931,8 +2936,7 @@ function ouvrirEspaceParent() {
 }
 
 function fermerEspaceParent() {
-    // On force la disparition totale
-    document.getElementById('modal-parent').style.display = "none";
+    document.getElementById('modal-parent').style.setProperty('display', 'none', 'important');
 }
 // ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
