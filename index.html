@@ -623,42 +623,50 @@
     </div>
 </div>  
 
-     <div id="modalTriangle" class="modal-fond" style="display:none;">
-    <div class="modal-contenu">
-        <h3>Construire un Triangle par Mesures</h3>
+     <div id="modalTriangle" class="modal-fond" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;">
+    <div class="modal-contenu" style="background: white; padding: 25px; border-radius: 15px; width: 500px; max-width: 95vw; box-shadow: 0 15px 40px rgba(0,0,0,0.5); border: 2px solid #2563eb; box-sizing: border-box;">
         
-        <div class="groupe-nommage">
-            <label>Nommer les sommets :</label>
-            <input type="text" id="nomA" value="A" maxlength="2">
-            <input type="text" id="nomB" value="B" maxlength="2">
-            <input type="text" id="nomC" value="C" maxlength="2">
+        <h3 style="margin-top: 0; color: #1e40af; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">📐 Construire un Triangle par Mesures</h3>
+        
+        <div class="groupe-nommage" style="margin-bottom: 20px; background: #f8fafc; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+            <strong style="font-size: 14px; color: #475569;">Sommets :</strong>
+            <input type="text" id="nomA" value="A" maxlength="2" style="width:35px; text-align:center; font-weight:bold; border: 1px solid #cbd5e1; border-radius:4px;">
+            <input type="text" id="nomB" value="B" maxlength="2" style="width:35px; text-align:center; font-weight:bold; border: 1px solid #cbd5e1; border-radius:4px;">
+            <input type="text" id="nomC" value="C" maxlength="2" style="width:35px; text-align:center; font-weight:bold; border: 1px solid #cbd5e1; border-radius:4px;">
         </div>
 
-        <div class="sections-saisie">
-            <div class="colonne">
-                <h4>Côtés (cm)</h4>
-                <label id="labelAB">Segment AB :</label>
-                <input type="number" id="valAB" placeholder="Ex: 5">
-                <label id="labelBC">Segment BC :</label>
-                <input type="number" id="valBC" placeholder="Ex: 4">
-                <label id="labelAC">Segment AC :</label>
-                <input type="number" id="valAC" placeholder="Ex: 6">
+        <div class="sections-saisie" style="display: flex; gap: 25px; justify-content: space-between;">
+            
+            <div class="colonne" style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+                <h4 style="margin: 0 0 5px 0; color: #2563eb; font-size: 15px; border-left: 3px solid #2563eb; padding-left: 8px;">Côtés (cm)</h4>
+                
+                <label id="labelAB" style="font-size: 13px; font-weight: 600;">Segment [AB] :</label>
+                <input type="number" id="valAB" placeholder="Ex: 5" style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                
+                <label id="labelBC" style="font-size: 13px; font-weight: 600;">Segment [BC] :</label>
+                <input type="number" id="valBC" placeholder="Ex: 4" style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                
+                <label id="labelAC" style="font-size: 13px; font-weight: 600;">Segment [AC] :</label>
+                <input type="number" id="valAC" placeholder="Ex: 6" style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px;">
             </div>
 
-            <div class="colonne">
-                <h4>Angles (°)</h4>
-                <label id="labelAngA">Angle Â :</label>
-                <input type="number" id="valAngA" placeholder="Ex: 60">
-                <label id="labelAngB">Angle B̂ :</label>
-                <input type="number" id="valAngB" placeholder="Ex: 45">
-                <label id="labelAngC">Angle Ĉ :</label>
-                <input type="number" id="valAngC" placeholder="Ex: 75">
+            <div class="colonne" style="flex: 1; display: flex; flex-direction: column; gap: 8px; background: #f1f5f9; padding: 10px; border-radius: 8px;">
+                <h4 style="margin: 0 0 5px 0; color: #2563eb; font-size: 15px; border-left: 3px solid #2563eb; padding-left: 8px;">Angles (°)</h4>
+                
+                <label id="labelAngA" style="font-size: 13px; font-weight: 600;">Angle Â :</label>
+                <input type="number" id="valAngA" placeholder="Ex: 60" style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                
+                <label id="labelAngB" style="font-size: 13px; font-weight: 600;">Angle B̂ :</label>
+                <input type="number" id="valAngB" placeholder="Ex: 45" style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                
+                <label id="labelAngC" style="font-size: 13px; font-weight: 600;">Angle Ĉ :</label>
+                <input type="number" id="valAngC" placeholder="Ex: 75" style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px;">
             </div>
         </div>
 
-        <div class="modal-actions">
-            <button onclick="fermerModalTriangle()" class="btn-annuler">Annuler</button>
-            <button onclick="genererTriangle()" class="btn-valider">Construire la figure</button>
+        <div class="modal-actions" style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #e2e8f0; text-align: right; display: flex; justify-content: flex-end; gap: 10px;">
+            <button onclick="fermerModalTriangle()" class="btn-annuler" style="background: #e2e8f0; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #475569;">Annuler</button>
+            <button onclick="genererTriangle()" class="btn-valider" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Construire la figure</button>
         </div>
     </div>
 </div>
