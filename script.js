@@ -2780,57 +2780,50 @@ function basculerOutilPoint(event) {
     }
 }
 
+
+// CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+//  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+//  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
+// =========================================================
+//  LOGIQUE DE SUPPRESSION (À placer avant le chargement)
+// =========================================================
 let modeSuppression = false;
 
 function activerSuppression() {
-    modeSuppression = !modeSuppression; // Alterne entre vrai et faux
+    modeSuppression = !modeSuppression;
     const btn = document.getElementById('btn-poubelle');
-    
-    if (modeSuppression) {
-        btn.classList.add('actif');
-        btn.style.border = "2px solid black";
-        console.log("Mode suppression activé : Cliquez sur un point.");
-    } else {
-        btn.classList.remove('actif');
-        btn.style.border = "none";
+    if (btn) {
+        // Changement visuel du bouton
+        btn.style.backgroundColor = modeSuppression ? "#b91c1c" : ""; 
+        btn.classList.toggle('actif', modeSuppression);
     }
 }
 
-// CETTE PARTIE EST À INTÉGRER DANS VOTRE FONCTION DE CLIC SUR LE CANVAS (Mousedown)
 function gererClicSuppression(x, y) {
-    if (!modeSuppression) return;
-
-    // 1. Chercher si un point se trouve sous la souris (marge de 10 pixels)
-    const indexPoint = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 10);
+    // On cherche un point à moins de 15 pixels (tolérance pour le doigt/souris)
+    const indexPoint = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 15);
 
     if (indexPoint !== -1) {
         const pointASupprimer = points[indexPoint];
         
-        // 2. Message de confirmation
-        const confirmation = confirm(`Voulez-vous vraiment supprimer le point ${pointASupprimer.label} ? Cela effacera aussi les segments attachés.`);
-        
-        if (confirmation) {
-            // 3. Supprimer le point
+        // Message de confirmation personnalisé
+        if (confirm(`Voulez-vous supprimer le point ${pointASupprimer.label} et tous ses segments liés ?`)) {
+            // 1. Retirer le point du tableau
             points.splice(indexPoint, 1);
             
-            // 4. Supprimer tous les segments qui utilisent ce point
+            // 2. Filtrer les éléments pour retirer les segments attachés à ce point
             elements = elements.filter(el => 
                 el.type !== 'segment' || (el.p1 !== pointASupprimer && el.p2 !== pointASupprimer)
             );
 
-            // 5. Désactiver le mode suppression après l'action
-            activerSuppression(); 
+            // 3. Rafraîchir le dessin et désactiver le mode
             refreshCanvas();
+            activerSuppression();
         }
     }
 }
-
-
-
-// CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-//  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-//  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 // =========================================================
 //  LANCEMENT UNIQUE ET SÉCURISÉ DU SYSTÈME DIOUF 2026
@@ -2849,7 +2842,7 @@ window.addEventListener('load', async () => {
         initAdminTrigger();
     }
 
-    // 3. SYNCHRONISATION DES DONNÉES CRUCIALES (Tarifs)
+    // 3. SYNCHRONISATION DES DONNÉES (Tarifs)
     if (typeof chargerTarifs === "function") {
         try {
             console.log("📊 Synchronisation des tarifs...");
@@ -2857,7 +2850,7 @@ window.addEventListener('load', async () => {
         } catch(e) { console.warn("Tarifs chargés en mode local."); }
     }
 
-    // 4. LE TUNNEL DE SÉCURITÉ (DÉCISION DE LA PAGE)
+    // 4. LE TUNNEL DE SÉCURITÉ
     if (typeof launchApp === "function") {
         console.log("🔓 Vérification de la licence...");
         await launchApp();
@@ -2873,67 +2866,51 @@ window.addEventListener('load', async () => {
         if (typeof surveillerConnexion === "function") surveillerConnexion();
     }
 
-    // --- ⬇️ AJOUT DES PARAMÈTRES INTERFACE 2026 ⬇️ ---
-
     // 6. GÉNÉRATION DU SOMMAIRE
     if (typeof chargerSommaire === "function") {
         chargerSommaire();
     }
 
-    // 7. RESTAURATION DU THÈME PRÉFÉRÉ
+    // 7. RESTAURATION DU THÈME
     const themeSauve = localStorage.getItem('theme_prefere');
     if (themeSauve && typeof changerTheme === "function") {
         changerTheme(themeSauve);
     }
 
-    // Fermer la grille si on clique ailleurs sur l'écran
-window.addEventListener('mousedown', function(e) {
-    const grille = document.getElementById('grille-couleurs');
-    const apercu = document.getElementById('apercu-couleur');
-    if (grille && !grille.contains(e.target) && e.target !== apercu) {
-        grille.style.display = 'none';
-    }
-});
+    // --- GESTION DES CLICS HORS-MENUS (Fermeture automatique) ---
+    window.addEventListener('mousedown', function(e) {
+        // Grille de couleurs
+        const grille = document.getElementById('grille-couleurs');
+        const apercu = document.getElementById('apercu-couleur');
+        if (grille && !grille.contains(e.target) && e.target !== apercu) {
+            grille.style.display = 'none';
+        }
 
- // =========================================================
-    canvas.addEventListener('mousedown', function(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / (zoomActuel || 1);
-    const y = (e.clientY - rect.top) / (zoomActuel || 1);
+        // Panel Paramètres
+        const panel = document.getElementById('panel-parametres');
+        const btnOpt = document.getElementById('btn-options'); 
+        if (panel && !panel.contains(e.target) && e.target !== btnOpt) {
+            panel.style.display = 'none';
+        }
+    });
 
-    // --- AJOUT ICI ---
-    if (modeSuppression) {
-        gererClicSuppression(x, y);
-        return; // On s'arrête là pour ne pas tracer autre chose en même temps
-    }
-    // --- FIN AJOUT ---
-
-    // Votre reste du code (tracer segment, etc.)
-});
-// =========================================================
-   // Fermer le menu si on clique ailleurs
-window.addEventListener('mousedown', function(e) {
-    const panel = document.getElementById('panel-parametres');
-    const btn = document.getElementById('btn-options'); 
-    if (panel && !panel.contains(e.target) && e.target !== btn) {
-        panel.style.display = 'none';
-    }
-});
-    // 8. ÉCOUTEUR TECHNIQUE POUR LE TABLEAU DE GÉOMÉTRIE
-    // On utilise 'pointerdown' pour gérer à la fois la souris et le tactile (doigt/stylet)
+    // 8. ÉCOUTEUR TECHNIQUE UNIQUE POUR LE TABLEAU (Gère Tracé + Suppression + Zoom)
     document.addEventListener('pointerdown', (e) => {
-        // Sécurité : On n'agit que si la cible est bien le canvas
         if (e.target.id !== 'geoCanvas') return;
         
-        // On récupère la position exacte du canvas sur l'écran
         const r = e.target.getBoundingClientRect(); 
         
-        // Calcul des coordonnées relatives au coin haut-gauche du tableau
-        const x = e.clientX - r.left;
-        const y = e.clientY - r.top;
+        // Calcul des coordonnées prenant en compte le décalage ET le Zoom
+        const x = (e.clientX - r.left) / (window.zoomActuel || 1);
+        const y = (e.clientY - r.top) / (window.zoomActuel || 1);
         
-        if (typeof handleInput === "function") {
-            handleInput(x, y);
+        // LOGIQUE DE PRIORITÉ : Suppression vs Tracé
+        if (modeSuppression) {
+            gererClicSuppression(x, y);
+        } else {
+            if (typeof handleInput === "function") {
+                handleInput(x, y);
+            }
         }
     }); 
     
@@ -2941,17 +2918,15 @@ window.addEventListener('mousedown', function(e) {
 });
 
 // --- GESTION DU REDIMENSIONNEMENT & ROTATION ---
-// Indispensable pour que les points ne se décalent pas si l'élève tourne son téléphone
 window.addEventListener('resize', () => {
     const area = document.getElementById('canvas-area');
     const geoContainer = document.getElementById('geo-container');
+    const canvas = document.getElementById('geoCanvas');
 
-    // On ne redimensionne que si l'espace géométrie est actuellement ouvert
     if (geoContainer && geoContainer.style.display === 'flex' && area && canvas) {
         canvas.width = area.clientWidth;
         canvas.height = area.clientHeight;
         
-        // On redessine tout immédiatement pour éviter un écran blanc
         if (typeof refreshCanvas === "function") {
             refreshCanvas();
         }
