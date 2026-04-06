@@ -2739,30 +2739,36 @@ function ajouterPointDirect() {
     console.log(`Point ${nomNouveau} placé à ${distanceCm}cm de ${nomRef}`);
 }
 
-// Modifier la fonction existante pour qu'elle ferme la barre après validation
-const ancienneFonctionAjouter = ajouterPointDirect;
+// Sécurité : Fermer la barre si on clique sur OK
+// Note : Assurez-vous que votre fonction ajouterPointDirect() existe déjà
+const originalAjouterPoint = ajouterPointDirect;
 ajouterPointDirect = function() {
-    ancienneFonctionAjouter(); // Exécute votre calcul
-    basculerOutilPoint();      // Ferme la barre automatiquement
+    // On appelle votre calcul original
+    if (typeof originalAjouterPoint === "function") {
+        originalAjouterPoint();
+    }
+    // On cache la barre
+    document.getElementById('outil-point-distance').style.display = 'none';
 };
 
-function basculerOutilPoint() {
+function basculerOutilPoint(event) {
     const barre = document.getElementById('outil-point-distance');
     const btn = document.getElementById('btn-trigger-point');
     
     if (barre.style.display === 'none' || barre.style.display === '') {
-        // On affiche la barre en mode flex
         barre.style.display = 'flex';
         
-        // Optionnel : Placer la barre juste sous le bouton
-        const rect = btn.getBoundingClientRect();
-        barre.style.top = (rect.bottom + 5) + "px";
-        barre.style.left = rect.left + "px";
+        // Positionnement automatique sous le bouton
+        if (event) {
+            const rect = btn.getBoundingClientRect();
+            barre.style.top = (rect.bottom + 10) + "px";
+            barre.style.left = rect.left + "px";
+        }
     } else {
-        // On cache la barre
         barre.style.display = 'none';
     }
 }
+
 
 
 
