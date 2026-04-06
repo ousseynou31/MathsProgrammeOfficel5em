@@ -1338,26 +1338,17 @@ input[type="radio"] {
 //   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 .modal-systeme {
-    /* Par défaut, on cache TOUT */
-    display: none; 
-    
-    /* Positionnement plein écran */
-    position: fixed; 
-    z-index: 99999; 
-    left: 0; 
-    top: 0; 
-    width: 100vw;  /* 100% de la largeur écran */
-    height: 100vh; /* 100% de la hauteur écran */
-    
-    background-color: rgba(15, 23, 42, 0.9); /* Bleu nuit très sombre */
-    backdrop-filter: blur(10px);
-    
-    /* Centrage parfait du contenu */
+    display: none; /* Caché par défaut */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 99999;
+    background: rgba(0,0,0,0.8);
     align-items: center;
     justify-content: center;
 }
 
-/* LA CLASSE MAGIQUE : On l'ajoutera via le bouton */
+/* C'est cette classe qui déclenche l'affichage en plein écran */
 .modal-systeme.actif {
     display: flex !important;
 }
