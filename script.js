@@ -18,6 +18,22 @@ if (typeof canvas === 'undefined') {
     var timerClic = null;
 }
 
+// Variables globales pour la session
+let heureDebutSession = null;
+
+window.addEventListener('load', () => {
+    // On enregistre l'heure précise du début
+    heureDebutSession = new Date();
+    console.log("⏱️ Session démarrée à : " + heureDebutSession.toLocaleTimeString());
+});
+
+function calculerDureeSession() {
+    if (!heureDebutSession) return "0 min";
+    const maintenant = new Date();
+    const diffMs = maintenant - heureDebutSession; // différence en millisecondes
+    const diffMin = Math.round(diffMs / 60000); // conversion en minutes
+    return diffMin + " min";
+}
 // 1. CONFIGURATION FIREBASE 
 const firebaseConfig = {
     databaseURL: "https://maths5eme-v1-default-rtdb.europe-west1.firebasedatabase.app"
@@ -2806,6 +2822,75 @@ function basculerOutilPoint(event) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
+
+
+
+// ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+//   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+//  ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+//   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
+/**
+ * Enregistre un résultat de devoir pour l'Espace Parent
+ * @param {string} chapitre - Le nom du cours (ex: "Fractions", "Géométrie")
+ * @param {number} noteSur20 - La note obtenue par l'élève
+ */
+function genererRapportParent(chapitre, noteSur20) {
+    let appreciation = "";
+    let recommandation = "";
+    let couleur = "";
+
+    // Logique des Paliers Diouf 2026
+    if (noteSur20 >= 18) {
+        appreciation = "Excellent ! Maîtrise parfaite du chapitre.";
+        recommandation = "L'élève est prêt pour le niveau supérieur.";
+        couleur = "#15803d"; // Vert foncé
+    } else if (noteSur20 >= 14) {
+        appreciation = "Bien. Bonne compréhension globale.";
+        recommandation = "Continuez la pratique pour gagner en rapidité.";
+        couleur = "#16a34a"; // Vert
+    } else if (noteSur20 >= 10) {
+        appreciation = "Moyen. Des notions restent fragiles.";
+        recommandation = "Vérifiez la rigueur des calculs ou l'usage des outils.";
+        couleur = "#ca8a04"; // Orange/Jaune
+    } else {
+        appreciation = "Insuffisant. Chapitre non acquis.";
+        recommandation = "Reprenez les bases du cours avec l'enfant.";
+        couleur = "#b91c1c"; // Rouge
+    }
+
+    const rapport = {
+        device_id: localStorage.getItem('user_tel_id') || "Inconnu",
+        date: new Date().toLocaleDateString(),
+        heure: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        duree: calculerDureeSession(),
+        chapitre: chapitre,
+        note: noteSur20 + "/20",
+        appreciation: appreciation,
+        recommandation: recommandation,
+        couleur_status: couleur
+    };
+
+    // 1. Sauvegarde locale (Historique immédiat)
+    sauvegarderLocalement(rapport);
+
+    // 2. Envoi Cloud (Base de données)
+    envoiVersBaseDeDonnees(rapport);
+}
+
+function sauvegarderLocalement(rapport) {
+    let historique = JSON.parse(localStorage.getItem('suivi_pedagogique') || "[]");
+    historique.unshift(rapport); // Ajoute au début de la liste
+    localStorage.setItem('suivi_pedagogique', JSON.stringify(historique.slice(0, 50))); // On garde les 50 derniers
+}
+
+// ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+//   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+//  ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+//   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
+
 
 // =========================================================
 //  LOGIQUE DE SUPPRESSION (VERSION BLINDÉE)
