@@ -2832,36 +2832,36 @@ function basculerOutilPoint(event) {
 //   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 /**
- * Enregistre un résultat de devoir pour l'Espace Parent
- * @param {string} chapitre - Le nom du cours (ex: "Fractions", "Géométrie")
- * @param {number} noteSur20 - La note obtenue par l'élève
+ * Génère le rapport et l'envoie sur Firebase RTDB
  */
-function genererRapportParent(chapitre, noteSur20) {
+async function genererRapportParent(chapitre, noteSur20) {
+    const tel = localStorage.getItem('user_tel_id');
+    if (!tel) return;
+
     let appreciation = "";
     let recommandation = "";
     let couleur = "";
 
     // Logique des Paliers Diouf 2026
     if (noteSur20 >= 18) {
-        appreciation = "Excellent ! Maîtrise parfaite du chapitre.";
+        appreciation = "Excellent ! Maîtrise parfaite.";
         recommandation = "L'élève est prêt pour le niveau supérieur.";
-        couleur = "#15803d"; // Vert foncé
+        couleur = "#15803d";
     } else if (noteSur20 >= 14) {
         appreciation = "Bien. Bonne compréhension globale.";
         recommandation = "Continuez la pratique pour gagner en rapidité.";
-        couleur = "#16a34a"; // Vert
+        couleur = "#16a34a";
     } else if (noteSur20 >= 10) {
         appreciation = "Moyen. Des notions restent fragiles.";
         recommandation = "Vérifiez la rigueur des calculs ou l'usage des outils.";
-        couleur = "#ca8a04"; // Orange/Jaune
+        couleur = "#ca8a04";
     } else {
         appreciation = "Insuffisant. Chapitre non acquis.";
         recommandation = "Reprenez les bases du cours avec l'enfant.";
-        couleur = "#b91c1c"; // Rouge
+        couleur = "#b91c1c";
     }
 
     const rapport = {
-        device_id: localStorage.getItem('user_tel_id') || "Inconnu",
         date: new Date().toLocaleDateString(),
         heure: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
         duree: calculerDureeSession(),
@@ -2869,16 +2869,25 @@ function genererRapportParent(chapitre, noteSur20) {
         note: noteSur20 + "/20",
         appreciation: appreciation,
         recommandation: recommandation,
-        couleur_status: couleur
+        couleur_status: couleur,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
     };
 
-    // 1. Sauvegarde locale (Historique immédiat)
-    sauvegarderLocalement(rapport);
-
-    // 2. Envoi Cloud (Base de données)
-    envoiVersBaseDeDonnees(rapport);
+    try {
+        // Enregistrement dans la branche : clients/TEL/suivi_parent/
+        const nouvelleRef = database.ref('clients/' + tel + '/suivi_parent').push();
+        await nouvelleRef.set(rapport);
+        console.log("✅ Rapport parent synchronisé sur Firebase");
+        
+        // Optionnel : Mise à jour locale pour affichage immédiat
+        let historique = JSON.parse(localStorage.getItem('suivi_local') || "[]");
+        historique.unshift(rapport);
+        localStorage.setItem('suivi_local', JSON.stringify(historique.slice(0, 50)));
+        
+    } catch (e) {
+        console.error("❌ Erreur envoi rapport:", e);
+    }
 }
-
 function sauvegarderLocalement(rapport) {
     let historique = JSON.parse(localStorage.getItem('suivi_pedagogique') || "[]");
     historique.unshift(rapport); // Ajoute au début de la liste
@@ -2886,38 +2895,44 @@ function sauvegarderLocalement(rapport) {
 }
 
 function ouvrirEspaceParent() {
+    const tel = localStorage.getItem('user_tel_id');
     const modal = document.getElementById('modal-parent');
     const corpsTable = document.getElementById('corps-table-suivi');
-    const historique = JSON.parse(localStorage.getItem('suivi_pedagogique') || "[]");
 
-    // Nettoyage et remplissage
-    corpsTable.innerHTML = "";
-    
-    if (historique.length === 0) {
-        corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun devoir enregistré pour le moment.</td></tr>";
-    } else {
-        // Mise à jour des stats rapides
-        document.getElementById('parent-derniere-note').innerText = historique[0].note;
-        
-        historique.forEach(r => {
-            const ligne = `
-                <tr>
-                    <td>${r.date}<br><small>${r.heure} (${r.duree})</small></td>
-                    <td><strong>${r.chapitre}</strong></td>
-                    <td><span class="badge-note" style="background:${r.couleur_status}">${r.note}</span></td>
-                    <td>
-                        <strong>${r.appreciation}</strong>
-                        <span class="conseil-parent">💡 Conseil : ${r.recommandation}</span>
-                    </td>
-                </tr>
-            `;
-            corpsTable.innerHTML += ligne;
+    if (!tel) return alert("Identifiez-vous d'abord.");
+
+    // On écoute une seule fois les derniers rapports (limité à 30)
+    database.ref('clients/' + tel + '/suivi_parent').limitToLast(30).once('value', (snapshot) => {
+        corpsTable.innerHTML = "";
+        let listeRapports = [];
+
+        snapshot.forEach(child => {
+            listeRapports.unshift(child.val()); // On inverse pour avoir le plus récent en haut
         });
-    }
 
-    modal.style.display = "block";
+        if (listeRapports.length === 0) {
+            corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun devoir enregistré.</td></tr>";
+        } else {
+            // Mise à jour des stats rapides (Dernière note)
+            document.getElementById('parent-derniere-note').innerText = listeRapports[0].note;
+            document.getElementById('parent-temps-total').innerText = listeRapports[0].duree;
+
+            listeRapports.forEach(r => {
+                corpsTable.innerHTML += `
+                    <tr>
+                        <td>${r.date}<br><small>${r.heure}</small></td>
+                        <td><strong>${r.chapitre}</strong></td>
+                        <td><span class="badge-note" style="background:${r.couleur_status}">${r.note}</span></td>
+                        <td>
+                            <strong>${r.appreciation}</strong>
+                            <span class="conseil-parent">💡 ${r.recommandation}</span>
+                        </td>
+                    </tr>`;
+            });
+        }
+        modal.style.display = "block";
+    });
 }
-
 function fermerEspaceParent() {
     document.getElementById('modal-parent').style.display = "none";
 }
