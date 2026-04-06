@@ -754,6 +754,124 @@
         </div>
     </div>
 </div>
+
+
+   <div id="page-test-positionnement" class="modal-systeme" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; z-index: 100000; overflow-y: auto; color: white; padding: 20px 0;">
+    <div style="width: 95%; max-width: 850px; background: #1e293b; margin: auto; padding: 30px; border-radius: 20px; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #60a5fa; margin: 0;">📝 TEST DE POSITIONNEMENT</h1>
+            <p style="color: #94a3b8;">Répondez aux 20 questions pour évaluer votre niveau initial.</p>
+        </div>
+
+        <form id="form-test-position">
+            <h3 style="color: #fbbf24; border-bottom: 1px solid #334155; padding-bottom: 10px;">I. VRAI OU FAUX</h3>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>1. La règle graduée sert uniquement à tracer des lignes droites.</p>
+                <label><input type="radio" name="q1" value="0"> Vrai</label> &nbsp;
+                <label><input type="radio" name="q1" value="1"> Faux</label>
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>2. Le rapporteur est l'instrument utilisé pour mesurer des longueurs.</p>
+                <label><input type="radio" name="q2" value="0"> Vrai</label> &nbsp;
+                <label><input type="radio" name="q2" value="1"> Faux</label>
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>3. Un triangle isocèle possède exactement deux côtés de même longueur.</p>
+                <label><input type="radio" name="q3" value="1"> Vrai</label> &nbsp;
+                <label><input type="radio" name="q3" value="0"> Faux</label>
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>4. Deux droites sont perpendiculaires si elles forment un angle droit.</p>
+                <label><input type="radio" name="q4" value="1"> Vrai</label> &nbsp;
+                <label><input type="radio" name="q4" value="0"> Faux</label>
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>5. Un hexagone régulier possède six côtés égaux.</p>
+                <label><input type="radio" name="q5" value="1"> Vrai</label> &nbsp;
+                <label><input type="radio" name="q5" value="0"> Faux</label>
+            </div>
+
+            <h3 style="color: #fbbf24; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-top: 30px;">II. CHOIX MULTIPLES (QCM)</h3>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>6. Un cube est un solide qui possède :</p>
+                <input type="radio" name="q6" value="0"> 12 faces <br>
+                <input type="radio" name="q6" value="1"> 8 sommets <br>
+                <input type="radio" name="q6" value="0"> 6 arêtes
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>7. L'écriture fractionnaire de 0,75 est :</p>
+                <input type="radio" name="q7" value="0"> 1/4 <br>
+                <input type="radio" name="q7" value="1"> 3/4 <br>
+                <input type="radio" name="q7" value="0"> 1/2
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>8. Deux droites sont parallèles si :</p>
+                <input type="radio" name="q8" value="0"> Elles se croisent <br>
+                <input type="radio" name="q8" value="1"> Elles n'ont aucun point commun <br>
+                <input type="radio" name="q8" value="0"> Elles sont perpendiculaires
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>9. Le milieu d'un segment est le point qui :</p>
+                <input type="radio" name="q9" value="1"> Le partage en deux longueurs égales <br>
+                <input type="radio" name="q9" value="0"> Est à une extrémité
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>10. Un quadrilatère possède :</p>
+                <input type="radio" name="q10" value="0"> 3 côtés <br>
+                <input type="radio" name="q10" value="1"> 4 côtés
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>17. Quel est le nom d'un angle qui mesure 180° ?</p>
+                <input type="radio" name="q17" value="0"> Angle droit <br>
+                <input type="radio" name="q17" value="1"> Angle plat
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>19. Abdoul réussit 4 exercices sur 6. Sa fraction simplifiée est :</p>
+                <input type="radio" name="q19" value="0"> 1/2 <br>
+                <input type="radio" name="q19" value="1"> 2/3
+            </div>
+
+            <h3 style="color: #fbbf24; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-top: 30px;">III. COMPLÉTER (ÉCRIRE)</h3>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>12. La droite perpendiculaire passant par le milieu d'un segment est la : <br>
+                <input type="text" id="q12" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>13. Un angle inférieur à 90° est un angle : <br>
+                <input type="text" id="q13" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>15. La ligne courbe dont tous les points sont à égale distance du centre est le : <br>
+                <input type="text" id="q15" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>16. Périmètre du cercle : P = 2 x <b>...</b> x r <br>
+                <input type="text" id="q16" placeholder="Symbole ou nom" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>18. Dans une fraction, le chiffre du haut est le : <br>
+                <input type="text" id="q18" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>20. Un solide à deux bases circulaires et un rectangle courbé est un : <br>
+                <input type="text" id="q20" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>11. Symbole d'appartenance à une droite : <br>
+                <input type="text" id="q11" placeholder="∈ ?" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:100px;"></p>
+            </div>
+            <div class="q-block" style="margin: 15px 0;">
+                <p>14. Pour multiplier des fractions, on multiplie les : <br>
+                <input type="text" id="q14" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+            </div>
+
+            <button type="button" onclick="corrigerTest()" style="margin-top: 30px; width: 100%; padding: 20px; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.2em;">
+                VALIDER ET ENVOYER LE RÉSULTAT
+            </button>
+        </form>
+    </div>
+</div>
 </body>
 </html>
 
