@@ -2787,43 +2787,51 @@ function basculerOutilPoint(event) {
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 // =========================================================
-//  LOGIQUE DE SUPPRESSION (À placer avant le chargement)
+//  LOGIQUE DE SUPPRESSION (VERSION BLINDÉE)
 // =========================================================
-let modeSuppression = false;
+window.modeSuppression = false; // On attache à window pour la visibilité globale
 
-function activerSuppression() {
-    modeSuppression = !modeSuppression;
+window.activerSuppression = function() {
+    window.modeSuppression = !window.modeSuppression;
     const btn = document.getElementById('btn-poubelle');
-    if (btn) {
-        // Changement visuel du bouton
-        btn.style.backgroundColor = modeSuppression ? "#b91c1c" : ""; 
-        btn.classList.toggle('actif', modeSuppression);
-    }
-}
+    
+    console.log("Mode suppression :", window.modeSuppression); // Debug console
 
-function gererClicSuppression(x, y) {
-    // On cherche un point à moins de 15 pixels (tolérance pour le doigt/souris)
-    const indexPoint = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 15);
+    if (btn) {
+        if (window.modeSuppression) {
+            btn.style.setProperty('background', '#b91c1c', 'important');
+            btn.style.color = "white";
+        } else {
+            btn.style.background = ""; 
+            btn.style.color = "";
+        }
+    } else {
+        console.error("ERREUR : Le bouton avec l'ID 'btn-poubelle' est introuvable.");
+    }
+};
+
+window.gererClicSuppression = function(x, y) {
+    // Tolérance de clic augmentée à 20 pixels pour plus de facilité
+    const indexPoint = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 20);
 
     if (indexPoint !== -1) {
         const pointASupprimer = points[indexPoint];
         
-        // Message de confirmation personnalisé
-        if (confirm(`Voulez-vous supprimer le point ${pointASupprimer.label} et tous ses segments liés ?`)) {
-            // 1. Retirer le point du tableau
+        if (confirm(`Voulez-vous supprimer le point ${pointASupprimer.label} ?`)) {
             points.splice(indexPoint, 1);
             
-            // 2. Filtrer les éléments pour retirer les segments attachés à ce point
-            elements = elements.filter(el => 
-                el.type !== 'segment' || (el.p1 !== pointASupprimer && el.p2 !== pointASupprimer)
-            );
+            // On nettoie les segments
+            if (window.elements) {
+                elements = elements.filter(el => 
+                    el.type !== 'segment' || (el.p1 !== pointASupprimer && el.p2 !== pointASupprimer)
+                );
+            }
 
-            // 3. Rafraîchir le dessin et désactiver le mode
-            refreshCanvas();
-            activerSuppression();
+            if (typeof refreshCanvas === "function") refreshCanvas();
+            window.activerSuppression(); // Désactive le mode après suppression
         }
     }
-}
+};
 
 // =========================================================
 //  LANCEMENT UNIQUE ET SÉCURISÉ DU SYSTÈME DIOUF 2026
@@ -2845,68 +2853,54 @@ window.addEventListener('load', async () => {
     // 3. SYNCHRONISATION DES DONNÉES (Tarifs)
     if (typeof chargerTarifs === "function") {
         try {
-            console.log("📊 Synchronisation des tarifs...");
             await chargerTarifs();
-        } catch(e) { console.warn("Tarifs chargés en mode local."); }
+        } catch(e) { console.warn("Mode local activé."); }
     }
 
     // 4. LE TUNNEL DE SÉCURITÉ
     if (typeof launchApp === "function") {
-        console.log("🔓 Vérification de la licence...");
         await launchApp();
     }
 
-    // 5. ACTIVATION DES SERVICES "BACKGROUND"
+    // 5. ACTIVATION DES SERVICES
     const telLocal = localStorage.getItem('user_tel_id');
     const estActif = localStorage.getItem('v32_active') === 'true';
-
     if (telLocal && estActif) {
         if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
         if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
-        if (typeof surveillerConnexion === "function") surveillerConnexion();
     }
 
     // 6. GÉNÉRATION DU SOMMAIRE
-    if (typeof chargerSommaire === "function") {
-        chargerSommaire();
-    }
+    if (typeof chargerSommaire === "function") chargerSommaire();
 
     // 7. RESTAURATION DU THÈME
     const themeSauve = localStorage.getItem('theme_prefere');
-    if (themeSauve && typeof changerTheme === "function") {
-        changerTheme(themeSauve);
-    }
+    if (themeSauve && typeof changerTheme === "function") changerTheme(themeSauve);
 
-    // --- GESTION DES CLICS HORS-MENUS (Fermeture automatique) ---
+    // --- GESTION DES CLICS HORS-MENUS ---
     window.addEventListener('mousedown', function(e) {
-        // Grille de couleurs
         const grille = document.getElementById('grille-couleurs');
-        const apercu = document.getElementById('apercu-couleur');
-        if (grille && !grille.contains(e.target) && e.target !== apercu) {
+        if (grille && !grille.contains(e.target) && e.target.id !== 'apercu-couleur') {
             grille.style.display = 'none';
         }
-
-        // Panel Paramètres
         const panel = document.getElementById('panel-parametres');
-        const btnOpt = document.getElementById('btn-options'); 
-        if (panel && !panel.contains(e.target) && e.target !== btnOpt) {
+        if (panel && !panel.contains(e.target) && e.target.id !== 'btn-options') {
             panel.style.display = 'none';
         }
     });
 
-    // 8. ÉCOUTEUR TECHNIQUE UNIQUE POUR LE TABLEAU (Gère Tracé + Suppression + Zoom)
+    // 8. ÉCOUTEUR TECHNIQUE UNIQUE (Gère Tracé + Suppression + Zoom)
     document.addEventListener('pointerdown', (e) => {
         if (e.target.id !== 'geoCanvas') return;
         
         const r = e.target.getBoundingClientRect(); 
+        const zoom = window.zoomActuel || 1;
         
-        // Calcul des coordonnées prenant en compte le décalage ET le Zoom
-        const x = (e.clientX - r.left) / (window.zoomActuel || 1);
-        const y = (e.clientY - r.top) / (window.zoomActuel || 1);
+        const x = (e.clientX - r.left) / zoom;
+        const y = (e.clientY - r.top) / zoom;
         
-        // LOGIQUE DE PRIORITÉ : Suppression vs Tracé
-        if (modeSuppression) {
-            gererClicSuppression(x, y);
+        if (window.modeSuppression) {
+            window.gererClicSuppression(x, y);
         } else {
             if (typeof handleInput === "function") {
                 handleInput(x, y);
@@ -2914,21 +2908,16 @@ window.addEventListener('load', async () => {
         }
     }); 
     
-    console.log("✅ Système Diouf Maths 5ème prêt (Interface & Géométrie OK).");
+    console.log("✅ Système Diouf Maths 5ème prêt.");
 });
 
-// --- GESTION DU REDIMENSIONNEMENT & ROTATION ---
+// --- REDIMENSIONNEMENT ---
 window.addEventListener('resize', () => {
     const area = document.getElementById('canvas-area');
-    const geoContainer = document.getElementById('geo-container');
     const canvas = document.getElementById('geoCanvas');
-
-    if (geoContainer && geoContainer.style.display === 'flex' && area && canvas) {
+    if (canvas && area && document.getElementById('geo-container').style.display === 'flex') {
         canvas.width = area.clientWidth;
         canvas.height = area.clientHeight;
-        
-        if (typeof refreshCanvas === "function") {
-            refreshCanvas();
-        }
+        if (typeof refreshCanvas === "function") refreshCanvas();
     }
 });
