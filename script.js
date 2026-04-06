@@ -2943,7 +2943,52 @@ function fermerEspaceParent() {
 //  ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
+function ouvrirTestPositionnement() {
+    const modal = document.getElementById('page-test-positionnement');
+    modal.style.display = 'block';
+    window.scrollTo(0,0);
+}
 
+async function corrigerTest() {
+    let score = 0;
+    
+    // Correction des QCM et Vrai/Faux (14 questions)
+    const questionsRadio = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q17", "q19"];
+    questionsRadio.forEach(q => {
+        const res = document.querySelector(`input[name="${q}"]:checked`);
+        if (res && res.value === "1") score++;
+    });
+
+    // Correction des champs texte (8 questions) - On accepte les minuscules
+    const verifTexte = (id, reponse) => {
+        const val = document.getElementById(id).value.toLowerCase().trim();
+        return val.includes(reponse);
+    };
+
+    if(verifTexte("q12", "médiatrice")) score++;
+    if(verifTexte("q13", "aigu")) score++;
+    if(verifTexte("q15", "cercle")) score++;
+    if(verifTexte("q16", "pi") || verifTexte("q16", "π")) score++;
+    if(verifTexte("q18", "numérateur")) score++;
+    if(verifTexte("q20", "cylindre")) score++;
+    if(verifTexte("q11", "∈") || verifTexte("q11", "appartient")) score++;
+    if(verifTexte("q14", "numérateur")) score++;
+
+    // 1. Affichage du résultat à l'élève
+    alert("Test terminé ! Ton score est de " + score + "/20.");
+
+    // 2. ENVOI AUTOMATIQUE À L'ESPACE PARENT
+    // On utilise votre fonction existante genererRapportParent
+    await genererRapportParent("TEST DE POSITIONNEMENT INITIAL", score);
+
+    // 3. Fermeture et retour
+    document.getElementById('page-test-positionnement').style.display = 'none';
+    
+    // Message de félicitations
+    if(score >= 15) alert("Excellent niveau ! Tu peux commencer les exercices avancés.");
+    else if(score >= 10) alert("Bon niveau, continue de t'entraîner.");
+    else alert("Travaille bien tes bases avec les premiers chapitres.");
+}
 
 // =========================================================
 //  LOGIQUE DE SUPPRESSION (VERSION BLINDÉE)
