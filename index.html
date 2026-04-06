@@ -502,25 +502,30 @@
             <span style="color: #ffd700; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">Géo-Magie Pro</span>
         </div>
 
-   <div id="outil-point-distance">
-    <span style="color: #475569; font-weight: bold;">📍 Placement Précis</span>
+   <button onclick="basculerOutilPoint()" class="btn-outil btn-geo" id="btn-trigger-point">
+    <span>📍</span> Placement Précis
+</button>
+
+<div id="outil-point-distance" style="display: none; position: absolute; background: white; border: 2px solid #6366f1; padding: 15px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; margin-top: 10px; flex-wrap: wrap; gap: 10px; align-items: center;">
     
-    <input type="text" id="p_nom" placeholder="Nom" title="Nom du point">
+    <input type="text" id="p_nom" placeholder="Nom" style="width:50px;">
     
     <div style="display:flex; align-items:center; gap:5px;">
         <input type="number" id="p_dist" placeholder="Dist." style="width:70px;">
-        <span style="font-size:0.9em; color:#64748b;">cm de</span>
+        <span style="font-size:0.85em; color:#64748b;">cm de</span>
     </div>
 
     <input type="text" id="p_ref" placeholder="Réf." style="width:50px;">
     
-    <span style="font-size:0.9em; color:#64748b;">vers</span>
+    <span style="font-size:0.85em; color:#64748b;">vers</span>
     
     <input type="text" id="p_dir" placeholder="Vers" style="width:50px;">
     
-    <button onclick="ajouterPointDirect()" class="btn-outil btn-geo" style="padding: 8px 15px; margin:0;">
-        Placer le point
+    <button onclick="ajouterPointDirect()" class="btn-valider" style="padding: 6px 12px; font-size: 13px;">
+        OK
     </button>
+    
+    <button onclick="basculerOutilPoint()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold;">✕</button>
 </div>
 
 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
