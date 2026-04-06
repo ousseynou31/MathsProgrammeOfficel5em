@@ -2990,6 +2990,21 @@ async function corrigerTest() {
     else alert("Travaille bien tes bases avec les premiers chapitres.");
 }
 
+/**
+ * Ferme le test sans valider les réponses
+ */
+function fermerTestPositionnement() {
+    if (confirm("Voulez-vous vraiment quitter le test ? Vos réponses ne seront pas enregistrées.")) {
+        const modalTest = document.getElementById('page-test-positionnement');
+        modalTest.style.display = 'none';
+        
+        // On s'assure que le Hub d'accueil est bien visible derrière
+        const hub = document.getElementById('hub-accueil');
+        if (hub) hub.style.display = 'block';
+        
+        console.log("🚫 Test annulé par l'élève.");
+    }
+}
 // =========================================================
 //  LOGIQUE DE SUPPRESSION (VERSION BLINDÉE)
 // =========================================================
