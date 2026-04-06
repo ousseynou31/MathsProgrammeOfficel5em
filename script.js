@@ -2780,6 +2780,50 @@ function basculerOutilPoint(event) {
     }
 }
 
+let modeSuppression = false;
+
+function activerSuppression() {
+    modeSuppression = !modeSuppression; // Alterne entre vrai et faux
+    const btn = document.getElementById('btn-poubelle');
+    
+    if (modeSuppression) {
+        btn.classList.add('actif');
+        btn.style.border = "2px solid black";
+        console.log("Mode suppression activé : Cliquez sur un point.");
+    } else {
+        btn.classList.remove('actif');
+        btn.style.border = "none";
+    }
+}
+
+// CETTE PARTIE EST À INTÉGRER DANS VOTRE FONCTION DE CLIC SUR LE CANVAS (Mousedown)
+function gererClicSuppression(x, y) {
+    if (!modeSuppression) return;
+
+    // 1. Chercher si un point se trouve sous la souris (marge de 10 pixels)
+    const indexPoint = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 10);
+
+    if (indexPoint !== -1) {
+        const pointASupprimer = points[indexPoint];
+        
+        // 2. Message de confirmation
+        const confirmation = confirm(`Voulez-vous vraiment supprimer le point ${pointASupprimer.label} ? Cela effacera aussi les segments attachés.`);
+        
+        if (confirmation) {
+            // 3. Supprimer le point
+            points.splice(indexPoint, 1);
+            
+            // 4. Supprimer tous les segments qui utilisent ce point
+            elements = elements.filter(el => 
+                el.type !== 'segment' || (el.p1 !== pointASupprimer && el.p2 !== pointASupprimer)
+            );
+
+            // 5. Désactiver le mode suppression après l'action
+            activerSuppression(); 
+            refreshCanvas();
+        }
+    }
+}
 
 
 
@@ -2852,6 +2896,20 @@ window.addEventListener('mousedown', function(e) {
 });
 
  // =========================================================
+    canvas.addEventListener('mousedown', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / (zoomActuel || 1);
+    const y = (e.clientY - rect.top) / (zoomActuel || 1);
+
+    // --- AJOUT ICI ---
+    if (modeSuppression) {
+        gererClicSuppression(x, y);
+        return; // On s'arrête là pour ne pas tracer autre chose en même temps
+    }
+    // --- FIN AJOUT ---
+
+    // Votre reste du code (tracer segment, etc.)
+});
 // =========================================================
    // Fermer le menu si on clique ailleurs
 window.addEventListener('mousedown', function(e) {
