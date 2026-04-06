@@ -2580,42 +2580,51 @@ async function telechargerPDF() {
 
 function creerParalleloComplet() {
     const echelle = 37.8; // Précision millimètre
+    const canvas = document.getElementById('geoCanvas');
     
-    // Récupération des noms
+    // 1. Récupération des noms
     const n1 = document.getElementById('pNom1').value || "A";
     const n2 = document.getElementById('pNom2').value || "B";
     const n3 = document.getElementById('pNom3').value || "C";
     const n4 = document.getElementById('pNom4').value || "D";
 
-    // Récupération des mesures
-    const distAB = parseFloat(document.getElementById('pMesureAB').value) || 5;
-    const distBC = parseFloat(document.getElementById('pMesureBC').value) || 5;
+    // 2. Récupération des mesures (conversion en pixels)
+    const distAB_px = (parseFloat(document.getElementById('pMesureAB').value) || 5) * echelle;
+    const distBC_px = (parseFloat(document.getElementById('pMesureBC').value) || 5) * echelle;
     const angleDeg = parseFloat(document.getElementById('pAngleSaisi').value) || 45;
     const angleRad = angleDeg * (Math.PI / 180);
 
-    // Points de départ (centrés)
-    const startX = 150;
-    const startY = 250;
+    // 3. CALCUL DU CENTRAGE
+    // On calcule la largeur et la hauteur totale que va occuper la figure
+    const largeurFigure = distAB_px + Math.abs(distBC_px * Math.cos(angleRad));
+    const hauteurFigure = Math.abs(distBC_px * Math.sin(angleRad));
 
-    // Calcul des coordonnées
+    // Le point de départ (A) est décalé pour que le milieu de la figure soit au milieu du canvas
+    const startX = (canvas.width / 2) - (largeurFigure / 2);
+    const startY = (canvas.height / 2) + (hauteurFigure / 2);
+
+    // 4. Calcul des coordonnées des 4 points
     const pt1 = { x: startX, y: startY, label: n1, color: couleurActive };
-    const pt2 = { x: startX + (distAB * echelle), y: startY, label: n2, color: couleurActive };
     
-    // Le point 3 (C) est placé selon l'angle par rapport à B
+    const pt2 = { 
+        x: pt1.x + distAB_px, 
+        y: pt1.y, 
+        label: n2, color: couleurActive 
+    };
+    
     const pt3 = { 
-        x: pt2.x + (distBC * echelle * Math.cos(angleRad)), 
-        y: pt2.y - (distBC * echelle * Math.sin(angleRad)), 
+        x: pt2.x + (distBC_px * Math.cos(angleRad)), 
+        y: pt2.y - (distBC_px * Math.sin(angleRad)), 
         label: n3, color: couleurActive 
     };
 
-    // Le point 4 (D) ferme la figure (A + vecteur BC)
     const pt4 = { 
         x: pt1.x + (pt3.x - pt2.x), 
         y: pt1.y + (pt3.y - pt2.y), 
         label: n4, color: couleurActive 
     };
 
-    // Enregistrement dans l'application
+    // 5. Enregistrement dans l'application
     points.push(pt1, pt2, pt3, pt4);
     elements.push(
         { type: 'segment', p1: pt1, p2: pt2, color: couleurActive },
@@ -2624,10 +2633,12 @@ function creerParalleloComplet() {
         { type: 'segment', p1: pt4, p2: pt1, color: couleurActive }
     );
 
+    // 6. Mise à jour visuelle
     refreshCanvas();
-    fermerModalParallelo();
+    if (typeof fermerModalParallelo === "function") {
+        fermerModalParallelo();
+    }
 }
-
 function ouvrirOutilParallelo() {
     // 1. Récupérer les éléments de saisie pour les vider
     const champs = ['pMesureAB', 'pMesureBC', 'pAngleSaisi'];
