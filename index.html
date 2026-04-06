@@ -502,30 +502,52 @@
             <span style="color: #ffd700; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">Géo-Magie Pro</span>
         </div>
 
-   <button onclick="basculerOutilPoint()" class="btn-outil btn-geo" id="btn-trigger-point">
+  <button onclick="basculerOutilPoint(event)" class="btn-outil btn-geo" id="btn-trigger-point">
     <span>📍</span> Placement Précis
 </button>
 
-<div id="outil-point-distance" style="display: none; position: absolute; background: white; border: 2px solid #6366f1; padding: 15px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; margin-top: 10px; flex-wrap: wrap; gap: 10px; align-items: center;">
+<div id="outil-point-distance" style="
+    display: none; 
+    position: fixed; 
+    z-index: 1000000 !important; 
+    background: white !important; 
+    border: 2px solid #6366f1 !important; 
+    padding: 15px; 
+    border-radius: 12px; 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3); 
+    flex-wrap: wrap; 
+    gap: 10px; 
+    align-items: center;
+    font-family: sans-serif;">
     
-    <input type="text" id="p_nom" placeholder="Nom" style="width:50px;">
+    <div style="display:flex; flex-direction:column; gap:2px;">
+        <label style="font-size:10px; color:#6366f1; font-weight:bold;">NOM</label>
+        <input type="text" id="p_nom" placeholder="M" style="width:40px; padding:5px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;">
+    </div>
     
-    <div style="display:flex; align-items:center; gap:5px;">
-        <input type="number" id="p_dist" placeholder="Dist." style="width:70px;">
-        <span style="font-size:0.85em; color:#64748b;">cm de</span>
+    <div style="display:flex; flex-direction:column; gap:2px;">
+        <label style="font-size:10px; color:#6366f1; font-weight:bold;">DISTANCE</label>
+        <div style="display:flex; align-items:center; gap:5px;">
+            <input type="number" id="p_dist" placeholder="0.0" step="0.1" style="width:60px; padding:5px; border:1px solid #cbd5e1; border-radius:4px;">
+            <span style="font-size:12px; color:#64748b;">cm</span>
+        </div>
     </div>
 
-    <input type="text" id="p_ref" placeholder="Réf." style="width:50px;">
+    <div style="display:flex; flex-direction:column; gap:2px;">
+        <label style="font-size:10px; color:#6366f1; font-weight:bold;">DE</label>
+        <input type="text" id="p_ref" placeholder="A" style="width:40px; padding:5px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;">
+    </div>
     
-    <span style="font-size:0.85em; color:#64748b;">vers</span>
+    <div style="display:flex; flex-direction:column; gap:2px;">
+        <label style="font-size:10px; color:#6366f1; font-weight:bold;">VERS</label>
+        <input type="text" id="p_dir" placeholder="B" style="width:40px; padding:5px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;">
+    </div>
     
-    <input type="text" id="p_dir" placeholder="Vers" style="width:50px;">
-    
-    <button onclick="ajouterPointDirect()" class="btn-valider" style="padding: 6px 12px; font-size: 13px;">
+    <button onclick="ajouterPointDirect()" class="btn-valider" style="background:#2563eb; color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold; margin-left:5px;">
         OK
     </button>
     
-    <button onclick="basculerOutilPoint()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold;">✕</button>
+    <button onclick="basculerOutilPoint()" style="background:#fee2e2; border:none; color:#ef4444; padding:8px; border-radius:50%; cursor:pointer; font-weight:bold; width:30px; height:30px; display:flex; align-items:center; justify-content:center; margin-left:5px;">✕</button>
 </div>
 
 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
