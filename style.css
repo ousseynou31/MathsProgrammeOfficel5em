@@ -1337,38 +1337,41 @@ input[type="radio"] {
 //  ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
-/* État de base : La fenêtre est totalement invisible et désactivée */
 .modal-systeme {
-    display: none; 
     position: fixed;
-    z-index: 99999;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
-    
-    /* On prépare le centrage, mais il ne s'active pas encore */
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    /* Ces 3 lignes centrent la boîte blanche au milieu */
+    display: none; 
     align-items: center;
     justify-content: center;
 }
 
-/* L'ÉTAT ACTIF : C'est ici qu'on force l'affichage en plein écran */
-.modal-systeme.actif {
-    display: flex !important;
+.modal-content-parent {
+    background: white;
+    width: 90%;
+    max-width: 800px;
+    border-radius: 15px;
+    padding: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
-/* On s'assure que le contenu blanc ne dépasse pas */
-.modal-content-parent {
-    background: #f8fafc;
-    width: 95%;
-    max-width: 900px;
-    max-height: 90vh;
-    border-radius: 20px;
-    padding: 25px;
-    overflow-y: auto; /* Scroll interne si trop de notes */
-    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+/* Style pour la croix de fermeture */
+.btn-fermer-parent {
+    background: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    font-weight: bold;
 }
 
 .header-parent { display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
