@@ -2908,9 +2908,8 @@ function ouvrirEspaceParent() {
         return alert("❌ Erreur : Aucun profil élève détecté sur cet appareil.");
     }
 
-    // 2. Affichage immédiat de la fenêtre (Plein Écran via CSS .actif)
-    modal.classList.add('actif');
-    
+    // Par sécurité, on s'assure que le style direct est aussi vidé
+    modal.style.display = "none";
     // Message d'attente pendant le chargement Firebase
     corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Chargement des résultats...</td></tr>";
 
