@@ -718,35 +718,38 @@
 
 
 
-<div id="modal-parent" class="modal-systeme" style="display: none;">
-    <div class="modal-content-parent">
-        <div class="header-parent">
-            <h2>📊 Suivi Parental</h2>
-            <button class="btn-fermer-parent" onclick="fermerEspaceParent()">×</button>
-        </div>
+<div id="modal-parent" class="modal-systeme" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 99999; align-items: center; justify-content: center;">
+    
+    <div class="modal-content-parent" style="background: #1e293b; width: 95%; max-width: 900px; border-radius: 20px; padding: 20px; border: 2px solid #3b82f6; max-height: 90vh; overflow-y: auto; color: white;">
         
-        <div class="stats-rapides">
-            <div class="stat-card">
-                <span class="stat-label">Dernière Note</span>
-                <span id="parent-derniere-note" class="stat-valeur">--/20</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; padding-bottom: 15px;">
+            <h2 style="color: #60a5fa; margin: 0;">📊 RAPPORT DE PROGRÈS</h2>
+            <button onclick="fermerEspaceParent()" style="background: #ef4444; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-weight: bold; cursor: pointer;">FERMER ×</button>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin: 20px 0;">
+            <div style="background: #0f172a; padding: 15px; border-radius: 12px; flex: 1; text-align: center; border: 1px solid #334155;">
+                <span style="color: #94a3b8; display: block; font-size: 0.9em;">Dernière Note</span>
+                <span id="parent-derniere-note" style="font-size: 1.8em; font-weight: bold; color: #4ade80;">--/20</span>
             </div>
-            <div class="stat-card">
-                <span class="stat-label">Temps de Travail</span>
-                <span id="parent-temps-total" class="stat-valeur">0 min</span>
+            <div style="background: #0f172a; padding: 15px; border-radius: 12px; flex: 1; text-align: center; border: 1px solid #334155;">
+                <span style="color: #94a3b8; display: block; font-size: 0.9em;">Temps de Travail</span>
+                <span id="parent-temps-total" style="font-size: 1.8em; font-weight: bold; color: #fbbf24;">0 min</span>
             </div>
         </div>
 
-        <div class="zone-tableau">
-            <table>
+        <div style="background: #0f172a; border-radius: 12px; overflow: hidden; border: 1px solid #334155;">
+            <table style="width: 100%; border-collapse: collapse; color: white;">
                 <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Chapitre</th>
-                        <th>Note</th>
-                        <th>Appréciation</th>
+                    <tr style="background: #334155; color: #60a5fa;">
+                        <th style="padding: 12px; text-align: left;">DATE</th>
+                        <th style="padding: 12px; text-align: left;">CHAPITRE</th>
+                        <th style="padding: 12px; text-align: center;">NOTE</th>
+                        <th style="padding: 12px; text-align: left;">CONSEIL</th>
                     </tr>
                 </thead>
-                <tbody id="corps-table-suivi"></tbody>
+                <tbody id="corps-table-suivi">
+                    </tbody>
             </table>
         </div>
     </div>
