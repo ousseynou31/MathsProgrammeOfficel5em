@@ -319,16 +319,9 @@
         <span>MES DEVOIRS</span>
     </button>
 
-    <div class="parent-access-container">
-    <button class="btn-parent-dashboard" onclick="ouvrirEspaceParent()">
-        <span class="icon">👨‍👩‍👧</span>
-        <div class="text-group">
-            <span class="title">ESPACE PARENT</span>
-            <span class="subtitle">Suivi des notes et progression</span>
-        </div>
-        <span class="arrow">→</span>
-    </button>
-</div>
+   <button class="btn-modern-2026" id="btn-espace-parent" onclick="ouvrirEspaceParent()">
+    <span>ESPACE PARENT</span>
+</button>
         <button class="btn-modern-2026" id="btn-parents" onclick="ouvrirParents(event)">
         <span>ESPACE PARENTS</span>
     </button>
@@ -724,10 +717,11 @@
 </div>
 
 
-    <div id="modal-parent" class="modal-systeme">
+
+<div id="modal-parent" class="modal-systeme" style="display: none;">
     <div class="modal-content-parent">
         <div class="header-parent">
-            <h2>📊 Espace de Suivi Parental</h2>
+            <h2>📊 Suivi Parental</h2>
             <button class="btn-fermer-parent" onclick="fermerEspaceParent()">×</button>
         </div>
         
@@ -737,28 +731,26 @@
                 <span id="parent-derniere-note" class="stat-valeur">--/20</span>
             </div>
             <div class="stat-card">
-                <span class="stat-label">Temps Total</span>
+                <span class="stat-label">Temps de Travail</span>
                 <span id="parent-temps-total" class="stat-valeur">0 min</span>
             </div>
         </div>
 
         <div class="zone-tableau">
-            <table id="table-suivi">
+            <table>
                 <thead>
                     <tr>
-                        <th>Date & Heure</th>
+                        <th>Date</th>
                         <th>Chapitre</th>
                         <th>Note</th>
-                        <th>Appréciation & Conseil</th>
+                        <th>Appréciation</th>
                     </tr>
                 </thead>
-                <tbody id="corps-table-suivi">
-                    </tbody>
+                <tbody id="corps-table-suivi"></tbody>
             </table>
         </div>
     </div>
 </div>
-
 </body>
 </html>
 
