@@ -464,6 +464,19 @@
       <button id="btn-nommer" class="btn-ui-geo" onclick="setMode('nommer')" tabindex="-1">
     🏷️ <span class="label">Nommer</span>
 </button>
+        <button onclick="activerSuppression()" class="btn-outil btn-suppr" id="btn-poubelle" title="Cliquez sur un point pour le supprimer">
+    <span>🗑️</span> Supprimer un Point
+</button>
+<style>
+    /* Style spécifique pour le bouton supprimer */
+    .btn-suppr { background: linear-gradient(135deg, #f87171, #ef4444); }
+    .btn-suppr.actif { 
+        background: #b91c1c !important; 
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        transform: translateY(2px);
+    }
+</style>
+        
       <div style="position: relative; display: inline-block; vertical-align: middle;">
     
     <div id="apercu-couleur" onclick="toggleGrilleCouleurs()" 
