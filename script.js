@@ -2894,47 +2894,93 @@ function sauvegarderLocalement(rapport) {
     localStorage.setItem('suivi_pedagogique', JSON.stringify(historique.slice(0, 50))); // On garde les 50 derniers
 }
 
+/**
+ * Ouvre l'Espace Parent, récupère les données Firebase 
+ * et affiche la fenêtre en plein écran.
+ */
 function ouvrirEspaceParent() {
     const tel = localStorage.getItem('user_tel_id');
     const modal = document.getElementById('modal-parent');
     const corpsTable = document.getElementById('corps-table-suivi');
 
-    if (!tel) return alert("Identifiez-vous d'abord.");
+    // 1. Vérification d'identité
+    if (!tel) {
+        return alert("❌ Erreur : Aucun profil élève détecté sur cet appareil.");
+    }
 
-    // On écoute une seule fois les derniers rapports (limité à 30)
+    // 2. Affichage immédiat de la fenêtre (Plein Écran via CSS .actif)
+    modal.classList.add('actif');
+    
+    // Message d'attente pendant le chargement Firebase
+    corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Chargement des résultats...</td></tr>";
+
+    // 3. Récupération des données depuis Firebase Realtime Database
+    // On limite aux 30 derniers devoirs pour garder de la fluidité
     database.ref('clients/' + tel + '/suivi_parent').limitToLast(30).once('value', (snapshot) => {
         corpsTable.innerHTML = "";
         let listeRapports = [];
 
+        // On transforme le snapshot en tableau pour pouvoir l'inverser
         snapshot.forEach(child => {
-            listeRapports.unshift(child.val()); // On inverse pour avoir le plus récent en haut
+            listeRapports.unshift(child.val()); // Plus récent en haut
         });
 
+        // 4. Cas où il n'y a pas encore de données
         if (listeRapports.length === 0) {
-            corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun devoir enregistré.</td></tr>";
-        } else {
-            // Mise à jour des stats rapides (Dernière note)
-            document.getElementById('parent-derniere-note').innerText = listeRapports[0].note;
-            document.getElementById('parent-temps-total').innerText = listeRapports[0].duree;
-
-            listeRapports.forEach(r => {
-                corpsTable.innerHTML += `
-                    <tr>
-                        <td>${r.date}<br><small>${r.heure}</small></td>
-                        <td><strong>${r.chapitre}</strong></td>
-                        <td><span class="badge-note" style="background:${r.couleur_status}">${r.note}</span></td>
-                        <td>
-                            <strong>${r.appreciation}</strong>
-                            <span class="conseil-parent">💡 ${r.recommandation}</span>
-                        </td>
-                    </tr>`;
-            });
+            corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px;'>📭 Aucun devoir enregistré pour le moment.</td></tr>";
+            document.getElementById('parent-derniere-note').innerText = "--/20";
+            document.getElementById('parent-temps-total').innerText = "0 min";
+            return;
         }
-        modal.style.display = "block";
+
+        // 5. Mise à jour des statistiques rapides en haut de la fenêtre
+        const dernierRapport = listeRapports[0];
+        document.getElementById('parent-derniere-note').innerText = dernierRapport.note;
+        document.getElementById('parent-temps-total').innerText = dernierRapport.duree;
+
+        // 6. Remplissage dynamique du tableau
+        listeRapports.forEach(r => {
+            // Sécurité : on vérifie que les champs existent pour éviter les erreurs d'affichage
+            const note = r.note || "0/20";
+            const chapitre = r.chapitre || "Inconnu";
+            const date = r.date || "--/--";
+            const heure = r.heure || "--:--";
+            const appreciation = r.appreciation || "Pas d'appréciation";
+            const conseil = r.recommandation || "Continuez vos efforts.";
+            const couleur = r.couleur_status || "#64748b";
+
+            corpsTable.innerHTML += `
+                <tr>
+                    <td>
+                        <span style="font-weight:600; color:#1e293b;">${date}</span><br>
+                        <small style="color:#64748b;">à ${heure} (${r.duree || '?'})</small>
+                    </td>
+                    <td><strong style="color:#334155;">${chapitre}</strong></td>
+                    <td>
+                        <span class="badge-note" style="background:${couleur}; color:white; padding:4px 8px; border-radius:6px; font-weight:bold; display:inline-block; min-width:55px; text-align:center;">
+                            ${note}
+                        </span>
+                    </td>
+                    <td style="line-height:1.4;">
+                        <div style="font-weight:600; color:#1e293b;">${appreciation}</div>
+                        <div class="conseil-parent" style="font-size:0.85em; color:#475569; margin-top:4px; font-style:italic; border-left:3px solid #cbd5e1; padding-left:8px;">
+                            💡 Conseil : ${conseil}
+                        </div>
+                    </td>
+                </tr>`;
+        });
+    }, (error) => {
+        console.error("Erreur Firebase Parent:", error);
+        corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center; color:red;'>Erreur lors de la récupération des données.</td></tr>";
     });
 }
+
+/**
+ * Ferme la fenêtre modale proprement
+ */
 function fermerEspaceParent() {
-    document.getElementById('modal-parent').style.display = "none";
+    const modal = document.getElementById('modal-parent');
+    modal.classList.remove('actif');
 }
 // ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
