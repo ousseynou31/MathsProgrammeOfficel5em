@@ -2895,91 +2895,65 @@ function sauvegarderLocalement(rapport) {
 }
 
 /**
- * Ouvre l'Espace Parent, récupère les données Firebase 
- * et affiche la fenêtre en plein écran.
+ * Ouvre l'Espace Parent proprement
  */
 function ouvrirEspaceParent() {
     const tel = localStorage.getItem('user_tel_id');
     const modal = document.getElementById('modal-parent');
     const corpsTable = document.getElementById('corps-table-suivi');
 
-    // 1. Vérification d'identité
-    if (!tel) {
-        return alert("❌ Erreur : Aucun profil élève détecté sur cet appareil.");
-    }
+    if (!tel) return alert("❌ Identifiez-vous d'abord.");
 
-    // Par sécurité, on s'assure que le style direct est aussi vidé
-    modal.style.display = "none";
-    // Message d'attente pendant le chargement Firebase
-    corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Chargement des résultats...</td></tr>";
+    // ÉTAPE A : On force l'affichage via la classe CSS
+    modal.classList.add('actif'); 
+    
+    // ÉTAPE B : Nettoyage et message d'attente
+    corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Chargement des données...</td></tr>";
 
-    // 3. Récupération des données depuis Firebase Realtime Database
-    // On limite aux 30 derniers devoirs pour garder de la fluidité
+    // ÉTAPE C : Récupération Firebase
     database.ref('clients/' + tel + '/suivi_parent').limitToLast(30).once('value', (snapshot) => {
         corpsTable.innerHTML = "";
         let listeRapports = [];
 
-        // On transforme le snapshot en tableau pour pouvoir l'inverser
         snapshot.forEach(child => {
-            listeRapports.unshift(child.val()); // Plus récent en haut
+            listeRapports.unshift(child.val());
         });
 
-        // 4. Cas où il n'y a pas encore de données
         if (listeRapports.length === 0) {
-            corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:30px;'>📭 Aucun devoir enregistré pour le moment.</td></tr>";
-            document.getElementById('parent-derniere-note').innerText = "--/20";
-            document.getElementById('parent-temps-total').innerText = "0 min";
-            return;
+            corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun devoir enregistré.</td></tr>";
+        } else {
+            // Stats
+            document.getElementById('parent-derniere-note').innerText = listeRapports[0].note;
+            document.getElementById('parent-temps-total').innerText = listeRapports[0].duree;
+
+            // Tableau
+            listeRapports.forEach(r => {
+                corpsTable.innerHTML += `
+                    <tr>
+                        <td>${r.date}<br><small>${r.heure}</small></td>
+                        <td><strong>${r.chapitre}</strong></td>
+                        <td><span class="badge-note" style="background:${r.couleur_status}">${r.note}</span></td>
+                        <td>
+                            <strong>${r.appreciation}</strong>
+                            <span class="conseil-parent">💡 ${r.recommandation}</span>
+                        </td>
+                    </tr>`;
+            });
         }
-
-        // 5. Mise à jour des statistiques rapides en haut de la fenêtre
-        const dernierRapport = listeRapports[0];
-        document.getElementById('parent-derniere-note').innerText = dernierRapport.note;
-        document.getElementById('parent-temps-total').innerText = dernierRapport.duree;
-
-        // 6. Remplissage dynamique du tableau
-        listeRapports.forEach(r => {
-            // Sécurité : on vérifie que les champs existent pour éviter les erreurs d'affichage
-            const note = r.note || "0/20";
-            const chapitre = r.chapitre || "Inconnu";
-            const date = r.date || "--/--";
-            const heure = r.heure || "--:--";
-            const appreciation = r.appreciation || "Pas d'appréciation";
-            const conseil = r.recommandation || "Continuez vos efforts.";
-            const couleur = r.couleur_status || "#64748b";
-
-            corpsTable.innerHTML += `
-                <tr>
-                    <td>
-                        <span style="font-weight:600; color:#1e293b;">${date}</span><br>
-                        <small style="color:#64748b;">à ${heure} (${r.duree || '?'})</small>
-                    </td>
-                    <td><strong style="color:#334155;">${chapitre}</strong></td>
-                    <td>
-                        <span class="badge-note" style="background:${couleur}; color:white; padding:4px 8px; border-radius:6px; font-weight:bold; display:inline-block; min-width:55px; text-align:center;">
-                            ${note}
-                        </span>
-                    </td>
-                    <td style="line-height:1.4;">
-                        <div style="font-weight:600; color:#1e293b;">${appreciation}</div>
-                        <div class="conseil-parent" style="font-size:0.85em; color:#475569; margin-top:4px; font-style:italic; border-left:3px solid #cbd5e1; padding-left:8px;">
-                            💡 Conseil : ${conseil}
-                        </div>
-                    </td>
-                </tr>`;
-        });
-    }, (error) => {
-        console.error("Erreur Firebase Parent:", error);
-        corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center; color:red;'>Erreur lors de la récupération des données.</td></tr>";
     });
 }
 
 /**
- * Ferme la fenêtre modale proprement
+ * Ferme la fenêtre modale
  */
 function fermerEspaceParent() {
     const modal = document.getElementById('modal-parent');
+    
+    // On retire la classe actif pour que le "display: none" du CSS reprenne le dessus
     modal.classList.remove('actif');
+    
+    // Sécurité supplémentaire : on s'assure que le style en ligne ne bloque rien
+    modal.style.display = "none";
 }
 // ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
