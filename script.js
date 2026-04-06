@@ -2738,6 +2738,14 @@ function ajouterPointDirect() {
     
     console.log(`Point ${nomNouveau} placé à ${distanceCm}cm de ${nomRef}`);
 }
+
+// Modifier la fonction existante pour qu'elle ferme la barre après validation
+const ancienneFonctionAjouter = ajouterPointDirect;
+ajouterPointDirect = function() {
+    ancienneFonctionAjouter(); // Exécute votre calcul
+    basculerOutilPoint();      // Ferme la barre automatiquement
+};
+
 function basculerOutilPoint() {
     const barre = document.getElementById('outil-point-distance');
     const btn = document.getElementById('btn-trigger-point');
@@ -2756,12 +2764,7 @@ function basculerOutilPoint() {
     }
 }
 
-// Modifier la fonction existante pour qu'elle ferme la barre après validation
-const ancienneFonctionAjouter = ajouterPointDirect;
-ajouterPointDirect = function() {
-    ancienneFonctionAjouter(); // Exécute votre calcul
-    basculerOutilPoint();      // Ferme la barre automatiquement
-};
+
 
 // CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  CONSTRUCTIO GEOMETRIQUE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
