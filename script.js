@@ -2885,6 +2885,42 @@ function sauvegarderLocalement(rapport) {
     localStorage.setItem('suivi_pedagogique', JSON.stringify(historique.slice(0, 50))); // On garde les 50 derniers
 }
 
+function ouvrirEspaceParent() {
+    const modal = document.getElementById('modal-parent');
+    const corpsTable = document.getElementById('corps-table-suivi');
+    const historique = JSON.parse(localStorage.getItem('suivi_pedagogique') || "[]");
+
+    // Nettoyage et remplissage
+    corpsTable.innerHTML = "";
+    
+    if (historique.length === 0) {
+        corpsTable.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Aucun devoir enregistré pour le moment.</td></tr>";
+    } else {
+        // Mise à jour des stats rapides
+        document.getElementById('parent-derniere-note').innerText = historique[0].note;
+        
+        historique.forEach(r => {
+            const ligne = `
+                <tr>
+                    <td>${r.date}<br><small>${r.heure} (${r.duree})</small></td>
+                    <td><strong>${r.chapitre}</strong></td>
+                    <td><span class="badge-note" style="background:${r.couleur_status}">${r.note}</span></td>
+                    <td>
+                        <strong>${r.appreciation}</strong>
+                        <span class="conseil-parent">💡 Conseil : ${r.recommandation}</span>
+                    </td>
+                </tr>
+            `;
+            corpsTable.innerHTML += ligne;
+        });
+    }
+
+    modal.style.display = "block";
+}
+
+function fermerEspaceParent() {
+    document.getElementById('modal-parent').style.display = "none";
+}
 // ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //  ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
