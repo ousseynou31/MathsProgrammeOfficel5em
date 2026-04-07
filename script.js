@@ -2912,8 +2912,7 @@ function fermerTestPositionnement() {
 }
 /** OUVRE UN CHAPITRE DANS L'OVERLAY */
 function ouvrirChapitre(id) {
-    // DEBUG : Supprimez cette ligne après test
-    console.log("Tentative d'ouverture du chapitre ID :", id);
+    console.log("Ouverture du chapitre ID :", id);
 
     const chapitre = programmeMaths.find(c => String(c.id) === String(id));
     if (!chapitre) {
@@ -2930,24 +2929,24 @@ function ouvrirChapitre(id) {
         overlay.style.display = "flex";
         
         corps.innerHTML = `
-            <div style="text-align:center; padding-top:40px;" class="anim-slide-up">
-                <h1 style="color:#ffd700; font-size:1.5rem; margin:0;">Chapitre ${chapitre.id}</h1>
-                <h2 style="color:white; margin-bottom:40px; font-size:1.8rem;">${chapitre.titre}</h2>
+            <div style="text-align:center; padding: 60px 20px;" class="anim-slide-up">
+                <h1 style="color:#ffd700; font-size:1.2rem; margin:0; letter-spacing: 2px;">CHAPITRE ${chapitre.id}</h1>
+                <h2 style="color:white; margin-bottom:50px; font-size:2rem; text-transform: uppercase;">${chapitre.titre}</h2>
                 
-                <div style="display:flex; flex-direction:column; gap:20px; max-width:400px; margin: 0 auto;">
-                    <button class="btn-modern-2026" onclick="chargerLecon('${chapitre.id}')" style="padding:20px; font-weight:bold;">
+                <div style="display:flex; flex-direction:column; gap:25px; max-width:400px; margin: 0 auto;">
+                    <button class="btn-modern-2026" onclick="chargerLecon('${chapitre.id}')" style="padding:22px; font-weight:bold; letter-spacing:1px;">
                         📖 ACCÉDER AU COURS
                     </button>
-                    <button class="btn-modern-2026" onclick="chargerExos('${chapitre.id}')" style="padding:20px; font-weight:bold; background:#2ecc71; color:white;">
+                    
+                    <button class="btn-modern-2026" onclick="chargerExos('${chapitre.id}')" style="padding:22px; font-weight:bold; background:#2ecc71; color:white; border:none; letter-spacing:1px;">
                         📝 FAIRE LES EXERCICES
                     </button>
                 </div>
-                <button onclick="document.getElementById('work-overlay').style.display='none'" style="margin-top:30px; background:none; border:none; color:#64748b; cursor:pointer;"> Fermer </button>
-            </div>
+
+                </div>
         `;
     }
 }
-
 
 
 
