@@ -3028,81 +3028,86 @@ function chargerLecon(id) {
     // LOGIQUE DE CHARGEMENT : Chapitre 1 = Puissances
     if (currentId === '1' || currentId === 'PUISSANCES' || currentId === 'C4') { 
         corps.innerHTML = `
-            <div id="cours-puissances-5eme" class="anim-slide-up" style="padding: 20px; color: var(--text); max-width: 800px; margin: auto; overflow-y: auto; height: 100%;">
+            <div id="cours-scroll-container" style="height: 100%; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch;">
                 
-                <button onclick="ouvrirChapitre('${id}')" style="background: rgba(255,255,255,0.05); border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 50px; cursor: pointer; margin-bottom: 25px; font-size: 0.7rem; transition: 0.3s;">
-                    ← RETOUR AU MENU DU CHAPITRE
-                </button>
-
-                <div style="text-align: center; margin-bottom: 40px;">
-                    <h2 class="glow-text" style="font-size: 1.8rem; letter-spacing: 4px; margin-bottom: 5px;">PUISSANCES</h2>
-                    <p style="color: #64748b; font-size: 0.7rem; text-transform: uppercase;">Chapitre 01 • Mathématiques 5ème</p>
-                    <div style="width: 40px; height: 2px; background: var(--gold); margin: 15px auto;"></div>
-                </div>
-
-                <section class="glass-card" style="max-width: none; text-align: left; margin-bottom: 25px; border-left: 4px solid var(--gold); background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px;">
-                    <h3 style="color: var(--gold); font-size: 1rem; margin-top: 0; display: flex; align-items: center; gap: 10px;">
-                        <span style="background: var(--gold); color: black; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">01</span> 
-                        DÉFINITION OFFICIELLE
-                    </h3>
-                    <p style="font-style: italic; color: #cbd5e1; font-size: 0.9rem; line-height: 1.6; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
-                        "Soit <strong>a</strong> un nombre décimal et <strong>n</strong> un entier naturel (n ≥ 2).<br>
-                        On appelle puissance n-ième de <strong>a</strong>, notée <strong>aⁿ</strong>, le produit de <strong>n</strong> facteurs tous égaux à <strong>a</strong>."
-                    </p>
+                <div id="cours-puissances-5eme" class="anim-slide-up" style="color: var(--text); max-width: 800px; margin: auto;">
                     
-                    <div style="text-align: center; margin: 25px 0;">
-                        <div style="font-size: 2rem; font-family: 'Times New Roman', serif; letter-spacing: 3px; color: white;">
-                            a<sup style="color:var(--gold)">n</sup> = <span style="font-size: 1.2rem;">a × a × ... × a</span>
-                        </div>
-                        <p style="font-size: 0.7rem; color: #64748b; margin-top: 10px;">(Il y a exactement n facteurs égaux à a)</p>
-                    </div>
-                </section>
-
-                <section class="glass-card" style="max-width: none; text-align: left; border-left: 4px solid var(--accent); background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px;">
-                    <h3 style="color: var(--accent); font-size: 1rem; margin-top: 0; display: flex; align-items: center; gap: 10px;">
-                        <span style="background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">02</span> 
-                        PROPRIÉTÉS DE CALCUL
-                    </h3>
-                    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
-                            <span style="font-size: 0.85rem; color: #94a3b8;">Multiplication :</span>
-                            <code style="color: var(--gold); font-weight: bold; font-size: 1rem;">aⁿ × aᵖ = aⁿ⁺ᵖ</code>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
-                            <span style="font-size: 0.85rem; color: #94a3b8;">Puissance de puissance :</span>
-                            <code style="color: var(--gold); font-weight: bold; font-size: 1rem;">(aⁿ)ᵖ = aⁿˣᵖ</code>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
-                            <span style="font-size: 0.85rem; color: #94a3b8;">Division (a ≠ 0) :</span>
-                            <code style="color: var(--gold); font-weight: bold; font-size: 1rem;">aⁿ / aᵖ = aⁿ⁻ᵖ</code>
-                        </div>
-                    </div>
-                </section>
-
-                <div style="margin-top: 25px; padding: 18px; background: rgba(239, 68, 68, 0.08); border-radius: 15px; border: 1px solid rgba(239, 68, 68, 0.2); position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -10px; right: -10px; font-size: 3rem; opacity: 0.1; color: white;">⚠</div>
-                    <h4 style="color: #f87171; margin: 0 0 10px 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">💡 RÈGLE DES SIGNES</h4>
-                    <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0; line-height: 1.5;">
-                        Si la base est <strong>négative</strong> :<br>
-                        • Résultat <strong>POSITIF</strong> si l'exposant est <span style="color: #4ade80;">pair</span> (2, 4, 6...).<br>
-                        • Résultat <strong>NÉGATIF</strong> si l'exposant est <span style="color: #f87171;">impair</span> (3, 5, 7...).
-                    </p>
-                </div>
-
-                <div style="text-align: center; margin-top: 40px; padding-bottom: 50px;">
-                    <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="width: auto; min-width: 280px; box-shadow: 0 10px 20px rgba(46, 204, 113, 0.2);">
-                        <span>COMMENCER LES EXERCICES</span>
+                    <button onclick="ouvrirChapitre('${id}')" style="background: rgba(255,255,255,0.05); border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 50px; cursor: pointer; margin-bottom: 25px; font-size: 0.7rem; transition: 0.3s;">
+                        ← RETOUR AU MENU DU CHAPITRE
                     </button>
+
+                    <div style="text-align: center; margin-bottom: 40px;">
+                        <h2 class="glow-text" style="font-size: 1.8rem; letter-spacing: 4px; margin-bottom: 5px;">PUISSANCES</h2>
+                        <p style="color: #64748b; font-size: 0.7rem; text-transform: uppercase;">Chapitre 01 • Mathématiques 5ème</p>
+                        <div style="width: 40px; height: 2px; background: var(--gold); margin: 15px auto;"></div>
+                    </div>
+
+                    <section class="glass-card" style="max-width: none; text-align: left; margin-bottom: 25px; border-left: 4px solid var(--gold); background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px;">
+                        <h3 style="color: var(--gold); font-size: 1rem; margin-top: 0; display: flex; align-items: center; gap: 10px;">
+                            <span style="background: var(--gold); color: black; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">01</span> 
+                            DÉFINITION OFFICIELLE
+                        </h3>
+                        <p style="font-style: italic; color: #cbd5e1; font-size: 0.9rem; line-height: 1.6; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                            "Soit <strong>a</strong> un nombre décimal et <strong>n</strong> un entier naturel (n ≥ 2).<br>
+                            On appelle puissance n-ième de <strong>a</strong>, notée <strong>aⁿ</strong>, le produit de <strong>n</strong> facteurs tous égaux à <strong>a</strong>."
+                        </p>
+                        
+                        <div style="text-align: center; margin: 25px 0;">
+                            <div style="font-size: 2rem; font-family: 'Times New Roman', serif; letter-spacing: 3px; color: white;">
+                                a<sup style="color:var(--gold)">n</sup> = <span style="font-size: 1.2rem;">a × a × ... × a</span>
+                            </div>
+                            <p style="font-size: 0.7rem; color: #64748b; margin-top: 10px;">(Il y a exactement n facteurs égaux à a)</p>
+                        </div>
+                    </section>
+
+                    <section class="glass-card" style="max-width: none; text-align: left; border-left: 4px solid var(--accent); background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px;">
+                        <h3 style="color: var(--accent); font-size: 1rem; margin-top: 0; display: flex; align-items: center; gap: 10px;">
+                            <span style="background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">02</span> 
+                            PROPRIÉTÉS DE CALCUL
+                        </h3>
+                        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                                <span style="font-size: 0.85rem; color: #94a3b8;">Multiplication :</span>
+                                <code style="color: var(--gold); font-weight: bold; font-size: 1rem;">aⁿ × aᵖ = aⁿ⁺ᵖ</code>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                                <span style="font-size: 0.85rem; color: #94a3b8;">Puissance de puissance :</span>
+                                <code style="color: var(--gold); font-weight: bold; font-size: 1rem;">(aⁿ)ᵖ = aⁿˣᵖ</code>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                                <span style="font-size: 0.85rem; color: #94a3b8;">Division (a ≠ 0) :</span>
+                                <code style="color: var(--gold); font-weight: bold; font-size: 1rem;">aⁿ / aᵖ = aⁿ⁻ᵖ</code>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div style="margin-top: 25px; padding: 18px; background: rgba(239, 68, 68, 0.08); border-radius: 15px; border: 1px solid rgba(239, 68, 68, 0.2); position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: -10px; right: -10px; font-size: 3rem; opacity: 0.1; color: white;">⚠</div>
+                        <h4 style="color: #f87171; margin: 0 0 10px 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">💡 RÈGLE DES SIGNES</h4>
+                        <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0; line-height: 1.5;">
+                            Si la base est <strong>négative</strong> :<br>
+                            • Résultat <strong>POSITIF</strong> si l'exposant est <span style="color: #4ade80;">pair</span> (2, 4, 6...).<br>
+                            • Résultat <strong>NÉGATIF</strong> si l'exposant est <span style="color: #f87171;">impair</span> (3, 5, 7...).
+                        </p>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 40px;">
+                        <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="width: auto; min-width: 280px; box-shadow: 0 10px 20px rgba(46, 204, 113, 0.2);">
+                            <span>COMMENCER LES EXERCICES</span>
+                        </button>
+                    </div>
+
+                    <div style="height: 150px; width: 100%;"></div>
+
                 </div>
             </div>
         `;
     } else {
-        // Fallback pour les chapitres non encore écrits (Fractions, Décimaux, etc.)
         corps.innerHTML = `
             <div style="text-align:center; padding: 100px 20px;">
                 <div style="font-size: 3rem; margin-bottom: 20px;">🚧</div>
                 <h3 style="color:#64748b; font-weight: 300;">Le chapitre <span style="color:var(--gold)">"${id}"</span> est en cours de rédaction.</h3>
-                <p style="color:#475569; font-size: 0.9rem; margin-bottom: 30px;">Revenez très bientôt pour découvrir la leçon !</p>
+                <p style="color:#475569; font-size: 0.9rem; margin-bottom: 30px;">Revenez très bientôt !</p>
                 <button onclick="ouvrirChapitre('${id}')" class="btn-modern-2026" style="padding: 10px 30px;">RETOUR</button>
             </div>
         `;
