@@ -3017,7 +3017,31 @@ function ouvrirChapitre(id) {
     }
 }
 
-/** CHARGE LE CONTENU DE LA LEÇON DANS L'OVERLAY */
+
+// =========================================================
+//  LOGIQUE DE SUPPRESSION (VERSION BLINDÉE)
+// =========================================================
+window.modeSuppression = false; // On attache à window pour la visibilité globale
+
+window.activerSuppression = function() {
+    window.modeSuppression = !window.modeSuppression;
+    const btn = document.getElementById('btn-poubelle');
+    
+    console.log("Mode suppression :", window.modeSuppression); // Debug console
+
+    if (btn) {
+        if (window.modeSuppression) {
+            btn.style.setProperty('background', '#b91c1c', 'important');
+            btn.style.color = "white";
+        } else {
+            btn.style.background = ""; 
+            btn.style.color = "";
+        }
+    } else {
+        console.error("ERREUR : Le bouton avec l'ID 'btn-poubelle' est introuvable.");
+    }
+};
+/** CHARGE LE CONTENU DE LA LEÇON - VERSION OPTIMISÉE SANS BOUTON BLOQUANT */
 function chargerLecon(id) {
     const corps = document.getElementById("overlay-body");
     if (!corps) return;
@@ -3086,18 +3110,18 @@ function chargerLecon(id) {
                         <h4 style="color: #f87171; margin: 0 0 10px 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">💡 RÈGLE DES SIGNES</h4>
                         <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0; line-height: 1.5;">
                             Si la base est <strong>négative</strong> :<br>
-                            • Résultat <strong>POSITIF</strong> si l'exposant est <span style="color: #4ade80;">pair</span> (2, 4, 6...).<br>
-                            • Résultat <strong>NÉGATIF</strong> si l'exposant est <span style="color: #f87171;">impair</span> (3, 5, 7...).
+                            • Résultat <strong>POSITIF</strong> si l'exposant est <span style="color: #4ade80;">pair</span>.<br>
+                            • Résultat <strong>NÉGATIF</strong> si l'exposant est <span style="color: #f87171;">impair</span>.
                         </p>
                     </div>
 
-                    <div style="text-align: center; margin-top: 40px;">
-                        <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="width: auto; min-width: 280px; box-shadow: 0 10px 20px rgba(46, 204, 113, 0.2);">
-                            <span>COMMENCER LES EXERCICES</span>
+                    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
+                        <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="width: 100%; max-width: 350px; box-shadow: 0 10px 20px rgba(46, 204, 113, 0.2);">
+                            <span>FAIRE LES EXERCICES</span>
                         </button>
                     </div>
 
-                    <div style="height: 150px; width: 100%;"></div>
+                    <div style="height: 60px;"></div>
 
                 </div>
             </div>
@@ -3107,36 +3131,11 @@ function chargerLecon(id) {
             <div style="text-align:center; padding: 100px 20px;">
                 <div style="font-size: 3rem; margin-bottom: 20px;">🚧</div>
                 <h3 style="color:#64748b; font-weight: 300;">Le chapitre <span style="color:var(--gold)">"${id}"</span> est en cours de rédaction.</h3>
-                <p style="color:#475569; font-size: 0.9rem; margin-bottom: 30px;">Revenez très bientôt !</p>
-                <button onclick="ouvrirChapitre('${id}')" class="btn-modern-2026" style="padding: 10px 30px;">RETOUR</button>
+                <button onclick="ouvrirChapitre('${id}')" class="btn-modern-2026" style="margin-top:20px; padding: 10px 30px;">RETOUR</button>
             </div>
         `;
     }
 }
-// =========================================================
-//  LOGIQUE DE SUPPRESSION (VERSION BLINDÉE)
-// =========================================================
-window.modeSuppression = false; // On attache à window pour la visibilité globale
-
-window.activerSuppression = function() {
-    window.modeSuppression = !window.modeSuppression;
-    const btn = document.getElementById('btn-poubelle');
-    
-    console.log("Mode suppression :", window.modeSuppression); // Debug console
-
-    if (btn) {
-        if (window.modeSuppression) {
-            btn.style.setProperty('background', '#b91c1c', 'important');
-            btn.style.color = "white";
-        } else {
-            btn.style.background = ""; 
-            btn.style.color = "";
-        }
-    } else {
-        console.error("ERREUR : Le bouton avec l'ID 'btn-poubelle' est introuvable.");
-    }
-};
-
 window.gererClicSuppression = function(x, y) {
     // Tolérance de clic augmentée à 20 pixels pour plus de facilité
     const indexPoint = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 20);
