@@ -3005,6 +3005,59 @@ function fermerTestPositionnement() {
         console.log("🚫 Test annulé par l'élève.");
     }
 }
+
+function chargerLecon(id) {
+    const corps = document.getElementById("overlay-body");
+    
+    // On vérifie si c'est le chapitre des puissances (l'ID doit correspondre à votre objet programmeMaths)
+    if (id === 'PUISSANCES' || id === 'C4') { // Ajustez l'ID selon votre nomenclature
+        corps.innerHTML = `
+            <div id="cours-puissances-5eme" class="anim-slide-up" style="padding: 20px; color: var(--text); max-width: 800px; margin: auto;">
+                
+                <button onclick="ouvrirChapitre('${id}')" style="background:none; border:1px solid var(--gold); color:var(--gold); padding:5px 15px; border-radius:50px; cursor:pointer; margin-bottom:20px;">← RETOUR AU HUB</button>
+
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h2 class="glow-text" style="font-size: 1.8rem; letter-spacing: 3px;">PUISSANCES DANS 🆔</h2>
+                    <div style="width: 50px; height: 2px; background: var(--gold); margin: 10px auto;"></div>
+                </div>
+
+                <section class="glass-card" style="max-width:none; text-align:left; margin-bottom:20px; border-left:4px solid var(--gold); background:rgba(255,255,255,0.02);">
+                    <h3 style="color: var(--gold); font-size:1.1rem;">01. DÉFINITION</h3>
+                    <p style="font-style: italic; color: #cbd5e1; font-size:0.9rem; background:rgba(0,0,0,0.2); padding:15px; border-radius:10px;">
+                        "Soit <strong>a</strong> un nombre décimal et <strong>n</strong> un entier naturel supérieur ou égal à 2. 
+                        On appelle puissance n-ième de <strong>a</strong>, notée <strong>aⁿ</strong>, le produit de <strong>n</strong> facteurs tous égaux à <strong>a</strong>."
+                    </p>
+                    <div style="text-align: center; font-size: 1.5rem; margin: 15px 0; font-family:serif;">
+                        aⁿ = a × a × ... × a
+                    </div>
+                </section>
+
+                <section class="glass-card" style="max-width:none; text-align:left; border-left:4px solid var(--accent); background:rgba(255,255,255,0.02);">
+                    <h3 style="color: var(--accent); font-size:1.1rem;">02. PROPRIÉTÉS</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px; font-size:0.85rem;">
+                        <div style="display:flex; justify-content:space-between; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px;">
+                            <span>Produit :</span> <strong style="color:var(--gold);">aⁿ × aᵖ = aⁿ⁺ᵖ</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px;">
+                            <span>Puissance de puissance :</span> <strong style="color:var(--gold);">(aⁿ)ᵖ = aⁿˣᵖ</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px;">
+                            <span>Quotient (a≠0) :</span> <strong style="color:var(--gold);">aⁿ / aᵖ = aⁿ⁻ᵖ</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn-modern-2026" onclick="chargerExos('${id}')">
+                        <span>S'ENTRAÎNER MAINTENANT</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    } else {
+        corps.innerHTML = `<h2 style="text-align:center; margin-top:50px;">Cours en cours de rédaction...</h2>`;
+    }
+}
 // =========================================================
 //  LOGIQUE DE SUPPRESSION (VERSION BLINDÉE)
 // =========================================================
