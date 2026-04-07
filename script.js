@@ -1859,79 +1859,6 @@ function rafraichirListeParFiltre() {
     }
 }
 
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-/** Ouvre le sommaire (Appelé par les 3 traits du header) */
-function openMenu() {
-    document.getElementById("side-menu").style.width = "280px";
-}
-
-/** Ferme le sommaire */
-function closeMenu() {
-    document.getElementById("side-menu").style.width = "0";
-}
-
-/** Ferme l'overlay de travail pour revenir au menu principal */
-function closeWorkOverlay() {
-    const overlay = document.getElementById("work-overlay");
-    if (overlay) {
-        overlay.style.display = "none";
-        // On vide le contenu pour libérer de la mémoire
-        document.getElementById("overlay-body").innerHTML = "";
-    }
-}
-// ==========================================
-// PROGRAMME MATHÉMATIQUES (C11 à C14)
-// ==========================================
-
-const programmeMaths = [
-    { id: "1", titre: "Puissance" },
-    { id: "2", titre: "Fractions" },
-    { id: "3", titre: "Nombres décimaux & Opérations" },
-    { id: "4", titre: "Calcul littéral & Équations" }
-];
-
-/** GÉNÈRE LE SOMMAIRE DANS LE MENU GAUCHE */
-function chargerSommaire() {
-    const listeUl = document.getElementById("chapters-list");
-    if (!listeUl) return;
-
-    listeUl.innerHTML = ""; // Nettoyage de sécurité
-
-    programmeMaths.forEach(chap => {
-        const li = document.createElement("li");
-        
-        // Style du bouton de chapitre (Harmonisé 2026)
-        li.style.padding = "15px";
-        li.style.margin = "8px 0";
-        li.style.background = "rgba(255,255,255,0.05)";
-        li.style.borderRadius = "10px";
-        li.style.cursor = "pointer";
-        li.style.transition = "0.3s";
-        
-        // Contenu du bouton
-        li.innerHTML = `
-            <b style="color:#ffd700; margin-right:10px;">${chap.id}</b> 
-            <span style="color:white; text-transform:uppercase; font-size:0.85rem;">${chap.titre}</span>
-        `;
-
-        // --- LIAISON DIRECTE AU CLIC ---
-        li.onclick = () => ouvrirChapitre(chap.id);
-
-        // Effet de survol
-        li.onmouseenter = () => li.style.background = "rgba(255,215,0,0.15)";
-        li.onmouseleave = () => li.style.background = "rgba(255,255,255,0.05)";
-
-        listeUl.appendChild(li);
-    });
-}
-
-
-
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
 
 
@@ -2917,6 +2844,10 @@ function fermerEspaceParent() {
 //  ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 //   ESPACE PARENTS°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
+
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 function ouvrirTestPositionnement() {
     const modal = document.getElementById('page-test-positionnement');
     modal.style.display = 'block';
@@ -3018,29 +2949,74 @@ function ouvrirChapitre(id) {
 }
 
 
-// =========================================================
-//  LOGIQUE DE SUPPRESSION (VERSION BLINDÉE)
-// =========================================================
-window.modeSuppression = false; // On attache à window pour la visibilité globale
 
-window.activerSuppression = function() {
-    window.modeSuppression = !window.modeSuppression;
-    const btn = document.getElementById('btn-poubelle');
-    
-    console.log("Mode suppression :", window.modeSuppression); // Debug console
 
-    if (btn) {
-        if (window.modeSuppression) {
-            btn.style.setProperty('background', '#b91c1c', 'important');
-            btn.style.color = "white";
-        } else {
-            btn.style.background = ""; 
-            btn.style.color = "";
-        }
-    } else {
-        console.error("ERREUR : Le bouton avec l'ID 'btn-poubelle' est introuvable.");
+/** Ouvre le sommaire (Appelé par les 3 traits du header) */
+function openMenu() {
+    document.getElementById("side-menu").style.width = "280px";
+}
+
+/** Ferme le sommaire */
+function closeMenu() {
+    document.getElementById("side-menu").style.width = "0";
+}
+
+/** Ferme l'overlay de travail pour revenir au menu principal */
+function closeWorkOverlay() {
+    const overlay = document.getElementById("work-overlay");
+    if (overlay) {
+        overlay.style.display = "none";
+        // On vide le contenu pour libérer de la mémoire
+        document.getElementById("overlay-body").innerHTML = "";
     }
-};
+}
+// ==========================================
+// PROGRAMME MATHÉMATIQUES (C11 à C14)
+// ==========================================
+
+const programmeMaths = [
+    { id: "1", titre: "Puissance" },
+    { id: "2", titre: "Fractions" },
+    { id: "3", titre: "Nombres décimaux & Opérations" },
+    { id: "4", titre: "Calcul littéral & Équations" }
+];
+
+/** GÉNÈRE LE SOMMAIRE DANS LE MENU GAUCHE */
+function chargerSommaire() {
+    const listeUl = document.getElementById("chapters-list");
+    if (!listeUl) return;
+
+    listeUl.innerHTML = ""; // Nettoyage de sécurité
+
+    programmeMaths.forEach(chap => {
+        const li = document.createElement("li");
+        
+        // Style du bouton de chapitre (Harmonisé 2026)
+        li.style.padding = "15px";
+        li.style.margin = "8px 0";
+        li.style.background = "rgba(255,255,255,0.05)";
+        li.style.borderRadius = "10px";
+        li.style.cursor = "pointer";
+        li.style.transition = "0.3s";
+        
+        // Contenu du bouton
+        li.innerHTML = `
+            <b style="color:#ffd700; margin-right:10px;">${chap.id}</b> 
+            <span style="color:white; text-transform:uppercase; font-size:0.85rem;">${chap.titre}</span>
+        `;
+
+        // --- LIAISON DIRECTE AU CLIC ---
+        li.onclick = () => ouvrirChapitre(chap.id);
+
+        // Effet de survol
+        li.onmouseenter = () => li.style.background = "rgba(255,215,0,0.15)";
+        li.onmouseleave = () => li.style.background = "rgba(255,255,255,0.05)";
+
+        listeUl.appendChild(li);
+    });
+}
+
+
 /** CHARGE LE CONTENU DE LA LEÇON - VERSION OPTIMISÉE SANS BOUTON BLOQUANT */
 function chargerLecon(id) {
     const corps = document.getElementById("overlay-body");
@@ -3136,6 +3112,39 @@ function chargerLecon(id) {
         `;
     }
 }
+
+
+
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+// MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
+
+
+// =========================================================
+//  LOGIQUE DE SUPPRESSION (VERSION BLINDÉE)
+// =========================================================
+window.modeSuppression = false; // On attache à window pour la visibilité globale
+
+window.activerSuppression = function() {
+    window.modeSuppression = !window.modeSuppression;
+    const btn = document.getElementById('btn-poubelle');
+    
+    console.log("Mode suppression :", window.modeSuppression); // Debug console
+
+    if (btn) {
+        if (window.modeSuppression) {
+            btn.style.setProperty('background', '#b91c1c', 'important');
+            btn.style.color = "white";
+        } else {
+            btn.style.background = ""; 
+            btn.style.color = "";
+        }
+    } else {
+        console.error("ERREUR : Le bouton avec l'ID 'btn-poubelle' est introuvable.");
+    }
+};
+
 window.gererClicSuppression = function(x, y) {
     // Tolérance de clic augmentée à 20 pixels pour plus de facilité
     const indexPoint = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 20);
