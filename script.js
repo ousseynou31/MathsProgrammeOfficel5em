@@ -1886,10 +1886,10 @@ function closeWorkOverlay() {
 // ==========================================
 
 const programmeMaths = [
-    { id: "C11", titre: "Puissance" },
-    { id: "C12", titre: "Fractions" },
-    { id: "C13", titre: "Nombres décimaux & Opérations" },
-    { id: "C14", titre: "Calcul littéral & Équations" }
+    { id: "1", titre: "Puissance" },
+    { id: "2", titre: "Fractions" },
+    { id: "3", titre: "Nombres décimaux & Opérations" },
+    { id: "4", titre: "Calcul littéral & Équations" }
 ];
 
 /** GÉNÈRE LE SOMMAIRE DANS LE MENU GAUCHE */
@@ -1927,33 +1927,7 @@ function chargerSommaire() {
     });
 }
 
-/** OUVRE UN CHAPITRE DANS L'OVERLAY */
-function ouvrirChapitre(id) {
-    const chapitre = programmeMaths.find(c => c.id === id);
-    if (!chapitre) return;
 
-    closeMenu(); // On ferme le sommaire
-
-    const overlay = document.getElementById("work-overlay");
-    const corps = document.getElementById("overlay-body");
-
-    if (overlay && corps) {
-        overlay.style.display = "flex";
-        
-        // Structure interne de l'overlay (Liaison vers Leçon et Exos)
-        corps.innerHTML = `
-            <div style="text-align:center; padding-top:40px;">
-                <h1 style="color:#ffd700; font-size:1.8rem;">${chapitre.id}</h1>
-                <h2 style="color:white; margin-bottom:40px;">${chapitre.titre}</h2>
-                
-                <div style="display:flex; flex-direction:column; gap:20px; max-width:400px; margin: 0 auto;">
-                    <button class="btn-modern-2026" onclick="chargerLecon('${id}')" style="padding:20px; font-weight:bold;">📖 ACCÉDER AU COURS</button>
-                    <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="padding:20px; font-weight:bold; background:#2ecc71; color:white;">📝 FAIRE LES EXERCICES</button>
-                </div>
-            </div>
-        `;
-    }
-}
 
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -3005,79 +2979,131 @@ function fermerTestPositionnement() {
         console.log("🚫 Test annulé par l'élève.");
     }
 }
+/** OUVRE UN CHAPITRE DANS L'OVERLAY */
+function ouvrirChapitre(id) {
+    // DEBUG : Supprimez cette ligne après test
+    console.log("Tentative d'ouverture du chapitre ID :", id);
 
+    const chapitre = programmeMaths.find(c => String(c.id) === String(id));
+    if (!chapitre) {
+        console.error("Chapitre introuvable pour l'ID:", id);
+        return;
+    }
+
+    if(typeof closeMenu === "function") closeMenu(); 
+
+    const overlay = document.getElementById("work-overlay");
+    const corps = document.getElementById("overlay-body");
+
+    if (overlay && corps) {
+        overlay.style.display = "flex";
+        
+        corps.innerHTML = `
+            <div style="text-align:center; padding-top:40px;" class="anim-slide-up">
+                <h1 style="color:#ffd700; font-size:1.5rem; margin:0;">Chapitre ${chapitre.id}</h1>
+                <h2 style="color:white; margin-bottom:40px; font-size:1.8rem;">${chapitre.titre}</h2>
+                
+                <div style="display:flex; flex-direction:column; gap:20px; max-width:400px; margin: 0 auto;">
+                    <button class="btn-modern-2026" onclick="chargerLecon('${chapitre.id}')" style="padding:20px; font-weight:bold;">
+                        📖 ACCÉDER AU COURS
+                    </button>
+                    <button class="btn-modern-2026" onclick="chargerExos('${chapitre.id}')" style="padding:20px; font-weight:bold; background:#2ecc71; color:white;">
+                        📝 FAIRE LES EXERCICES
+                    </button>
+                </div>
+                <button onclick="document.getElementById('work-overlay').style.display='none'" style="margin-top:30px; background:none; border:none; color:#64748b; cursor:pointer;"> Fermer </button>
+            </div>
+        `;
+    }
+}
+
+/** CHARGE LE CONTENU DE LA LEÇON DANS L'OVERLAY */
 function chargerLecon(id) {
     const corps = document.getElementById("overlay-body");
     if (!corps) return;
 
-    // On définit le contenu pour le chapitre PUISSANCES (ID: C4 ou selon votre nomenclature)
-    if (id === 'PUISSANCES' || id === 'C4') { 
+    // Harmonisation de l'ID pour accepter "1", 1 ou "PUISSANCES"
+    const currentId = String(id).toUpperCase();
+
+    // LOGIQUE DE CHARGEMENT : Chapitre 1 = Puissances
+    if (currentId === '1' || currentId === 'PUISSANCES' || currentId === 'C4') { 
         corps.innerHTML = `
             <div id="cours-puissances-5eme" class="anim-slide-up" style="padding: 20px; color: var(--text); max-width: 800px; margin: auto; overflow-y: auto; height: 100%;">
                 
-                <button onclick="ouvrirChapitre('${id}')" style="background: rgba(255,255,255,0.05); border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 50px; cursor: pointer; margin-bottom: 25px; font-size: 0.7rem;">
+                <button onclick="ouvrirChapitre('${id}')" style="background: rgba(255,255,255,0.05); border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 50px; cursor: pointer; margin-bottom: 25px; font-size: 0.7rem; transition: 0.3s;">
                     ← RETOUR AU MENU DU CHAPITRE
                 </button>
 
                 <div style="text-align: center; margin-bottom: 40px;">
-                    <h2 class="glow-text" style="font-size: 1.8rem; letter-spacing: 4px; margin-bottom: 5px;">PUISSANCES DANS 🆔</h2>
-                    <p style="color: #64748b; font-size: 0.7rem; text-transform: uppercase;">Rappels du Programme de 5ème</p>
+                    <h2 class="glow-text" style="font-size: 1.8rem; letter-spacing: 4px; margin-bottom: 5px;">PUISSANCES</h2>
+                    <p style="color: #64748b; font-size: 0.7rem; text-transform: uppercase;">Chapitre 01 • Mathématiques 5ème</p>
                     <div style="width: 40px; height: 2px; background: var(--gold); margin: 15px auto;"></div>
                 </div>
 
-                <section class="glass-card" style="max-width: none; text-align: left; margin-bottom: 25px; border-left: 4px solid var(--gold); background: rgba(0,0,0,0.2);">
-                    <h3 style="color: var(--gold); font-size: 1rem; margin-top: 0;">1. DÉFINITION OFFICIELLE</h3>
-                    <p style="font-style: italic; color: #cbd5e1; font-size: 0.85rem; line-height: 1.5; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                        "Soit <strong>a</strong> un nombre décimal et <strong>n</strong> un entier naturel supérieur ou égal à 2. <br>
+                <section class="glass-card" style="max-width: none; text-align: left; margin-bottom: 25px; border-left: 4px solid var(--gold); background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px;">
+                    <h3 style="color: var(--gold); font-size: 1rem; margin-top: 0; display: flex; align-items: center; gap: 10px;">
+                        <span style="background: var(--gold); color: black; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">01</span> 
+                        DÉFINITION OFFICIELLE
+                    </h3>
+                    <p style="font-style: italic; color: #cbd5e1; font-size: 0.9rem; line-height: 1.6; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                        "Soit <strong>a</strong> un nombre décimal et <strong>n</strong> un entier naturel (n ≥ 2).<br>
                         On appelle puissance n-ième de <strong>a</strong>, notée <strong>aⁿ</strong>, le produit de <strong>n</strong> facteurs tous égaux à <strong>a</strong>."
                     </p>
                     
-                    <div style="text-align: center; margin: 20px 0;">
-                        <div style="font-size: 1.8rem; font-family: serif; letter-spacing: 2px;">
-                            a<sup style="color:var(--gold)">n</sup> = a × a × ... × a
+                    <div style="text-align: center; margin: 25px 0;">
+                        <div style="font-size: 2rem; font-family: 'Times New Roman', serif; letter-spacing: 3px; color: white;">
+                            a<sup style="color:var(--gold)">n</sup> = <span style="font-size: 1.2rem;">a × a × ... × a</span>
                         </div>
-                        <p style="font-size: 0.65rem; color: #475569;">(Il y a n facteurs égaux à a)</p>
+                        <p style="font-size: 0.7rem; color: #64748b; margin-top: 10px;">(Il y a exactement n facteurs égaux à a)</p>
                     </div>
                 </section>
 
-                <section class="glass-card" style="max-width: none; text-align: left; border-left: 4px solid var(--accent); background: rgba(0,0,0,0.2);">
-                    <h3 style="color: var(--accent); font-size: 1rem; margin-top: 0;">2. PROPRIÉTÉS DE CALCUL</h3>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; font-size: 0.85rem;">
-                            <span>Produit :</span>
-                            <code style="color: var(--gold);">aⁿ × aᵖ = aⁿ⁺ᵖ</code>
+                <section class="glass-card" style="max-width: none; text-align: left; border-left: 4px solid var(--accent); background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px;">
+                    <h3 style="color: var(--accent); font-size: 1rem; margin-top: 0; display: flex; align-items: center; gap: 10px;">
+                        <span style="background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">02</span> 
+                        PROPRIÉTÉS DE CALCUL
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-size: 0.85rem; color: #94a3b8;">Multiplication :</span>
+                            <code style="color: var(--gold); font-weight: bold; font-size: 1rem;">aⁿ × aᵖ = aⁿ⁺ᵖ</code>
                         </div>
-                        <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; font-size: 0.85rem;">
-                            <span>Puissance de puissance :</span>
-                            <code style="color: var(--gold);">(aⁿ)ᵖ = aⁿˣᵖ</code>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-size: 0.85rem; color: #94a3b8;">Puissance de puissance :</span>
+                            <code style="color: var(--gold); font-weight: bold; font-size: 1rem;">(aⁿ)ᵖ = aⁿˣᵖ</code>
                         </div>
-                        <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; font-size: 0.85rem;">
-                            <span>Quotient (a ≠ 0) :</span>
-                            <code style="color: var(--gold);">aⁿ / aᵖ = aⁿ⁻ᵖ</code>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-size: 0.85rem; color: #94a3b8;">Division (a ≠ 0) :</span>
+                            <code style="color: var(--gold); font-weight: bold; font-size: 1rem;">aⁿ / aᵖ = aⁿ⁻ᵖ</code>
                         </div>
                     </div>
                 </section>
 
-                <div style="margin-top: 25px; padding: 15px; background: rgba(239, 68, 68, 0.05); border-radius: 15px; border: 1px solid rgba(239, 68, 68, 0.1);">
-                    <h4 style="color: var(--danger); margin: 0 0 10px 0; font-size: 0.8rem;">💡 RÈGLE DES SIGNES</h4>
-                    <p style="font-size: 0.75rem; color: #94a3b8; margin: 0;">
-                        Si la base est négative, la puissance est <strong>positive</strong> si l'exposant est <strong>pair</strong>, et <strong>négative</strong> s'il est <strong>impair</strong>.
+                <div style="margin-top: 25px; padding: 18px; background: rgba(239, 68, 68, 0.08); border-radius: 15px; border: 1px solid rgba(239, 68, 68, 0.2); position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -10px; right: -10px; font-size: 3rem; opacity: 0.1; color: white;">⚠</div>
+                    <h4 style="color: #f87171; margin: 0 0 10px 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">💡 RÈGLE DES SIGNES</h4>
+                    <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0; line-height: 1.5;">
+                        Si la base est <strong>négative</strong> :<br>
+                        • Résultat <strong>POSITIF</strong> si l'exposant est <span style="color: #4ade80;">pair</span> (2, 4, 6...).<br>
+                        • Résultat <strong>NÉGATIF</strong> si l'exposant est <span style="color: #f87171;">impair</span> (3, 5, 7...).
                     </p>
                 </div>
 
-                <div style="text-align: center; margin-top: 40px; padding-bottom: 40px;">
-                    <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="width: auto; min-width: 250px;">
-                        <span>S'ENTRAÎNER (EXERCICES)</span>
+                <div style="text-align: center; margin-top: 40px; padding-bottom: 50px;">
+                    <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="width: auto; min-width: 280px; box-shadow: 0 10px 20px rgba(46, 204, 113, 0.2);">
+                        <span>COMMENCER LES EXERCICES</span>
                     </button>
                 </div>
             </div>
         `;
     } else {
-        // Message par défaut pour les chapitres non encore intégrés
+        // Fallback pour les chapitres non encore écrits (Fractions, Décimaux, etc.)
         corps.innerHTML = `
-            <div style="text-align:center; padding-top:100px;">
-                <h3 style="color:#64748b;">Leçon en cours de préparation...</h3>
-                <button onclick="ouvrirChapitre('${id}')" class="btn-mini-2026">RETOUR</button>
+            <div style="text-align:center; padding: 100px 20px;">
+                <div style="font-size: 3rem; margin-bottom: 20px;">🚧</div>
+                <h3 style="color:#64748b; font-weight: 300;">Le chapitre <span style="color:var(--gold)">"${id}"</span> est en cours de rédaction.</h3>
+                <p style="color:#475569; font-size: 0.9rem; margin-bottom: 30px;">Revenez très bientôt pour découvrir la leçon !</p>
+                <button onclick="ouvrirChapitre('${id}')" class="btn-modern-2026" style="padding: 10px 30px;">RETOUR</button>
             </div>
         `;
     }
