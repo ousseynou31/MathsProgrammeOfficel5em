@@ -2970,7 +2970,7 @@ function closeWorkOverlay() {
     }
 }
 // ==========================================
-// PROGRAMME MATHÉMATIQUES (C11 à C14)
+// PROGRAMME MATHÉMATIQUES 
 // ==========================================
 const programme5eme = [
     // Partie Numérique
@@ -2991,40 +2991,57 @@ const programme5eme = [
 
 
 /** GÉNÈRE LE SOMMAIRE DANS LE MENU GAUCHE */
+/** GÉNÈRE LE SOMMAIRE DANS LE MENU GAUCHE */
 function chargerSommaire() {
     const listeUl = document.getElementById("chapters-list");
-    if (!listeUl) return;
+    if (!listeUl) {
+        console.error("Erreur : L'élément 'chapters-list' est introuvable dans le HTML.");
+        return;
+    }
 
-    listeUl.innerHTML = ""; // Nettoyage de sécurité
+    listeUl.innerHTML = ""; // Nettoyage
 
-    programmeMaths.forEach(chap => {
+    // CORRECTION ICI : On utilise bien 'programme5eme'
+    programme5eme.forEach(chap => {
         const li = document.createElement("li");
         
-        // Style du bouton de chapitre (Harmonisé 2026)
+        // Style du bouton
         li.style.padding = "15px";
         li.style.margin = "8px 0";
         li.style.background = "rgba(255,255,255,0.05)";
         li.style.borderRadius = "10px";
         li.style.cursor = "pointer";
         li.style.transition = "0.3s";
+        li.style.listStyle = "none"; // Enlève les puces par défaut
         
-        // Contenu du bouton
+        // Contenu du bouton avec l'icône en bonus
         li.innerHTML = `
+            <span style="margin-right:10px;">${chap.icone}</span>
             <b style="color:#ffd700; margin-right:10px;">${chap.id}</b> 
             <span style="color:white; text-transform:uppercase; font-size:0.85rem;">${chap.titre}</span>
         `;
 
-        // --- LIAISON DIRECTE AU CLIC ---
+        // Action au clic
         li.onclick = () => ouvrirChapitre(chap.id);
 
-        // Effet de survol
-        li.onmouseenter = () => li.style.background = "rgba(255,215,0,0.15)";
-        li.onmouseleave = () => li.style.background = "rgba(255,255,255,0.05)";
+        // Effets visuels
+        li.onmouseenter = () => {
+            li.style.background = "rgba(255,215,0,0.15)";
+            li.style.transform = "translateX(5px)";
+        };
+        li.onmouseleave = () => {
+            li.style.background = "rgba(255,255,255,0.05)";
+            li.style.transform = "translateX(0px)";
+        };
 
         listeUl.appendChild(li);
     });
-} 
+}
 
+// IMPORTANT : Appelez la fonction au chargement de la page
+window.onload = () => {
+    chargerSommaire();
+};
 /** CHARGE LE CONTENU DEPUIS FIREBASE + RENDU MATHS */
 async function chargerLecon(id) {
     const corps = document.getElementById("overlay-body");
