@@ -3023,7 +3023,7 @@ function chargerSommaire() {
 
         listeUl.appendChild(li);
     });
-}
+} 
 
 /** CHARGE LE CONTENU DEPUIS FIREBASE + RENDU MATHS */
 async function chargerLecon(id) {
