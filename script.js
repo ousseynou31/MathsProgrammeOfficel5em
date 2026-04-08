@@ -2911,15 +2911,19 @@ function fermerTestPositionnement() {
     }
 }
 /** OUVRE UN CHAPITRE DANS L'OVERLAY */
+/** OUVRE UN CHAPITRE DANS L'OVERLAY */
 function ouvrirChapitre(id) {
-    console.log("Ouverture du chapitre ID :", id);
+    console.log("Tentative d'ouverture du chapitre ID :", id);
 
-    const chapitre = programmeMaths.find(c => String(c.id) === String(id));
+    // CORRECTION : On pointe sur le bon tableau 'programme5eme'
+    const chapitre = programme5eme.find(c => String(c.id) === String(id));
+    
     if (!chapitre) {
-        console.error("Chapitre introuvable pour l'ID:", id);
+        console.error("Erreur : Le chapitre avec l'ID '" + id + "' n'existe pas dans programme5eme.");
         return;
     }
 
+    // Fermeture du menu mobile si la fonction existe
     if(typeof closeMenu === "function") closeMenu(); 
 
     const overlay = document.getElementById("work-overlay");
@@ -2928,23 +2932,29 @@ function ouvrirChapitre(id) {
     if (overlay && corps) {
         overlay.style.display = "flex";
         
+        // On injecte l'interface de choix (Cours ou Exercices)
         corps.innerHTML = `
             <div style="text-align:center; padding: 60px 20px;" class="anim-slide-up">
                 <h1 style="color:#ffd700; font-size:1.2rem; margin:0; letter-spacing: 2px;">CHAPITRE ${chapitre.id}</h1>
                 <h2 style="color:white; margin-bottom:50px; font-size:2rem; text-transform: uppercase;">${chapitre.titre}</h2>
                 
                 <div style="display:flex; flex-direction:column; gap:25px; max-width:400px; margin: 0 auto;">
-                    <button class="btn-modern-2026" onclick="chargerLecon('${chapitre.id}')" style="padding:22px; font-weight:bold; letter-spacing:1px;">
+                    <button class="btn-modern-2026" onclick="chargerLecon('${chapitre.id}')" style="padding:22px; font-weight:bold; letter-spacing:1px; cursor:pointer;">
                         📖 ACCÉDER AU COURS
                     </button>
                     
-                    <button class="btn-modern-2026" onclick="chargerExos('${chapitre.id}')" style="padding:22px; font-weight:bold; background:#2ecc71; color:white; border:none; letter-spacing:1px;">
+                    <button class="btn-modern-2026" onclick="chargerExos('${chapitre.id}')" style="padding:22px; font-weight:bold; background:#2ecc71; color:white; border:none; letter-spacing:1px; cursor:pointer;">
                         📝 FAIRE LES EXERCICES
                     </button>
                 </div>
 
-                </div>
+                <button onclick="document.getElementById('work-overlay').style.display='none'" style="margin-top:40px; background:none; border:none; color:#64748b; cursor:pointer; text-decoration:underline;">
+                    Quitter ce chapitre
+                </button>
+            </div>
         `;
+    } else {
+        console.error("Erreur : Les éléments 'work-overlay' ou 'overlay-body' sont absents du HTML.");
     }
 }
 
