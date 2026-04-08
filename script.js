@@ -2972,13 +2972,23 @@ function closeWorkOverlay() {
 // ==========================================
 // PROGRAMME MATHÉMATIQUES (C11 à C14)
 // ==========================================
-
-const programmeMaths = [
-    { id: "1", titre: "Puissance" },
-    { id: "2", titre: "Fractions" },
-    { id: "3", titre: "Nombres décimaux & Opérations" },
-    { id: "4", titre: "Calcul littéral & Équations" }
+const programme5eme = [
+    // Partie Numérique
+    { id: 'N1', titre: 'Puissances', domaine: 'Numérique', icone: '🔢' },
+    { id: 'N2', titre: 'Multiples & Diviseurs', domaine: 'Numérique', icone: '⚖️' },
+    { id: 'N3', titre: 'Fractions', domaine: 'Numérique', icone: '🍕' },
+    { id: 'N4', titre: 'Proportionnalité', domaine: 'Numérique', icone: '📈' },
+    { id: 'N5', titre: 'Nombres Relatifs', domaine: 'Numérique', icone: '➖' },
+    { id: 'N6', titre: 'Représentation Graphique', domaine: 'Numérique', icone: '📊' },
+    // Partie Géométrie
+    { id: 'G1', titre: 'Symétrie Centrale', domaine: 'Géométrie', icone: '🔄' },
+    { id: 'G2', titre: 'Angles', domaine: 'Géométrie', icone: '📐' },
+    { id: 'G3', titre: 'Parallélogrammes', domaine: 'Géométrie', icone: '🔷' },
+    { id: 'G4', titre: 'Triangles', domaine: 'Géométrie', icone: '🔺' },
+    { id: 'G5', titre: 'Autres Quadrilatères', domaine: 'Géométrie', icone: '⏹️' },
+    { id: 'G6', titre: 'Géométrie dans l\'Espace', domaine: 'Géométrie', icone: '📦' }
 ];
+
 
 /** GÉNÈRE LE SOMMAIRE DANS LE MENU GAUCHE */
 function chargerSommaire() {
