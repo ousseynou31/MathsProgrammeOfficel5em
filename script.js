@@ -3015,29 +3015,24 @@ function chargerSommaire() {
     });
 }
 
-
-/** CHARGE LE CONTENU DEPUIS FIREBASE (VERSION ULTRA-LÉGÈRE) */
+/** CHARGE LE CONTENU DEPUIS FIREBASE + RENDU MATHS */
 async function chargerLecon(id) {
     const corps = document.getElementById("overlay-body");
     if (!corps) return;
 
-    // 1. Écran de chargement stylé
     corps.innerHTML = `
         <div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--gold);">
             <div class="anim-pulse">⚡ CHARGEMENT DE LA LEÇON...</div>
         </div>`;
 
     try {
-        // 2. Récupération des données dans la branche 'chapitres'
         const snapshot = await database.ref('chapitres/' + id).once('value');
         const data = snapshot.val();
 
         if (data) {
-            // 3. Affichage du contenu dynamique
             corps.innerHTML = `
                 <div id="cours-scroll-container" style="height: 100%; overflow-y: auto; padding: 20px;">
                     <div class="anim-slide-up" style="color: var(--text); max-width: 800px; margin: auto;">
-                        
                         <button onclick="ouvrirChapitre('${id}')" style="background: rgba(255,255,255,0.05); border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 50px; cursor: pointer; margin-bottom: 25px; font-size: 0.7rem;">
                             ← RETOUR AU MENU
                         </button>
@@ -3048,40 +3043,43 @@ async function chargerLecon(id) {
                             <div style="width: 40px; height: 2px; background: var(--gold); margin: 15px auto;"></div>
                         </div>
 
-                        <div id="firebase-content">
-                            ${data.contenu_html}
-                        </div>
+                        <div id="firebase-content">${data.contenu_html}</div>
 
                         <div style="text-align: center; margin-top: 40px;">
                             <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="width: 100%; max-width: 350px;">
                                 <span>FAIRE LES EXERCICES</span>
                             </button>
                         </div>
-                        
                         <div style="height: 60px;"></div>
                     </div>
-                </div>
-            `;
+                </div>`;
+
+            // --- DÉCLENCHEMENT DU RENDU MATHÉMATIQUE ---
+            renderMathInElement(corps, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ],
+                throwOnError : false
+            });
+
         } else {
-            // Si le chapitre n'existe pas dans la base
             corps.innerHTML = `<div style="text-align:center; padding:100px;"><h3>🚧 Chapitre en rédaction...</h3></div>`;
         }
     } catch (error) {
         console.error("Erreur Firebase:", error);
-        corps.innerHTML = `<div style="text-align:center; padding:100px; color:red;">Erreur de connexion à la base de données.</div>`;
+        corps.innerHTML = `<div style="text-align:center; padding:100px; color:red;">Erreur de connexion.</div>`;
     }
 }
 
-/** CHARGE LES EXERCICES DEPUIS FIREBASE */
+/** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS */
 function chargerExos(id) {
     const corps = document.getElementById("overlay-body");
     if (!corps) return;
 
     corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">Chargement des exercices...</div>`;
 
-    // On va chercher les exercices spécifiques au chapitre dans Firebase
-    database.ref('exercices/' + id).once('value')
-    .then((snapshot) => {
+    database.ref('exercices/' + id).once('value').then((snapshot) => {
         const exercices = snapshot.val();
 
         if (exercices) {
@@ -3090,9 +3088,7 @@ function chargerExos(id) {
                     <button onclick="chargerLecon('${id}')" style="background:none; border:1px solid #64748b; color:#64748b; padding:5px 15px; border-radius:20px; cursor:pointer; margin-bottom:20px;">
                         ← REVOIR LE COURS
                     </button>
-                    
-                    <h2 style="color:var(--gold); margin-bottom:30px; text-align:center;">🎯 ENTRAÎNEMENT</h2>
-            `;
+                    <h2 style="color:var(--gold); margin-bottom:30px; text-align:center;">🎯 ENTRAÎNEMENT</h2>`;
 
             exercices.forEach((exo, index) => {
                 htmlExos += `
@@ -3100,7 +3096,6 @@ function chargerExos(id) {
                         <p style="color:white; font-size:1.1rem; margin-bottom:15px;">
                             <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${exo.enonce}
                         </p>
-                        
                         <div style="display:grid; gap:10px;">
                             ${exo.options.map((opt, i) => `
                                 <button class="btn-option" 
@@ -3111,18 +3106,26 @@ function chargerExos(id) {
                             `).join('')}
                         </div>
                         <div class="feedback" style="margin-top:15px; font-size:0.9rem; display:none; padding:10px; border-radius:8px;"></div>
-                    </div>
-                `;
+                    </div>`;
             });
 
             htmlExos += `</div>`;
             corps.innerHTML = htmlExos;
+
+            // --- DÉCLENCHEMENT DU RENDU MATHÉMATIQUE ---
+            renderMathInElement(corps, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ],
+                throwOnError : false
+            });
+
         } else {
-            corps.innerHTML = `<div style="padding:50px; text-align:center;">Aucun exercice disponible pour ce chapitre.</div>`;
+            corps.innerHTML = `<div style="padding:50px; text-align:center;">Aucun exercice disponible.</div>`;
         }
     });
 }
-
 /** FONCTION DE VÉRIFICATION (Logique universelle) */
 function verifierReponse(btn, indexCorrect, indexChoisi, aide) {
     const parent = btn.parentElement;
