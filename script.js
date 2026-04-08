@@ -3112,6 +3112,82 @@ function chargerLecon(id) {
     }
 }
 
+/** CHARGE LES EXERCICES DEPUIS FIREBASE */
+function chargerExos(id) {
+    const corps = document.getElementById("overlay-body");
+    if (!corps) return;
+
+    corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">Chargement des exercices...</div>`;
+
+    // On va chercher les exercices spécifiques au chapitre dans Firebase
+    database.ref('exercices/' + id).once('value')
+    .then((snapshot) => {
+        const exercices = snapshot.val();
+
+        if (exercices) {
+            let htmlExos = `
+                <div style="padding: 20px; max-width: 800px; margin: auto;" class="anim-slide-up">
+                    <button onclick="chargerLecon('${id}')" style="background:none; border:1px solid #64748b; color:#64748b; padding:5px 15px; border-radius:20px; cursor:pointer; margin-bottom:20px;">
+                        ← REVOIR LE COURS
+                    </button>
+                    
+                    <h2 style="color:var(--gold); margin-bottom:30px; text-align:center;">🎯 ENTRAÎNEMENT</h2>
+            `;
+
+            exercices.forEach((exo, index) => {
+                htmlExos += `
+                    <div class="glass-card" style="margin-bottom:25px; padding:20px; border-radius:15px; background:rgba(255,255,255,0.03);">
+                        <p style="color:white; font-size:1.1rem; margin-bottom:15px;">
+                            <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${exo.enonce}
+                        </p>
+                        
+                        <div style="display:grid; gap:10px;">
+                            ${exo.options.map((opt, i) => `
+                                <button class="btn-option" 
+                                        onclick="verifierReponse(this, ${exo.correct}, ${i}, '${exo.aide.replace(/'/g, "\\'")}')"
+                                        style="text-align:left; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:white; cursor:pointer; transition:0.3s;">
+                                    ${opt}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div class="feedback" style="margin-top:15px; font-size:0.9rem; display:none; padding:10px; border-radius:8px;"></div>
+                    </div>
+                `;
+            });
+
+            htmlExos += `</div>`;
+            corps.innerHTML = htmlExos;
+        } else {
+            corps.innerHTML = `<div style="padding:50px; text-align:center;">Aucun exercice disponible pour ce chapitre.</div>`;
+        }
+    });
+}
+
+/** FONCTION DE VÉRIFICATION (Logique universelle) */
+function verifierReponse(btn, indexCorrect, indexChoisi, aide) {
+    const parent = btn.parentElement;
+    const feedback = parent.nextElementSibling;
+    const tousLesBtns = parent.querySelectorAll('button');
+
+    // Désactiver les boutons après le choix
+    tousLesBtns.forEach(b => b.style.pointerEvents = "none");
+
+    feedback.style.display = "block";
+
+    if (indexChoisi === indexCorrect) {
+        btn.style.background = "#2ecc71"; // Vert
+        btn.style.borderColor = "#2ecc71";
+        feedback.innerHTML = "✅ **Bravo !** C'est la bonne réponse.";
+        feedback.style.color = "#2ecc71";
+    } else {
+        btn.style.background = "#e74c3c"; // Rouge
+        btn.style.borderColor = "#e74c3c";
+        feedback.innerHTML = `❌ **Oups...** La bonne réponse était la ${indexCorrect + 1}. <br><small style="color:#cbd5e1">${aide}</small>`;
+        feedback.style.color = "#e74c3c";
+        // Montrer la bonne réponse en vert
+        tousLesBtns[indexCorrect].style.border = "1px solid #2ecc71";
+    }
+}
 
 
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
