@@ -3266,46 +3266,79 @@ let examenEnCours = {
     questions: []
 };
 
-async function chargerDevoir(idChapitre) {
-    console.log("1. Tentative de chargement pour :", idChapitre);
-    const conteneur = document.getElementById('conteneurSommaire');
+function chargerDevoir(id) {
+    // 1. On cible le corps de la fenêtre (votre ID est 'conteneurSommaire')
+    const corps = document.getElementById("conteneurSommaire");
+    if (!corps) return;
 
-    try {
-        console.log("2. Recherche du fichier dans DEVOIRS/devoirs.json...");
-        
-const reponse = await fetch('./DEVOIRS/devoirs.json');
-        
-        if (!reponse.ok) {
-            console.error("ERREUR : Le fichier n'existe pas dans le dossier DEVOIRS.");
-            alert("Fichier JSON introuvable.");
-            return;
+    corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Préparation de l'évaluation...</div>`;
+
+    // 2. On se connecte à Firebase (Exactement comme pour vos exos)
+    // On va chercher dans le dossier 'DEVOIRS' de votre base Firebase
+    database.ref('DEVOIRS/' + id).once('value').then((snapshot) => {
+        const banqueQuestions = snapshot.val();
+
+        if (banqueQuestions) {
+            // 3. Tirage aléatoire de 20 questions (Logique universelle)
+            examenEnCours.id = id;
+            examenEnCours.questions = [...banqueQuestions]
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 20);
+
+            // 4. Construction de l'interface d'examen
+            let htmlDevoir = `
+                <div style="padding: 20px; max-width: 800px; margin: auto;">
+                    <h2 style="color:var(--gold); text-align:center; margin-bottom:10px;">ÉVALUATION : ${id}</h2>
+                    <p style="text-align:center; color:#64748b; margin-bottom:30px;">Durée : 45 minutes</p>
+            `;
+
+            examenEnCours.questions.forEach((q, index) => {
+                htmlDevoir += `
+                    <div class="glass-card" style="margin-bottom:25px; padding:20px; border-radius:15px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1);">
+                        <p style="color:white; font-size:1.1rem; margin-bottom:15px;">
+                            <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${q.enonce}
+                        </p>
+                        <div style="display:grid; gap:10px;">
+                            ${q.options.map((opt, i) => `
+                                <label style="display:flex; align-items:center; gap:10px; padding:12px; border-radius:8px; background:rgba(255,255,255,0.05); color:white; cursor:pointer; border:1px solid rgba(255,255,255,0.1);">
+                                    <input type="radio" name="q${index}" value="${i}" style="accent-color:var(--gold);">
+                                    ${opt}
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>`;
+            });
+
+            // Bouton de validation final
+            htmlDevoir += `
+                <button onclick="validerEvaluation()" style="width:100%; padding:20px; background:var(--gold); color:black; border:none; border-radius:12px; font-weight:bold; font-size:1.2rem; cursor:pointer; margin-top:20px; margin-bottom:50px;">
+                    TERMINER ET ENVOYER LES RÉSULTATS
+                </button>
+            </div>`;
+
+            corps.innerHTML = htmlDevoir;
+
+            // 5. Rendu Mathématique (KaTeX/MathJax)
+            if (typeof renderMathInElement === "function") {
+                renderMathInElement(corps, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError : false
+                });
+            }
+
+            // 6. Lancement du Chrono (Si votre fonction existe)
+            lancerChrono45Min();
+
+        } else {
+            corps.innerHTML = `<div style="padding:50px; text-align:center; color:white;">Aucun devoir n'est configuré pour le chapitre ${id} dans Firebase.</div>`;
         }
-
-        const data = await reponse.json();
-        console.log("3. Fichier JSON lu avec succès. Contenu :", data);
-
-        // On vérifie si la clé 'evaluation' contient bien vos questions
-        const banque = data.evaluation; 
-        console.log("4. Contenu de la clé 'evaluation' :", banque);
-
-        if (!banque || !Array.isArray(banque)) {
-            console.error("ERREUR : La clé 'evaluation' est vide ou n'est pas un tableau.");
-            alert("Erreur de structure dans le fichier JSON.");
-            return;
-        }
-
-        // Si on arrive ici, tout est bon
-        console.log("5. Lancement du tirage aléatoire...");
-        examenEnCours.id = idChapitre;
-        examenEnCours.questions = [...banque].sort(() => Math.random() - 0.5).slice(0, 20);
-
-        // Appel de l'affichage
-        afficherInterfaceQuestions(); 
-        console.log("6. Affichage terminé !");
-
-    } catch (error) {
-        console.error("CRASH DU MOTEUR :", error);
-    }
+    }).catch((error) => {
+        console.error("Erreur Firebase :", error);
+        corps.innerHTML = `<div style="color:red; padding:50px; text-align:center;">Erreur de connexion à la base de données.</div>`;
+    });
 }
 function lancerChronoUniversel() {
     const afficheur = document.getElementById('chrono');
