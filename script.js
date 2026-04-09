@@ -3189,6 +3189,46 @@ function verifierReponse(btn, indexCorrect, indexChoisi, aide) {
     }
 }
 
+function afficherSommaireDevoirs() {
+    const conteneur = document.getElementById('conteneurQuestionsDevoir');
+    // On simule une note déjà existante pour l'exemple
+    let derniereNote = obtenirDerniereNote("N1_PUISSANCES"); 
+
+    conteneur.innerHTML = `
+        <div class="hub-devoirs">
+            <div class="item-chapitre">
+                <h3>N1 : Les Puissances</h3>
+                <p>Statut : ${derniereNote ? '✅ Complété' : '⏳ À faire'}</p>
+                <p>Meilleure note : ${derniereNote ? derniereNote + '/20' : '--/20'}</p>
+                
+                <div class="actions">
+                    ${!derniereNote ? 
+                        `<button class="btn-principal" onclick="lancerSessionDevoir('N1')">DÉMARRER L'ÉVALUATION</button>` : 
+                        `<button class="btn-secondaire" onclick="lancerSessionDevoir('N1')">🔄 FAIRE UN AUTRE DEVOIR (Nouvelles questions)</button>`
+                    }
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function gererFinChrono() {
+    // 1. Bloquer l'interface
+    const toutesLesOptions = document.querySelectorAll('input[type="radio"]');
+    toutesLesOptions.forEach(opt => opt.disabled = true);
+    
+    // 2. Changer le style pour montrer que c'est fini
+    document.getElementById('chrono').style.color = "gray";
+    document.getElementById('chrono').innerText = "00:00 - TERMINÉ";
+
+    // 3. Calculer et enregistrer
+    let scoreFinal = calculerScoreActuel();
+    enregistrerNoteBDD("N1_PUISSANCES", scoreFinal);
+
+    // 4. Message et Fermeture
+    alert("Le temps est fini ! Ton évaluation a été envoyée automatiquement.");
+    fermerFenetreDevoir();
+}
 
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
