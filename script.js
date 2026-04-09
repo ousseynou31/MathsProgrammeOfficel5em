@@ -3267,7 +3267,7 @@ let examenEnCours = {
 };
 
 async function chargerDevoir(idChapitre) {
-    const conteneur = document.getElementById('conteneurSommaire');
+    const conteneur = document.getElementById('conteneurSommaire'); 
     const titreHeader = document.getElementById('titreDevoir');
     
     // 1. Préparation de l'interface
