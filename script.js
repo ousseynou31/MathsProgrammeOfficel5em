@@ -3486,8 +3486,7 @@ function chargerDevoir(id) {
             corps.innerHTML = html;
 
             // 4. Lancement du Chrono de 45 minutes
-            
-            lancerChronoEvaluation(60); // 60 secondes = 1 minute
+            lancerChronoEvaluation(45 * 60);
 
             // Rendu mathématique
             if (window.renderMathInElement) {
