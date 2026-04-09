@@ -880,6 +880,56 @@
         </form>
     </div>
 </div>
+
+    <div id="hub-devoirs-container" class="hub-devoirs">
+    
+    <div class="hub-header">
+        <h2><i class="fas fa-graduation-cap"></i> Tableau de bord des Évaluations</h2>
+        <p>Choisis un chapitre pour t'évaluer. Tu as 45 minutes par tentative.</p>
+    </div>
+
+    <div class="hub-list">
+        
+        <div class="chapitre-card active">
+            <div class="chapitre-info">
+                <span class="chapitre-code">N1</span>
+                <div class="chapitre-details">
+                    <h3>Les Puissances d'un nombre</h3>
+                    <div class="statut-badge">
+                        <span id="statut-n1" class="badge-todo">À faire</span>
+                        <span id="score-n1" class="badge-score">--/20</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chapitre-actions">
+                <button id="btn-start-n1" class="btn-eval-primary" onclick="preparerEvaluation('N1')">
+                    DÉMARRER L'ÉVALUATION
+                </button>
+                
+                <button id="btn-retry-n1" class="btn-eval-secondary" style="display:none;" onclick="preparerEvaluation('N1')">
+                    🔄 FAIRE UN AUTRE DEVOIR
+                </button>
+            </div>
+        </div>
+
+        <div class="chapitre-card locked">
+            <div class="chapitre-info">
+                <span class="chapitre-code">N2</span>
+                <div class="chapitre-details">
+                    <h3>Divisibilité et Nombres Premiers</h3>
+                    <div class="statut-badge">
+                        <span class="badge-locked">🔒 Verrouillé</span>
+                    </div>
+                </div>
+            </div>
+            <div class="chapitre-actions">
+                <small>Termine la leçon pour débloquer</small>
+            </div>
+        </div>
+
+    </div>
+</div>
 </body>
 </html>
 
