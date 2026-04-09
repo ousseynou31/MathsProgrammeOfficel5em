@@ -3267,46 +3267,38 @@ let examenEnCours = {
 };
 
 async function chargerDevoir(idChapitre) {
-    const conteneur = document.getElementById('conteneurSommaire'); 
-    const titreHeader = document.getElementById('titreDevoir');
+    const conteneur = document.getElementById('conteneurSommaire');
     
-    // 1. Préparation de l'interface
-    titreHeader.innerText = `Évaluation : ${idChapitre}`;
-    conteneur.innerHTML = "<div style='text-align:center; padding:50px;'>⏳ Chargement des exercices depuis la base de données...</div>";
-
     try {
-        // 2. Chemin vers votre dossier DEVOIRS
-        // On récupère le fichier devoirs.json situé dans le dossier DEVOIRS
+        // 1. Appel du fichier
         const reponse = await fetch('DEVOIRS/devoirs.json'); 
         
-        if (!reponse.ok) throw new Error("Fichier introuvable dans le dossier DEVOIRS");
-        
-        const data = await reponse.json();
-        
-        // 3. Extraction de la banque d'exercices
-        // La fonction cherche la clé correspondante, par exemple "evaluation_N1"
-        const banque = data[`evaluation_${idChapitre}`];
-
-        if (!banque) {
-            alert(`Désolé, les exercices pour ${idChapitre} ne sont pas encore disponibles.`);
-            ouvrirDevoirs(); // Retour au sommaire
+        if (!reponse.ok) {
+            alert("Erreur : Le fichier DEVOIRS/devoirs.json est introuvable sur le serveur.");
             return;
         }
 
-        // 4. Tirage aléatoire de 20 questions
+        const data = await reponse.json();
+        console.log("Données reçues :", data); // Pour vérifier dans la console F12
+
+        // 2. Accès à la clé (Modifiez ici si votre clé est différente)
+        const banque = data.evaluation; 
+
+        if (!banque) {
+            alert("Erreur : La clé 'evaluation' n'existe pas dans le fichier JSON.");
+            return;
+        }
+
+        // 3. Tirage et affichage
         examenEnCours.id = idChapitre;
-        examenEnCours.questions = [...banque]
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 20);
+        examenEnCours.questions = [...banque].sort(() => Math.random() - 0.5).slice(0, 20);
 
-        // 5. Lancer l'affichage et le chrono
-        afficherInterfaceQuestions();
-        lancerChrono45Min();
-
+        // Cette fonction doit exister pour dessiner les questions
+        afficherInterfaceQuestions(); 
+        
     } catch (error) {
-        console.error("Erreur technique :", error);
-        alert("Erreur de connexion avec le dossier DEVOIRS. Vérifiez que le fichier devoirs.json s'y trouve bien.");
-        ouvrirDevoirs();
+        console.error(error);
+        alert("La fenêtre ne s'ouvre pas car il y a une erreur de lecture du JSON.");
     }
 }
 function lancerChronoUniversel() {
