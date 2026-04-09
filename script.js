@@ -3272,7 +3272,8 @@ async function chargerDevoir(idChapitre) {
 
     try {
         console.log("2. Recherche du fichier dans DEVOIRS/devoirs.json...");
-        const reponse = await fetch('DEVOIRS/devoirs.json'); 
+        
+const reponse = await fetch('./DEVOIRS/devoirs.json');
         
         if (!reponse.ok) {
             console.error("ERREUR : Le fichier n'existe pas dans le dossier DEVOIRS.");
