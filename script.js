@@ -3193,6 +3193,10 @@ function ouvrirDevoirs(event) {
 
     const modal = document.getElementById('modalDevoir');
     const conteneur = document.getElementById('conteneurSommaire');
+    const titreHeader = document.getElementById('titreDevoir');
+
+    // Réinitialisation du titre au cas où on revient d'un devoir
+    if (titreHeader) titreHeader.innerText = "Sommaire des Évaluations";
 
     // On s'assure que le conteneur est vide
     conteneur.innerHTML = "";
@@ -3201,7 +3205,7 @@ function ouvrirDevoirs(event) {
     programme5eme.forEach(chapitre => {
         const carte = document.createElement('div');
         
-        // Style de la carte
+        // Style de la carte (Conservation de votre logique actuelle)
         carte.style.cssText = `
             background: #f8f9fa;
             border: 1px solid #e1e4e8;
@@ -3217,8 +3221,16 @@ function ouvrirDevoirs(event) {
         `;
 
         // Effet au survol
-        carte.onmouseover = () => { carte.style.borderColor = "#3498db"; carte.style.transform = "translateY(-5px)"; };
-        carte.onmouseout = () => { carte.style.borderColor = "#e1e4e8"; carte.style.transform = "translateY(0)"; };
+        carte.onmouseover = () => { 
+            carte.style.borderColor = "#3498db"; 
+            carte.style.transform = "translateY(-5px)"; 
+            carte.style.boxShadow = "0 5px 15px rgba(0,0,0,0.1)";
+        };
+        carte.onmouseout = () => { 
+            carte.style.borderColor = "#e1e4e8"; 
+            carte.style.transform = "translateY(0)"; 
+            carte.style.boxShadow = "none";
+        };
 
         // Contenu de la carte
         carte.innerHTML = `
@@ -3228,10 +3240,12 @@ function ouvrirDevoirs(event) {
             <small style="color: #a4b0be;">${chapitre.domaine}</small>
         `;
 
-        // Action au clic sur un chapitre
+        // ACTION MODIFIÉE : Appel du moteur universel de devoir
         carte.onclick = () => {
-            alert(`Démarrage de l'évaluation : ${chapitre.titre} (${chapitre.id})`);
-            // Ici, nous ajouterons plus tard la fonction pour charger le devoir réel
+            // Optionnel : une confirmation avant de lancer le chrono de 45 min
+            if(confirm(`Voulez-vous commencer le devoir : ${chapitre.titre} ?\n(Durée : 45 minutes)`)) {
+                chargerDevoir(chapitre.id); 
+            }
         };
 
         conteneur.appendChild(carte);
@@ -3246,41 +3260,90 @@ function fermerModal() {
 }
 
 let examenEnCours = {
+    id: null,
     timer: null,
-    tempsRestant: 2700, // 45 minutes
-    questionsSelectionnees: []
+    tempsRestant: 2700,
+    questions: []
 };
 
 async function chargerDevoir(idChapitre) {
     const conteneur = document.getElementById('conteneurSommaire');
+    const afficheurChrono = document.getElementById('chrono'); // Assurez-vous d'avoir cet ID dans votre HTML
     
-    // 1. Nettoyage de l'interface pour l'examen
-    conteneur.innerHTML = "<p style='text-align:center;'>Chargement du devoir en cours...</p>";
-    document.getElementById('titreDevoir').innerText = `Évaluation : ${idChapitre}`;
+    examenEnCours.id = idChapitre;
+    examenEnCours.tempsRestant = 2700; 
+    
+    conteneur.innerHTML = "<div style='text-align:center; padding:50px;'>⏳ Chargement des exercices...</div>";
 
     try {
-        // 2. Récupération UNIVERSELLE du fichier JSON
-        // On suppose que vos fichiers s'appellent N1.json, N2.json, etc.
-        const reponse = await fetch(`${idChapitre}.json`);
+        // Chargement du fichier JSON correspondant à l'ID (ex: N1.json)
+        // Note : Si tous vos devoirs sont dans 'devoirs.json', adaptez le fetch
+        const reponse = await fetch('devoirs.json'); 
         const data = await reponse.json();
         
-        // On récupère la banque (ex: data.questions ou data.evaluation_N1)
-        const banqueComplete = data.evaluation || data.questions || data[`evaluation_${idChapitre}`];
+        // On récupère la banque spécifique au chapitre (ex: data.evaluation_N1)
+        const banque = data[`evaluation_${idChapitre}`] || data.questions;
 
-        // 3. Tirage Aléatoire Universel (20 questions parmi X)
-        examenEnCours.questionsSelectionnees = [...banqueComplete]
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 20);
+        // Tirage de 20 questions uniques
+        examenEnCours.questions = [...banque].sort(() => Math.random() - 0.5).slice(0, 20);
 
-        // 4. Affichage et Chrono
-        afficherQuestionsExamen();
+        // Affichage des questions
+        afficherInterfaceExamen();
+        
+        // Lancement du Chrono
+        if(afficheurChrono) afficheurChrono.style.display = 'block';
         lancerChronoUniversel();
 
     } catch (error) {
-        console.error("Erreur de chargement:", error);
-        alert("Erreur : Le fichier de ce devoir est introuvable.");
-        ouvrirDevoirs(); // Retour au sommaire
+        alert("Erreur : Impossible de charger le devoir " + idChapitre);
+        ouvrirDevoirs(); 
     }
+}
+
+function lancerChronoUniversel() {
+    const afficheur = document.getElementById('chrono');
+    
+    clearInterval(examenEnCours.timer);
+    examenEnCours.timer = setInterval(() => {
+        examenEnCours.tempsRestant--;
+        
+        let m = Math.floor(examenEnCours.tempsRestant / 60);
+        let s = examenEnCours.tempsRestant % 60;
+        if(afficheur) afficheur.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+
+        if (examenEnCours.tempsRestant <= 0) {
+            clearInterval(examenEnCours.timer);
+            alert("Temps écoulé ! Validation automatique.");
+            validerEvaluationUniverselle();
+        }
+    }, 1000);
+}
+
+function afficherInterfaceQuestions() {
+    const conteneur = document.getElementById('conteneurSommaire');
+    let html = '<div style="padding: 20px;">';
+
+    examenEnCours.questions.forEach((q, index) => {
+        html += `
+            <div style="margin-bottom: 25px; background: #fff; padding: 15px; border-radius: 8px; border-left: 5px solid #3498db;">
+                <p><strong>${index + 1}.</strong> ${q.enonce}</p>
+                ${q.options.map((opt, i) => `
+                    <label style="display:block; margin:10px 0; cursor:pointer;">
+                        <input type="radio" name="q${index}" value="${i}"> ${opt}
+                    </label>
+                `).join('')}
+            </div>
+        `;
+    });
+
+    html += `
+        <button onclick="validerEvaluationUniverselle()" style="width:100%; padding:20px; background:#27ae60; color:white; border:none; border-radius:10px; font-size:18px; cursor:pointer; font-weight:bold; margin-top:20px;">
+            VALIDER MON DEVOIR
+        </button>
+    </div>`;
+
+    conteneur.innerHTML = html;
+    conteneur.scrollTop = 0; // Remonte en haut de la fenêtre
 }
 
 function afficherQuestionsExamen() {
