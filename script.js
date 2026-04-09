@@ -3439,12 +3439,20 @@ function chargerDevoir(id) {
 /**
  * CALCULE LE SCORE ET ENREGISTRE DANS L'ESPACE PARENT
  */
+
+/**
+ * FERME LA MODALE
+ */
+function fermerModalDevoir() {
+    const modal = document.getElementById('modalDevoir');
+    if (modal) modal.style.display = "none";
+}
 function validerEvaluation() {
     let score = 0;
     const total = examenEnCours.questions.length;
     let reponsesManquantes = false;
 
-    // Calcul
+    // 1. Calcul du score
     examenEnCours.questions.forEach((q, index) => {
         const input = document.querySelector(`input[name="q${index}"]:checked`);
         if (input) {
@@ -3454,38 +3462,39 @@ function validerEvaluation() {
         }
     });
 
-    if (reponsesManquantes && !confirm("Tu n'as pas répondu à toutes les questions. Valider quand même ?")) return;
+    if (reponsesManquantes && !confirm("⚠️ Tu n'as pas répondu à toutes les questions. Valider quand même ?")) return;
 
-    // Données pour la base de données (Espace Parent)
-    const userId = localStorage.getItem("userId") || "eleve_anonyme";
-    const dateJour = new Date().toLocaleString('fr-FR');
+    // 2. Récupération du numéro de téléphone (l'identifiant utilisé dans enregistrerProfil)
+    const telId = localStorage.getItem('user_tel_id'); 
 
+    if (!telId) {
+        return alert("❌ Erreur : Impossible de trouver votre profil. Veuillez vous reconnecter.");
+    }
+
+    // 3. Préparation du compte-rendu
+    const maintenant = new Date();
     const compteRendu = {
         matiere: "Mathématiques 5ème",
         chapitre: examenEnCours.id,
         note: score,
         sur: total,
         pourcentage: Math.round((score / total) * 100) + "%",
-        date: dateJour
+        date: maintenant.toISOString(), // Format standard pour le tri
+        date_lisible: maintenant.toLocaleString('fr-FR')
     };
 
-    // Envoi à Firebase sous le nœud RESULTATS_PARENTS
-    database.ref('RESULTATS_PARENTS/' + userId).push(compteRendu)
+    // 4. Enregistrement DIRECT dans le dossier de l'élève
+    // On crée un sous-dossier 'evaluations' à l'intérieur du dossier du client
+    database.ref('clients/' + telId + '/evaluations').push(compteRendu)
     .then(() => {
-        alert(`Évaluation terminée !\nNote : ${score}/${total}\nTes résultats sont enregistrés pour tes parents.`);
+        alert(`🎯 Évaluation terminée !\nScore : ${score}/${total}\nTes parents peuvent voir tes progrès sur leur espace.`);
         fermerModalDevoir();
     })
-    .catch(err => alert("Erreur lors de l'enregistrement : " + err.message));
+    .catch(err => {
+        console.error("Erreur BDD:", err);
+        alert("Erreur lors de l'enregistrement du score.");
+    });
 }
-
-/**
- * FERME LA MODALE
- */
-function fermerModalDevoir() {
-    const modal = document.getElementById('modalDevoir');
-    if (modal) modal.style.display = "none";
-}
-
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
