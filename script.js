@@ -3270,41 +3270,55 @@ function chargerDevoir(id) {
     const corps = document.getElementById("conteneurSommaire");
     if (!corps) return;
 
+    // 1. On applique immédiatement un fond sombre au conteneur
+    corps.style.backgroundColor = "#1a1c23"; // Un noir bleuté élégant
+    corps.style.color = "white";
+    corps.style.minHeight = "100%";
+    
     corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Chargement de l'évaluation...</div>`;
 
-    // CORRECTION ICI : On cible 'evaluation_N1', 'evaluation_N2', etc.
     const cheminFirebase = 'DEVOIRS/evaluation_' + id;
 
     database.ref(cheminFirebase).once('value').then((snapshot) => {
         const banqueQuestions = snapshot.val();
 
         if (banqueQuestions) {
-            // On s'assure que c'est bien un tableau pour le mélange
             const listeComplete = Array.isArray(banqueQuestions) ? banqueQuestions : Object.values(banqueQuestions);
             
             examenEnCours.id = id;
             examenEnCours.questions = [...listeComplete].sort(() => Math.random() - 0.5).slice(0, 20);
 
-            let html = `<div style="padding:20px; color:white;">
-                            <h2 style="text-align:center; color:var(--gold);">📝 ÉVALUATION : ${id}</h2>
-                            <p style="text-align:center; opacity:0.6;">20 questions tirées au sort</p>
-                            <hr style="opacity:0.1; margin:20px 0;">`;
+            // 2. Construction du HTML avec des cartes contrastées
+            let html = `
+                <div style="padding:20px; background:#1a1c23; min-height:100vh;">
+                    <h2 style="text-align:center; color:var(--gold); font-size:1.5rem; text-transform:uppercase;">📝 ÉVALUATION : ${id}</h2>
+                    <p style="text-align:center; opacity:0.7; color:#a4b0be;">Réponds aux 20 questions avec précision.</p>
+                    <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
+            `;
 
             examenEnCours.questions.forEach((q, index) => {
                 html += `
-                    <div class="glass-card" style="margin-bottom:20px; padding:20px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px;">
-                        <p style="font-size:1.1rem; margin-bottom:15px;"><span style="color:var(--gold);">Q${index + 1}.</span> ${q.enonce}</p>
-                        <div style="display:grid; gap:10px;">
+                    <div style="margin-bottom:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:15px;">
+                        <p style="font-size:1.1rem; margin-bottom:15px; color:white;">
+                            <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${q.enonce}
+                        </p>
+                        <div style="display:grid; gap:12px;">
                             ${q.options.map((opt, i) => `
-                                <label style="display:flex; align-items:center; gap:10px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; cursor:pointer;">
-                                    <input type="radio" name="q${index}" value="${i}"> ${opt}
+                                <label style="display:flex; align-items:center; gap:12px; padding:12px; background:rgba(255,255,255,0.03); border-radius:10px; cursor:pointer; transition:0.3s; border:1px solid rgba(255,255,255,0.05); color:#e1e4e8;">
+                                    <input type="radio" name="q${index}" value="${i}" style="width:18px; height:18px; accent-color:var(--gold);"> 
+                                    <span>${opt}</span>
                                 </label>
                             `).join('')}
                         </div>
                     </div>`;
             });
 
-            html += `<button onclick="validerEvaluation()" style="width:100%; padding:20px; background:var(--gold); color:black; border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-top:20px; font-size:1.1rem;">ENVOYER MON DEVOIR</button></div>`;
+            // Bouton de validation stylisé
+            html += `
+                <button onclick="validerEvaluation()" style="width:100%; padding:18px; background:var(--gold); color:#1a1c23; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:20px; font-size:1.1rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
+                    VALIDER MON DEVOIR
+                </button>
+            </div>`;
 
             corps.innerHTML = html;
 
@@ -3312,9 +3326,7 @@ function chargerDevoir(id) {
                 renderMathInElement(corps, { delimiters: [{left: '$', right: '$', display: false}] });
             }
         } else {
-            corps.innerHTML = `<div style="text-align:center; padding:50px; color:white;">
-                ⚠️ La clé <b>${cheminFirebase}</b> n'a pas été trouvée dans Firebase.
-            </div>`;
+            corps.innerHTML = `<div style="text-align:center; padding:100px; color:white;">⚠️ Chapitre non configuré : ${cheminFirebase}</div>`;
         }
     });
 }
