@@ -17,6 +17,7 @@ if (typeof canvas === 'undefined') {
     var dernierClicTemps = 0; // Pour détecter le double-clic
     var timerClic = null;
 }
+let chronoInterval; // Variable globale pour stopper le chrono si besoin
 
 // Variables globales pour la session
 let heureDebutSession = null;
@@ -3346,99 +3347,6 @@ function afficherQuestionsExamen() {
     conteneur.innerHTML = html;
 }
 
-/** * CHARGE LE DEVOIR DEPUIS FIREBASE ET GÈRE L'INTERFACE D'EXAMEN
- */
-function chargerDevoir(id) {
-    const corps = document.getElementById("conteneurSommaire");
-    if (!corps) return;
-
-    // 1. Style de l'interface (Fond sombre et plein écran)
-    corps.style.backgroundColor = "#1a1c23"; 
-    corps.style.color = "white";
-    corps.style.minHeight = "100%";
-    
-    corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Préparation de votre évaluation...</div>`;
-
-    const cheminFirebase = 'DEVOIRS/evaluation_' + id;
-
-    database.ref(cheminFirebase).once('value').then((snapshot) => {
-        const banqueQuestions = snapshot.val();
-
-        if (banqueQuestions) {
-            // Conversion en tableau et mélange pour avoir 20 questions aléatoires
-            const listeComplete = Array.isArray(banqueQuestions) ? banqueQuestions : Object.values(banqueQuestions);
-            
-            examenEnCours.id = id;
-            examenEnCours.questions = [...listeComplete]
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 20);
-
-            // 2. Construction du HTML
-            let html = `
-                <div style="padding:20px; background:#1a1c23; min-height:100vh; position:relative;">
-                    
-                    <button onclick="fermerModalDevoir()" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
-
-                    <h2 style="text-align:center; color:var(--gold); font-size:1.5rem; text-transform:uppercase; margin-top:20px;">📝 ÉVALUATION : ${id}</h2>
-                    <p style="text-align:center; opacity:0.7; color:#a4b0be;">Session de 20 questions — Bonne chance !</p>
-                    <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
-            `;
-
-            // Génération des questions
-            examenEnCours.questions.forEach((q, index) => {
-                html += `
-                    <div class="glass-card" style="margin-bottom:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:15px;">
-                        <p style="font-size:1.1rem; margin-bottom:15px; color:white;">
-                            <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${q.enonce}
-                        </p>
-                        <div style="display:grid; gap:12px;">
-                            ${q.options.map((opt, i) => `
-                                <label style="display:flex; align-items:center; gap:12px; padding:12px; background:rgba(255,255,255,0.03); border-radius:10px; cursor:pointer; border:1px solid rgba(255,255,255,0.05); color:#e1e4e8;">
-                                    <input type="radio" name="q${index}" value="${i}" style="width:18px; height:18px; accent-color:var(--gold);"> 
-                                    <span>${opt}</span>
-                                </label>
-                            `).join('')}
-                        </div>
-                    </div>`;
-            });
-
-            // 3. Zone d'actions finale
-            html += `
-                <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; padding-bottom:50px;">
-                    <button onclick="validerEvaluation()" style="width:100%; padding:18px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">
-                        ✅ VALIDER ET ENREGISTRER
-                    </button>
-                    
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        <button onclick="chargerDevoir('${id}')" style="padding:12px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer;">
-                            🔄 AUTRES QUESTIONS
-                        </button>
-                        <button onclick="fermerModalDevoir()" style="padding:12px; background:#e74c3c; color:white; border:none; border-radius:10px; cursor:pointer;">
-                            ❌ QUITTER
-                        </button>
-                    </div>
-                </div>
-            </div>`;
-
-            corps.innerHTML = html;
-
-            // Rendu mathématique
-            if (window.renderMathInElement) {
-                renderMathInElement(corps, { delimiters: [{left: '$', right: '$', display: false}] });
-            }
-        } else {
-            corps.innerHTML = `
-                <div style="text-align:center; padding:100px; color:white;">
-                    <p>⚠️ Aucun exercice trouvé pour : ${cheminFirebase}</p>
-                    <button onclick="fermerModalDevoir()" style="color:var(--gold); background:none; border:1px solid var(--gold); padding:10px; cursor:pointer; border-radius:5px; margin-top:20px;">Retour au sommaire</button>
-                </div>`;
-        }
-    });
-}
-
-/**
- * CALCULE LE SCORE ET ENREGISTRE DANS L'ESPACE PARENT
- */
 
 /**
  * FERME LA MODALE
@@ -3478,6 +3386,112 @@ async function validerEvaluation() {
         alert("Erreur lors de l'envoi du rapport.");
         console.error(e);
     }
+}
+
+function lancerCompteARebours(secondes) {
+    let tempsRestant = secondes;
+    const affichage = document.getElementById('timer-display');
+
+    chronoInterval = setInterval(() => {
+        let minutes = Math.floor(tempsRestant / 60);
+        let secs = tempsRestant % 60;
+
+        // Formatage 00:00
+        affichage.innerText = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+        // Alerte visuelle quand il reste moins de 5 minutes
+        if (tempsRestant <= 300) {
+            affichage.style.color = "#ff4757";
+            affichage.style.animation = "blink 1s infinite";
+        }
+
+        if (tempsRestant <= 0) {
+            clearInterval(chronoInterval);
+            verrouillerEtEnvoyerAutomatiquement();
+        }
+
+        tempsRestant--;
+    }, 1000);
+}
+
+function verrouillerEtEnvoyerAutomatiquement() {
+    // 1. Désactiver tous les champs pour que l'élève ne puisse plus modifier
+    const inputs = document.querySelectorAll('input[type="radio"]');
+    inputs.forEach(input => input.disabled = true);
+    
+    const btn = document.getElementById('btn-valider-final');
+    if(btn) btn.disabled = true;
+
+    alert("⌛ TEMPS ÉCOULÉ ! Votre copie a été ramassée et envoyée automatiquement.");
+    
+    // 2. Lancement de la validation forcée
+    validerEvaluation();
+}
+
+
+function chargerDevoir(id) {
+    const corps = document.getElementById("conteneurSommaire");
+    if (!corps) return;
+
+    // Reset du chrono précédent s'il existe
+    clearInterval(chronoInterval);
+
+    corps.style.backgroundColor = "#1a1c23"; 
+    corps.style.color = "white";
+    
+    corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Préparation de l'évaluation...</div>`;
+
+    database.ref('DEVOIRS/evaluation_' + id).once('value').then((snapshot) => {
+        const banqueQuestions = snapshot.val();
+
+        if (banqueQuestions) {
+            const listeComplete = Array.isArray(banqueQuestions) ? banqueQuestions : Object.values(banqueQuestions);
+            examenEnCours.id = id;
+            examenEnCours.questions = [...listeComplete].sort(() => Math.random() - 0.5).slice(0, 20);
+
+            let html = `
+                <div style="padding:20px; background:#1a1c23; min-height:100vh; position:relative;">
+                    
+                    <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px);">
+                        <div style="color:var(--gold); font-weight:bold;">⏳ TEMPS RESTANT : <span id="timer-display" style="font-size:1.4rem;">45:00</span></div>
+                        <button onclick="fermerModalDevoir()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+                    </div>
+
+                    <h2 style="text-align:center; color:var(--gold); margin-top:20px;">📝 ÉVALUATION : ${id}</h2>
+                    <hr style="opacity:0.1; margin:20px 0;">
+            `;
+
+            examenEnCours.questions.forEach((q, index) => {
+                html += `
+                    <div class="glass-card" style="margin-bottom:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:15px;">
+                        <p style="color:white;"><span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${q.enonce}</p>
+                        <div style="display:grid; gap:12px; margin-top:15px;">
+                            ${q.options.map((opt, i) => `
+                                <label style="display:flex; align-items:center; gap:12px; padding:12px; background:rgba(255,255,255,0.03); border-radius:10px; cursor:pointer; color:#e1e4e8;">
+                                    <input type="radio" name="q${index}" value="${i}" style="width:18px; height:18px; accent-color:var(--gold);"> 
+                                    <span>${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>`;
+            });
+
+            html += `
+                <button id="btn-valider-final" onclick="validerEvaluation()" style="width:100%; padding:18px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; margin-bottom:50px;">
+                    ✅ TERMINER ET ENVOYER
+                </button>
+            </div>`;
+
+            corps.innerHTML = html;
+
+            // --- LANCEMENT DU COMPTE À REBOURS (45 MIN) ---
+            lancerCompteARebours(45 * 60);
+
+            if (window.renderMathInElement) {
+                renderMathInElement(corps, { delimiters: [{left: '$', right: '$', display: false}] });
+            }
+        }
+    });
 }
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
