@@ -3229,6 +3229,64 @@ function gererFinChrono() {
     alert("Le temps est fini ! Ton évaluation a été envoyée automatiquement.");
     fermerFenetreDevoir();
 }
+function ouvrirDevoirs(event) {
+    event.preventDefault();
+    const modal = document.getElementById('modalDevoir');
+    const conteneur = document.getElementById('conteneurQuestionsDevoir');
+    
+    // On réinitialise l'affichage pour montrer le SOMMAIRE
+    document.getElementById('titreDevoir').innerText = "SOMMAIRE DES DEVOIRS - 5ème";
+    document.getElementById('chrono').style.display = 'none'; // Pas de chrono sur le sommaire
+
+    let htmlSommaire = '<div class="grille-devoirs">';
+    
+    // On boucle sur votre constante programme5eme
+    programme5eme.forEach(chapitre => {
+        htmlSommaire += `
+            <div class="carte-devoir-item" onclick="chargerEvaluation('${chapitre.id}')">
+                <div class="icone-chapitre">${chapitre.icone}</div>
+                <div class="info-chapitre">
+                    <span class="code">${chapitre.id}</span>
+                    <h4>${chapitre.titre}</h4>
+                    <small>${chapitre.domaine}</small>
+                </div>
+                <button class="btn-ouvrir-devoir">FAIRE LE DEVOIR</button>
+            </div>
+        `;
+    });
+
+    htmlSommaire += '</div>';
+    conteneur.innerHTML = htmlSommaire;
+    modal.style.display = 'block';
+}
+async function chargerEvaluation(idChapitre) {
+    // 1. On change l'interface pour le mode "Examen"
+    document.getElementById('titreDevoir').innerText = `Évaluation : ${idChapitre}`;
+    document.getElementById('chrono').style.display = 'block';
+    
+    // 2. Chargement des questions (ex: devoirs.json ou N1.json)
+    // Ici on adapte pour charger le bon fichier selon l'ID
+    const nomFichier = (idChapitre === 'N1') ? 'devoirs.json' : `${idChapitre}.json`;
+    
+    try {
+        const response = await fetch(nomFichier);
+        const data = await response.json();
+        const toutesLesQuestions = data.evaluation_N1 || data.questions;
+
+        // 3. Tirage aléatoire de 20 questions sans répétition
+        const selection20 = toutesLesQuestions
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 20);
+
+        // 4. Affichage des questions et lancement du chrono 45 min
+        afficherInterfaceQuestions(selection20);
+        lancerChrono45Min();
+
+    } catch (err) {
+        alert("Ce devoir n'est pas encore disponible.");
+        ouvrirDevoirs(event); // Retour au sommaire
+    }
+}
 
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
