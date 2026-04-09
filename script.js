@@ -3267,38 +3267,43 @@ let examenEnCours = {
 };
 
 async function chargerDevoir(idChapitre) {
+    console.log("1. Tentative de chargement pour :", idChapitre);
     const conteneur = document.getElementById('conteneurSommaire');
-    
+
     try {
-        // 1. Appel du fichier
+        console.log("2. Recherche du fichier dans DEVOIRS/devoirs.json...");
         const reponse = await fetch('DEVOIRS/devoirs.json'); 
         
         if (!reponse.ok) {
-            alert("Erreur : Le fichier DEVOIRS/devoirs.json est introuvable sur le serveur.");
+            console.error("ERREUR : Le fichier n'existe pas dans le dossier DEVOIRS.");
+            alert("Fichier JSON introuvable.");
             return;
         }
 
         const data = await reponse.json();
-        console.log("Données reçues :", data); // Pour vérifier dans la console F12
+        console.log("3. Fichier JSON lu avec succès. Contenu :", data);
 
-        // 2. Accès à la clé (Modifiez ici si votre clé est différente)
+        // On vérifie si la clé 'evaluation' contient bien vos questions
         const banque = data.evaluation; 
+        console.log("4. Contenu de la clé 'evaluation' :", banque);
 
-        if (!banque) {
-            alert("Erreur : La clé 'evaluation' n'existe pas dans le fichier JSON.");
+        if (!banque || !Array.isArray(banque)) {
+            console.error("ERREUR : La clé 'evaluation' est vide ou n'est pas un tableau.");
+            alert("Erreur de structure dans le fichier JSON.");
             return;
         }
 
-        // 3. Tirage et affichage
+        // Si on arrive ici, tout est bon
+        console.log("5. Lancement du tirage aléatoire...");
         examenEnCours.id = idChapitre;
         examenEnCours.questions = [...banque].sort(() => Math.random() - 0.5).slice(0, 20);
 
-        // Cette fonction doit exister pour dessiner les questions
+        // Appel de l'affichage
         afficherInterfaceQuestions(); 
-        
+        console.log("6. Affichage terminé !");
+
     } catch (error) {
-        console.error(error);
-        alert("La fenêtre ne s'ouvre pas car il y a une erreur de lecture du JSON.");
+        console.error("CRASH DU MOTEUR :", error);
     }
 }
 function lancerChronoUniversel() {
