@@ -1400,3 +1400,4 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
     backdrop-filter: blur(5px); /* Floute le cours derrière le bouton */
     background: rgba(0, 0, 0, 0.7); /* Fond semi-transparent */
 }
+@keyframes blink { 50% { opacity: 0.5; } }
