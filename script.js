@@ -3397,6 +3397,15 @@ window.addEventListener('load', async () => {
         }
     });
 
+    window.onclick = function(event) {
+    const modal = document.getElementById('modalDevoir');
+    if (event.target == modal) {
+        if(confirm("Attention : Si tu fermes cette fenêtre, ton évaluation en cours sera perdue. Quitter ?")) {
+            modal.style.display = "none";
+            clearInterval(timerDevoir); // On arrête le chrono
+        }
+    }
+}
     // 8. ÉCOUTEUR TECHNIQUE UNIQUE (Gère Tracé + Suppression + Zoom)
     document.addEventListener('pointerdown', (e) => {
         if (e.target.id !== 'geoCanvas') return;
