@@ -3229,49 +3229,50 @@ function gererFinChrono() {
     alert("Le temps est fini ! Ton évaluation a été envoyée automatiquement.");
     fermerFenetreDevoir();
 }
+
 function ouvrirDevoirs(event) {
+    // 1. Bloquer le comportement par défaut
     if (event) event.preventDefault();
+    console.log("Le bouton Mes Devoirs a été cliqué !");
 
     const modal = document.getElementById('modalDevoir');
     const conteneur = document.getElementById('conteneurQuestionsDevoir');
-    const titre = document.getElementById('titreDevoir');
-    const chronoAfficheur = document.getElementById('chrono');
 
-    // 1. Configuration initiale de la fenêtre
-    titre.innerText = "SOMMAIRE DES DEVOIRS - 5ème";
-    if (chronoAfficheur) chronoAfficheur.style.display = 'none'; // On cache le chrono pour le sommaire
-    
-    // 2. Construction du HTML du Sommaire à partir de programme5eme
+    // 2. Vérification de sécurité
+    if (!modal || !conteneur) {
+        console.error("Erreur : Les éléments HTML modalDevoir ou conteneurQuestionsDevoir sont introuvables.");
+        return;
+    }
+
+    // 3. Construction du Sommaire à partir de votre constante programme5eme
     let htmlSommaire = `
         <div class="hub-header-2026">
-            <p>Sélectionnez un chapitre pour débuter votre évaluation (45 minutes).</p>
+            <h2 style="text-align:center; color:#2c3e50;">Sommaire des Évaluations</h2>
+            <p style="text-align:center;">Choisissez un chapitre pour commencer (45 min).</p>
         </div>
-        <div class="grille-devoirs-2026">
+        <div class="grille-devoirs-2026" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; padding: 20px;">
     `;
 
-    // Utilisation de votre constante programme5eme
+    // Boucle sur vos données
     programme5eme.forEach(chapitre => {
         htmlSommaire += `
-            <div class="carte-devoir-2026" onclick="chargerEvaluation('${chapitre.id}', '${chapitre.titre}')">
-                <div class="icone-devoir">${chapitre.icone}</div>
-                <div class="details-devoir">
-                    <span class="code-devoir">${chapitre.id}</span>
-                    <h4>${chapitre.titre}</h4>
-                    <small>${chapitre.domaine}</small>
-                </div>
-                <div class="action-devoir">
-                    <i class="fas fa-chevron-right"></i>
+            <div class="carte-devoir-2026" onclick="chargerEvaluation('${chapitre.id}')" style="background:white; border:1px solid #ddd; padding:15px; border-radius:10px; cursor:pointer; display:flex; align-items:center; transition:0.3s;">
+                <span style="font-size:2em; margin-right:15px;">${chapitre.icone}</span>
+                <div>
+                    <strong style="display:block;">${chapitre.id} : ${chapitre.titre}</strong>
+                    <small style="color:#7f8c8d;">${chapitre.domaine}</small>
                 </div>
             </div>
         `;
     });
 
-    htmlSommaire += '</div>';
+    htmlSommaire += `</div>`;
 
-    // 3. Injection et Affichage
+    // 4. Injection du HTML et Affichage de la fenêtre
     conteneur.innerHTML = htmlSommaire;
-    modal.style.display = 'flex'; // Assurez-vous que votre CSS utilise flex ou block
+    modal.style.display = "flex"; // On passe de 'none' à 'flex' pour l'afficher
 }
+
 async function chargerEvaluation(idChapitre) {
     // 1. On change l'interface pour le mode "Examen"
     document.getElementById('titreDevoir').innerText = `Évaluation : ${idChapitre}`;
