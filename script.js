@@ -3268,38 +3268,47 @@ let examenEnCours = {
 
 async function chargerDevoir(idChapitre) {
     const conteneur = document.getElementById('conteneurSommaire');
-    const afficheurChrono = document.getElementById('chrono'); // Assurez-vous d'avoir cet ID dans votre HTML
+    const titreHeader = document.getElementById('titreDevoir');
     
-    examenEnCours.id = idChapitre;
-    examenEnCours.tempsRestant = 2700; 
-    
-    conteneur.innerHTML = "<div style='text-align:center; padding:50px;'>⏳ Chargement des exercices...</div>";
+    // 1. Préparation de l'interface
+    titreHeader.innerText = `Évaluation : ${idChapitre}`;
+    conteneur.innerHTML = "<div style='text-align:center; padding:50px;'>⏳ Chargement des exercices depuis la base de données...</div>";
 
     try {
-        // Chargement du fichier JSON correspondant à l'ID (ex: N1.json)
-        // Note : Si tous vos devoirs sont dans 'devoirs.json', adaptez le fetch
-        const reponse = await fetch('devoirs.json'); 
+        // 2. Chemin vers votre dossier DEVOIRS
+        // On récupère le fichier devoirs.json situé dans le dossier DEVOIRS
+        const reponse = await fetch('DEVOIRS/devoirs.json'); 
+        
+        if (!reponse.ok) throw new Error("Fichier introuvable dans le dossier DEVOIRS");
+        
         const data = await reponse.json();
         
-        // On récupère la banque spécifique au chapitre (ex: data.evaluation_N1)
-        const banque = data[`evaluation_${idChapitre}`] || data.questions;
+        // 3. Extraction de la banque d'exercices
+        // La fonction cherche la clé correspondante, par exemple "evaluation_N1"
+        const banque = data[`evaluation_${idChapitre}`];
 
-        // Tirage de 20 questions uniques
-        examenEnCours.questions = [...banque].sort(() => Math.random() - 0.5).slice(0, 20);
+        if (!banque) {
+            alert(`Désolé, les exercices pour ${idChapitre} ne sont pas encore disponibles.`);
+            ouvrirDevoirs(); // Retour au sommaire
+            return;
+        }
 
-        // Affichage des questions
-        afficherInterfaceExamen();
-        
-        // Lancement du Chrono
-        if(afficheurChrono) afficheurChrono.style.display = 'block';
-        lancerChronoUniversel();
+        // 4. Tirage aléatoire de 20 questions
+        examenEnCours.id = idChapitre;
+        examenEnCours.questions = [...banque]
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 20);
+
+        // 5. Lancer l'affichage et le chrono
+        afficherInterfaceQuestions();
+        lancerChrono45Min();
 
     } catch (error) {
-        alert("Erreur : Impossible de charger le devoir " + idChapitre);
-        ouvrirDevoirs(); 
+        console.error("Erreur technique :", error);
+        alert("Erreur de connexion avec le dossier DEVOIRS. Vérifiez que le fichier devoirs.json s'y trouve bien.");
+        ouvrirDevoirs();
     }
 }
-
 function lancerChronoUniversel() {
     const afficheur = document.getElementById('chrono');
     
