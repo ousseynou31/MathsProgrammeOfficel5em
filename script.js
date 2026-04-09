@@ -3188,7 +3188,62 @@ function verifierReponse(btn, indexCorrect, indexChoisi, aide) {
         tousLesBtns[indexCorrect].style.border = "1px solid #2ecc71";
     }
 }
+function ouvrirDevoirs(event) {
+    if (event) event.preventDefault();
 
+    const modal = document.getElementById('modalDevoir');
+    const conteneur = document.getElementById('conteneurSommaire');
+
+    // On s'assure que le conteneur est vide
+    conteneur.innerHTML = "";
+
+    // On parcourt votre constante programme5eme
+    programme5eme.forEach(chapitre => {
+        const carte = document.createElement('div');
+        
+        // Style de la carte
+        carte.style.cssText = `
+            background: #f8f9fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        `;
+
+        // Effet au survol
+        carte.onmouseover = () => { carte.style.borderColor = "#3498db"; carte.style.transform = "translateY(-5px)"; };
+        carte.onmouseout = () => { carte.style.borderColor = "#e1e4e8"; carte.style.transform = "translateY(0)"; };
+
+        // Contenu de la carte
+        carte.innerHTML = `
+            <div style="font-size: 40px; margin-bottom: 10px;">${chapitre.icone}</div>
+            <span style="color: #3498db; font-weight: bold; font-size: 14px;">${chapitre.id}</span>
+            <h4 style="margin: 5px 0; color: #2f3542; font-size: 16px;">${chapitre.titre}</h4>
+            <small style="color: #a4b0be;">${chapitre.domaine}</small>
+        `;
+
+        // Action au clic sur un chapitre
+        carte.onclick = () => {
+            alert(`Démarrage de l'évaluation : ${chapitre.titre} (${chapitre.id})`);
+            // Ici, nous ajouterons plus tard la fonction pour charger le devoir réel
+        };
+
+        conteneur.appendChild(carte);
+    });
+
+    // Afficher la fenêtre
+    modal.style.display = "flex";
+}
+
+function fermerModal() {
+    document.getElementById('modalDevoir').style.display = "none";
+}
 
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
