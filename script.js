@@ -3189,118 +3189,6 @@ function verifierReponse(btn, indexCorrect, indexChoisi, aide) {
     }
 }
 
-function afficherSommaireDevoirs() {
-    const conteneur = document.getElementById('conteneurQuestionsDevoir');
-    // On simule une note déjà existante pour l'exemple
-    let derniereNote = obtenirDerniereNote("N1_PUISSANCES"); 
-
-    conteneur.innerHTML = `
-        <div class="hub-devoirs">
-            <div class="item-chapitre">
-                <h3>N1 : Les Puissances</h3>
-                <p>Statut : ${derniereNote ? '✅ Complété' : '⏳ À faire'}</p>
-                <p>Meilleure note : ${derniereNote ? derniereNote + '/20' : '--/20'}</p>
-                
-                <div class="actions">
-                    ${!derniereNote ? 
-                        `<button class="btn-principal" onclick="lancerSessionDevoir('N1')">DÉMARRER L'ÉVALUATION</button>` : 
-                        `<button class="btn-secondaire" onclick="lancerSessionDevoir('N1')">🔄 FAIRE UN AUTRE DEVOIR (Nouvelles questions)</button>`
-                    }
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function gererFinChrono() {
-    // 1. Bloquer l'interface
-    const toutesLesOptions = document.querySelectorAll('input[type="radio"]');
-    toutesLesOptions.forEach(opt => opt.disabled = true);
-    
-    // 2. Changer le style pour montrer que c'est fini
-    document.getElementById('chrono').style.color = "gray";
-    document.getElementById('chrono').innerText = "00:00 - TERMINÉ";
-
-    // 3. Calculer et enregistrer
-    let scoreFinal = calculerScoreActuel();
-    enregistrerNoteBDD("N1_PUISSANCES", scoreFinal);
-
-    // 4. Message et Fermeture
-    alert("Le temps est fini ! Ton évaluation a été envoyée automatiquement.");
-    fermerFenetreDevoir();
-}
-
-function ouvrirDevoirs(event) {
-    // 1. Bloquer le comportement par défaut
-    if (event) event.preventDefault();
-    console.log("Le bouton Mes Devoirs a été cliqué !");
-
-    const modal = document.getElementById('modalDevoir');
-    const conteneur = document.getElementById('conteneurQuestionsDevoir');
-
-    // 2. Vérification de sécurité
-    if (!modal || !conteneur) {
-        console.error("Erreur : Les éléments HTML modalDevoir ou conteneurQuestionsDevoir sont introuvables.");
-        return;
-    }
-
-    // 3. Construction du Sommaire à partir de votre constante programme5eme
-    let htmlSommaire = `
-        <div class="hub-header-2026">
-            <h2 style="text-align:center; color:#2c3e50;">Sommaire des Évaluations</h2>
-            <p style="text-align:center;">Choisissez un chapitre pour commencer (45 min).</p>
-        </div>
-        <div class="grille-devoirs-2026" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; padding: 20px;">
-    `;
-
-    // Boucle sur vos données
-    programme5eme.forEach(chapitre => {
-        htmlSommaire += `
-            <div class="carte-devoir-2026" onclick="chargerEvaluation('${chapitre.id}')" style="background:white; border:1px solid #ddd; padding:15px; border-radius:10px; cursor:pointer; display:flex; align-items:center; transition:0.3s;">
-                <span style="font-size:2em; margin-right:15px;">${chapitre.icone}</span>
-                <div>
-                    <strong style="display:block;">${chapitre.id} : ${chapitre.titre}</strong>
-                    <small style="color:#7f8c8d;">${chapitre.domaine}</small>
-                </div>
-            </div>
-        `;
-    });
-
-    htmlSommaire += `</div>`;
-
-    // 4. Injection du HTML et Affichage de la fenêtre
-    conteneur.innerHTML = htmlSommaire;
-    modal.style.display = "flex"; // On passe de 'none' à 'flex' pour l'afficher
-}
-
-async function chargerEvaluation(idChapitre) {
-    // 1. On change l'interface pour le mode "Examen"
-    document.getElementById('titreDevoir').innerText = `Évaluation : ${idChapitre}`;
-    document.getElementById('chrono').style.display = 'block';
-    
-    // 2. Chargement des questions (ex: devoirs.json ou N1.json)
-    // Ici on adapte pour charger le bon fichier selon l'ID
-    const nomFichier = (idChapitre === 'N1') ? 'devoirs.json' : `${idChapitre}.json`;
-    
-    try {
-        const response = await fetch(nomFichier);
-        const data = await response.json();
-        const toutesLesQuestions = data.evaluation_N1 || data.questions;
-
-        // 3. Tirage aléatoire de 20 questions sans répétition
-        const selection20 = toutesLesQuestions
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 20);
-
-        // 4. Affichage des questions et lancement du chrono 45 min
-        afficherInterfaceQuestions(selection20);
-        lancerChrono45Min();
-
-    } catch (err) {
-        alert("Ce devoir n'est pas encore disponible.");
-        ouvrirDevoirs(event); // Retour au sommaire
-    }
-}
 
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
@@ -3411,15 +3299,6 @@ window.addEventListener('load', async () => {
         }
     });
 
-    window.onclick = function(event) {
-    const modal = document.getElementById('modalDevoir');
-    if (event.target == modal) {
-        if(confirm("Attention : Si tu fermes cette fenêtre, ton évaluation en cours sera perdue. Quitter ?")) {
-            modal.style.display = "none";
-            clearInterval(timerDevoir); // On arrête le chrono
-        }
-    }
-}
     // 8. ÉCOUTEUR TECHNIQUE UNIQUE (Gère Tracé + Suppression + Zoom)
     document.addEventListener('pointerdown', (e) => {
         if (e.target.id !== 'geoCanvas') return;
