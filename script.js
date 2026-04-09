@@ -3355,38 +3355,6 @@ function fermerModalDevoir() {
     const modal = document.getElementById('modalDevoir');
     if (modal) modal.style.display = "none";
 }
-async function validerEvaluation() {
-    let scoreBrut = 0;
-    const totalQuestions = examenEnCours.questions.length;
-
-    // 1. Calcul du score sur le nombre de questions (ex: 15/20)
-    examenEnCours.questions.forEach((q, index) => {
-        const input = document.querySelector(`input[name="q${index}"]:checked`);
-        if (input && parseInt(input.value) === q.correct) {
-            scoreBrut++;
-        }
-    });
-
-    // 2. Conversion de la note sur 20 (pour la logique de vos paliers Diouf)
-    // Formule : (Score / Total) * 20
-    const noteSur20 = Math.round((scoreBrut / totalQuestions) * 20);
-
-    // 3. Appel de VOTRE fonction de rapport (celle que vous m'avez montrée)
-    // Elle va gérer l'appréciation, la couleur et l'envoi Firebase
-    const nomChapitre = "DEVOIR : " + examenEnCours.id;
-    
-    try {
-        await genererRapportParent(nomChapitre, noteSur20);
-        
-        // Message de succès
-        alert(`🎯 Évaluation enregistrée !\nNote : ${scoreBrut}/${totalQuestions} (${noteSur20}/20)\nConsultez l'Espace Parent pour le détail.`);
-        
-        fermerModalDevoir();
-    } catch (e) {
-        alert("Erreur lors de l'envoi du rapport.");
-        console.error(e);
-    }
-}
 
 
 function verrouillerEtEnvoyerAutomatiquement() {
@@ -3527,6 +3495,108 @@ function lancerChronoEvaluation(secondes) {
         }
         temps--;
     }, 1000);
+}
+async function validerEvaluation() {
+    let scoreBrut = 0;
+    const totalQuestions = examenEnCours.questions.length;
+
+    // Arrêt du chrono dès la validation
+    if (window.chronoInterval) clearInterval(window.chronoInterval);
+
+    // 1. Calcul du score + Stockage des réponses pour la correction
+    examenEnCours.questions.forEach((q, index) => {
+        const input = document.querySelector(`input[name="q${index}"]:checked`);
+        // On sauvegarde le choix de l'élève (index de l'option ou null)
+        q.reponseEleve = input ? parseInt(input.value) : null; 
+        
+        if (q.reponseEleve === q.correct) {
+            scoreBrut++;
+        }
+    });
+
+    const noteSur20 = Math.round((scoreBrut / totalQuestions) * 20);
+    const nomChapitre = "DEVOIR : " + examenEnCours.id;
+    
+    try {
+        // 2. Enregistrement Firebase pour les parents (Inchangé)
+        await genererRapportParent(nomChapitre, noteSur20);
+        
+        // 3. Affichage du résultat et transition vers la correction
+        alert(`🎯 Évaluation enregistrée !\nNote : ${scoreBrut}/${totalQuestions} (${noteSur20}/20)`);
+        
+        // AU LIEU DE FERMER, ON AFFICHE LE BILAN
+        afficherEcranResultat(scoreBrut, totalQuestions);
+
+    } catch (e) {
+        alert("Erreur lors de l'envoi du rapport.");
+        console.error(e);
+    }
+}
+function afficherEcranResultat(score, total) {
+    const corps = document.getElementById("conteneurSommaire");
+    
+    corps.innerHTML = `
+        <div style="text-align:center; padding:50px; background:#1a1c23; min-height:100vh; color:white;">
+            <div style="font-size:60px; margin-bottom:20px;">${score >= (total/2) ? '🏆' : '📚'}</div>
+            <h2 style="color:var(--gold); font-size:2rem;">RÉSULTAT FINAL</h2>
+            <div style="font-size:3.5rem; font-weight:bold; margin:20px 0; color:white;">${score} <span style="font-size:1.5rem; opacity:0.5;">/ ${total}</span></div>
+            
+            <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; max-width:400px; margin:auto;">
+                <button onclick="afficherCorrectionDetaillee()" style="padding:18px; background:var(--gold); color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.1rem;">
+                    👁️ VOIR LA CORRECTION
+                </button>
+                <button onclick="fermerModalDevoir()" style="padding:15px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.3); border-radius:12px; cursor:pointer;">
+                    RETOUR AU SOMMAIRE
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function afficherCorrectionDetaillee() {
+    const corps = document.getElementById("conteneurSommaire");
+    let html = `
+        <div style="padding:20px; background:#1a1c23; color:white; min-height:100vh;">
+            <h2 style="text-align:center; color:var(--gold);">CORRECTION DÉTAILLÉE</h2>
+            <p style="text-align:center; opacity:0.6; margin-bottom:30px;">Analyse de tes erreurs et réussites</p>
+    `;
+
+    examenEnCours.questions.forEach((q, index) => {
+        const estCorrect = q.reponseEleve === q.correct;
+        
+        html += `
+            <div style="margin-bottom:20px; padding:20px; border-radius:15px; border:1px solid ${estCorrect ? '#27ae60' : '#e74c3c'}; background:rgba(255,255,255,0.02);">
+                <p style="font-size:1.1rem; margin-bottom:15px;"><strong>Q${index + 1}.</strong> ${q.enonce}</p>
+                
+                <div style="padding:12px; border-radius:10px; background:${estCorrect ? 'rgba(39, 174, 96, 0.1)' : 'rgba(231, 76, 60, 0.1)'};">
+                    <p style="color:${estCorrect ? '#2ecc71' : '#ff4757'}; margin:0;">
+                        ${estCorrect ? '✅ <b>Bravo !</b> C\'est la bonne réponse.' : '❌ <b>Erreur.</b>'}
+                    </p>
+                    ${!estCorrect ? `
+                        <p style="margin:5px 0 0 0; color:#94a3b8;">
+                            Ta réponse : <span style="text-decoration:line-through;">${q.reponseEleve !== null ? q.options[q.reponseEleve] : 'Aucune'}</span>
+                        </p>
+                        <p style="margin:5px 0 0 0; color:#2ecc71; font-weight:bold;">
+                            ✔️ La bonne réponse était : ${q.options[q.correct]}
+                        </p>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    html += `
+        <button onclick="fermerModalDevoir()" style="width:100%; padding:20px; background:var(--gold); color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:30px; margin-bottom:50px;">
+            J'AI COMPRIS MES ERREURS
+        </button>
+    </div>`;
+
+    corps.innerHTML = html;
+    
+    // Rendu des formules mathématiques dans la correction
+    if (window.renderMathInElement) {
+        renderMathInElement(corps, { delimiters: [{left: '$', right: '$', display: false}] });
+    }
 }
 
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
