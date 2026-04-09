@@ -3245,6 +3245,77 @@ function fermerModal() {
     document.getElementById('modalDevoir').style.display = "none";
 }
 
+let examenEnCours = {
+    timer: null,
+    tempsRestant: 2700, // 45 minutes
+    questionsSelectionnees: []
+};
+
+async function chargerDevoir(idChapitre) {
+    const conteneur = document.getElementById('conteneurSommaire');
+    
+    // 1. Nettoyage de l'interface pour l'examen
+    conteneur.innerHTML = "<p style='text-align:center;'>Chargement du devoir en cours...</p>";
+    document.getElementById('titreDevoir').innerText = `Évaluation : ${idChapitre}`;
+
+    try {
+        // 2. Récupération UNIVERSELLE du fichier JSON
+        // On suppose que vos fichiers s'appellent N1.json, N2.json, etc.
+        const reponse = await fetch(`${idChapitre}.json`);
+        const data = await reponse.json();
+        
+        // On récupère la banque (ex: data.questions ou data.evaluation_N1)
+        const banqueComplete = data.evaluation || data.questions || data[`evaluation_${idChapitre}`];
+
+        // 3. Tirage Aléatoire Universel (20 questions parmi X)
+        examenEnCours.questionsSelectionnees = [...banqueComplete]
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 20);
+
+        // 4. Affichage et Chrono
+        afficherQuestionsExamen();
+        lancerChronoUniversel();
+
+    } catch (error) {
+        console.error("Erreur de chargement:", error);
+        alert("Erreur : Le fichier de ce devoir est introuvable.");
+        ouvrirDevoirs(); // Retour au sommaire
+    }
+}
+
+function afficherQuestionsExamen() {
+    const conteneur = document.getElementById('conteneurSommaire');
+    let html = '<div id="zone-questions" style="padding-bottom:100px;">';
+
+    examenEnCours.questionsSelectionnees.forEach((q, index) => {
+        html += `
+            <div class="question-bloc" style="margin-bottom:30px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                <p><strong>Question ${index + 1} :</strong> ${q.enonce}</p>
+                <div class="options-liste">
+                    ${q.options.map((opt, i) => `
+                        <label style="display:block; margin:8px 0; cursor:pointer;">
+                            <input type="radio" name="reponse_${index}" value="${i}"> ${opt}
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    
+    // Ajout du bouton de validation fixe en bas
+    html += `
+        <div style="position: sticky; bottom: 0; background: white; padding: 20px; border-top: 2px solid #3498db; text-align: center;">
+            <button onclick="validerEvaluationUniverselle()" style="background:#27ae60; color:white; padding:15px 40px; border:none; border-radius:10px; cursor:pointer; font-weight:bold;">
+                TERMINER MON DEVOIR
+            </button>
+        </div>
+    `;
+
+    conteneur.innerHTML = html;
+}
+
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
