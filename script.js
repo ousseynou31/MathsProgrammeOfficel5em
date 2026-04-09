@@ -3266,70 +3266,7 @@ let examenEnCours = {
     questions: []
 };
 
-function chargerDevoir(id) {
-    const corps = document.getElementById("conteneurSommaire");
-    if (!corps) return;
 
-    // 1. On applique immédiatement un fond sombre au conteneur
-    corps.style.backgroundColor = "#1a1c23"; // Un noir bleuté élégant
-    corps.style.color = "white";
-    corps.style.minHeight = "100%";
-    
-    corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Chargement de l'évaluation...</div>`;
-
-    const cheminFirebase = 'DEVOIRS/evaluation_' + id;
-
-    database.ref(cheminFirebase).once('value').then((snapshot) => {
-        const banqueQuestions = snapshot.val();
-
-        if (banqueQuestions) {
-            const listeComplete = Array.isArray(banqueQuestions) ? banqueQuestions : Object.values(banqueQuestions);
-            
-            examenEnCours.id = id;
-            examenEnCours.questions = [...listeComplete].sort(() => Math.random() - 0.5).slice(0, 20);
-
-            // 2. Construction du HTML avec des cartes contrastées
-            let html = `
-                <div style="padding:20px; background:#1a1c23; min-height:100vh;">
-                    <h2 style="text-align:center; color:var(--gold); font-size:1.5rem; text-transform:uppercase;">📝 ÉVALUATION : ${id}</h2>
-                    <p style="text-align:center; opacity:0.7; color:#a4b0be;">Réponds aux 20 questions avec précision.</p>
-                    <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
-            `;
-
-            examenEnCours.questions.forEach((q, index) => {
-                html += `
-                    <div style="margin-bottom:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:15px;">
-                        <p style="font-size:1.1rem; margin-bottom:15px; color:white;">
-                            <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${q.enonce}
-                        </p>
-                        <div style="display:grid; gap:12px;">
-                            ${q.options.map((opt, i) => `
-                                <label style="display:flex; align-items:center; gap:12px; padding:12px; background:rgba(255,255,255,0.03); border-radius:10px; cursor:pointer; transition:0.3s; border:1px solid rgba(255,255,255,0.05); color:#e1e4e8;">
-                                    <input type="radio" name="q${index}" value="${i}" style="width:18px; height:18px; accent-color:var(--gold);"> 
-                                    <span>${opt}</span>
-                                </label>
-                            `).join('')}
-                        </div>
-                    </div>`;
-            });
-
-            // Bouton de validation stylisé
-            html += `
-                <button onclick="validerEvaluation()" style="width:100%; padding:18px; background:var(--gold); color:#1a1c23; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:20px; font-size:1.1rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
-                    VALIDER MON DEVOIR
-                </button>
-            </div>`;
-
-            corps.innerHTML = html;
-
-            if (window.renderMathInElement) {
-                renderMathInElement(corps, { delimiters: [{left: '$', right: '$', display: false}] });
-            }
-        } else {
-            corps.innerHTML = `<div style="text-align:center; padding:100px; color:white;">⚠️ Chapitre non configuré : ${cheminFirebase}</div>`;
-        }
-    });
-}
 function lancerChronoUniversel() {
     const afficheur = document.getElementById('chrono');
     
@@ -3407,6 +3344,146 @@ function afficherQuestionsExamen() {
     `;
 
     conteneur.innerHTML = html;
+}
+
+/** * CHARGE LE DEVOIR DEPUIS FIREBASE ET GÈRE L'INTERFACE D'EXAMEN
+ */
+function chargerDevoir(id) {
+    const corps = document.getElementById("conteneurSommaire");
+    if (!corps) return;
+
+    // 1. Style de l'interface (Fond sombre et plein écran)
+    corps.style.backgroundColor = "#1a1c23"; 
+    corps.style.color = "white";
+    corps.style.minHeight = "100%";
+    
+    corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Préparation de votre évaluation...</div>`;
+
+    const cheminFirebase = 'DEVOIRS/evaluation_' + id;
+
+    database.ref(cheminFirebase).once('value').then((snapshot) => {
+        const banqueQuestions = snapshot.val();
+
+        if (banqueQuestions) {
+            // Conversion en tableau et mélange pour avoir 20 questions aléatoires
+            const listeComplete = Array.isArray(banqueQuestions) ? banqueQuestions : Object.values(banqueQuestions);
+            
+            examenEnCours.id = id;
+            examenEnCours.questions = [...listeComplete]
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 20);
+
+            // 2. Construction du HTML
+            let html = `
+                <div style="padding:20px; background:#1a1c23; min-height:100vh; position:relative;">
+                    
+                    <button onclick="fermerModalDevoir()" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+
+                    <h2 style="text-align:center; color:var(--gold); font-size:1.5rem; text-transform:uppercase; margin-top:20px;">📝 ÉVALUATION : ${id}</h2>
+                    <p style="text-align:center; opacity:0.7; color:#a4b0be;">Session de 20 questions — Bonne chance !</p>
+                    <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
+            `;
+
+            // Génération des questions
+            examenEnCours.questions.forEach((q, index) => {
+                html += `
+                    <div class="glass-card" style="margin-bottom:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:15px;">
+                        <p style="font-size:1.1rem; margin-bottom:15px; color:white;">
+                            <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${q.enonce}
+                        </p>
+                        <div style="display:grid; gap:12px;">
+                            ${q.options.map((opt, i) => `
+                                <label style="display:flex; align-items:center; gap:12px; padding:12px; background:rgba(255,255,255,0.03); border-radius:10px; cursor:pointer; border:1px solid rgba(255,255,255,0.05); color:#e1e4e8;">
+                                    <input type="radio" name="q${index}" value="${i}" style="width:18px; height:18px; accent-color:var(--gold);"> 
+                                    <span>${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>`;
+            });
+
+            // 3. Zone d'actions finale
+            html += `
+                <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; padding-bottom:50px;">
+                    <button onclick="validerEvaluation()" style="width:100%; padding:18px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">
+                        ✅ VALIDER ET ENREGISTRER
+                    </button>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <button onclick="chargerDevoir('${id}')" style="padding:12px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer;">
+                            🔄 AUTRES QUESTIONS
+                        </button>
+                        <button onclick="fermerModalDevoir()" style="padding:12px; background:#e74c3c; color:white; border:none; border-radius:10px; cursor:pointer;">
+                            ❌ QUITTER
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+
+            corps.innerHTML = html;
+
+            // Rendu mathématique
+            if (window.renderMathInElement) {
+                renderMathInElement(corps, { delimiters: [{left: '$', right: '$', display: false}] });
+            }
+        } else {
+            corps.innerHTML = `
+                <div style="text-align:center; padding:100px; color:white;">
+                    <p>⚠️ Aucun exercice trouvé pour : ${cheminFirebase}</p>
+                    <button onclick="fermerModalDevoir()" style="color:var(--gold); background:none; border:1px solid var(--gold); padding:10px; cursor:pointer; border-radius:5px; margin-top:20px;">Retour au sommaire</button>
+                </div>`;
+        }
+    });
+}
+
+/**
+ * CALCULE LE SCORE ET ENREGISTRE DANS L'ESPACE PARENT
+ */
+function validerEvaluation() {
+    let score = 0;
+    const total = examenEnCours.questions.length;
+    let reponsesManquantes = false;
+
+    // Calcul
+    examenEnCours.questions.forEach((q, index) => {
+        const input = document.querySelector(`input[name="q${index}"]:checked`);
+        if (input) {
+            if (parseInt(input.value) === q.correct) score++;
+        } else {
+            reponsesManquantes = true;
+        }
+    });
+
+    if (reponsesManquantes && !confirm("Tu n'as pas répondu à toutes les questions. Valider quand même ?")) return;
+
+    // Données pour la base de données (Espace Parent)
+    const userId = localStorage.getItem("userId") || "eleve_anonyme";
+    const dateJour = new Date().toLocaleString('fr-FR');
+
+    const compteRendu = {
+        matiere: "Mathématiques 5ème",
+        chapitre: examenEnCours.id,
+        note: score,
+        sur: total,
+        pourcentage: Math.round((score / total) * 100) + "%",
+        date: dateJour
+    };
+
+    // Envoi à Firebase sous le nœud RESULTATS_PARENTS
+    database.ref('RESULTATS_PARENTS/' + userId).push(compteRendu)
+    .then(() => {
+        alert(`Évaluation terminée !\nNote : ${score}/${total}\nTes résultats sont enregistrés pour tes parents.`);
+        fermerModalDevoir();
+    })
+    .catch(err => alert("Erreur lors de l'enregistrement : " + err.message));
+}
+
+/**
+ * FERME LA MODALE
+ */
+function fermerModalDevoir() {
+    const modal = document.getElementById('modalDevoir');
+    if (modal) modal.style.display = "none";
 }
 
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
