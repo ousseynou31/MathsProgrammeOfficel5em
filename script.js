@@ -3322,14 +3322,23 @@ function verrouillerEtEnvoyerAutomatiquement() {
 
 /** * CHARGE LE DEVOIR DEPUIS FIREBASE + GÈRE L'INTERFACE + CHRONO 45 MIN
  */
+/** * CHARGE LE DEVOIR DEPUIS FIREBASE + GÈRE L'INTERFACE + CHRONO 45 MIN
+ */
 function chargerDevoir(id) {
     const corps = document.getElementById("conteneurSommaire");
     if (!corps) return;
 
-    // Arrêter un éventuel chrono en cours avant d'en lancer un nouveau
+    // 1. INITIALISATION DE L'OBJET GLOBAL (Crucial pour la correction)
+    window.examenEnCours = {
+        id: id,
+        type: "DEVOIR", // Changement de type ici
+        questions: [],
+        timer: null,
+        tempsRestant: 45 * 60 // 45 minutes
+    };
+
     if (window.chronoInterval) clearInterval(window.chronoInterval);
 
-    // 1. Style de l'interface (Fond sombre et plein écran)
     corps.style.backgroundColor = "#1a1c23"; 
     corps.style.color = "white";
     corps.style.minHeight = "100%";
@@ -3342,18 +3351,15 @@ function chargerDevoir(id) {
         const banqueQuestions = snapshot.val();
 
         if (banqueQuestions) {
-            // Conversion en tableau et mélange pour avoir 20 questions aléatoires
             const listeComplete = Array.isArray(banqueQuestions) ? banqueQuestions : Object.values(banqueQuestions);
             
-            examenEnCours.id = id;
-            examenEnCours.questions = [...listeComplete]
+            // On mélange et on prend 20 questions
+            window.examenEnCours.questions = [...listeComplete]
                 .sort(() => Math.random() - 0.5)
                 .slice(0, 20);
 
-            // 2. Construction du HTML
             let html = `
                 <div style="padding:20px; background:#1a1c23; min-height:100vh; position:relative;">
-                    
                     <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 20px -20px;">
                         <div style="color:var(--gold); font-weight:bold; font-size:1.1rem;">⏳ TEMPS : <span id="timer-display">45:00</span></div>
                         <button onclick="fermerModalDevoir()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
@@ -3364,8 +3370,7 @@ function chargerDevoir(id) {
                     <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
             `;
 
-            // Génération des questions
-            examenEnCours.questions.forEach((q, index) => {
+            window.examenEnCours.questions.forEach((q, index) => {
                 html += `
                     <div class="glass-card" style="margin-bottom:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:15px;">
                         <p style="font-size:1.1rem; margin-bottom:15px; color:white;">
@@ -3382,13 +3387,17 @@ function chargerDevoir(id) {
                     </div>`;
             });
 
-            // 3. Zone d'actions finale (Vos boutons originaux conservés)
+            // --- SECTION BOUTONS ADAPTÉE (Identique à l'exercice) ---
             html += `
                 <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; padding-bottom:50px;">
-                    <button id="btn-valider-devoir" onclick="validerEvaluation()" style="width:100%; padding:18px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">
+                    <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:18px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">
                         ✅ VALIDER ET ENREGISTRER
                     </button>
                     
+                    <button id="btn-correction-exo" onclick="afficherCorrectionDetaillee()" disabled style="width:100%; padding:18px; background:#334155; color:rgba(255,255,255,0.2); border:none; border-radius:12px; font-weight:bold; cursor:not-allowed; font-size:1.1rem; transition:0.3s;">
+                        👁️ VOIR LA CORRECTION
+                    </button>
+
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                         <button onclick="chargerDevoir('${id}')" style="padding:12px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer;">
                             🔄 AUTRES QUESTIONS
@@ -3401,24 +3410,14 @@ function chargerDevoir(id) {
             </div>`;
 
             corps.innerHTML = html;
-
-            // 4. Lancement du Chrono de 45 minutes
             lancerChronoEvaluation(45 * 60);
 
-            // Rendu mathématique
             if (window.renderMathInElement) {
                 renderMathInElement(corps, { delimiters: [{left: '$', right: '$', display: false}] });
             }
-        } else {
-            corps.innerHTML = `
-                <div style="text-align:center; padding:100px; color:white;">
-                    <p>⚠️ Aucun exercice trouvé pour : ${cheminFirebase}</p>
-                    <button onclick="fermerModalDevoir()" style="color:var(--gold); background:none; border:1px solid var(--gold); padding:10px; cursor:pointer; border-radius:5px; margin-top:20px;">Retour au sommaire</button>
-                </div>`;
         }
     });
 }
-
 /**
  * GESTION DU TEMPS ET VERROUILLAGE
  */
