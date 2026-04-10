@@ -3444,26 +3444,6 @@ function lancerChronoEvaluation(secondes) {
     }, 1000);
 }
 
-function afficherEcranResultat(score, total) {
-    const corps = document.getElementById("conteneurSommaire");
-    
-    corps.innerHTML = `
-        <div style="text-align:center; padding:50px; background:#1a1c23; min-height:100vh; color:white;">
-            <div style="font-size:60px; margin-bottom:20px;">${score >= (total/2) ? '🏆' : '📚'}</div>
-            <h2 style="color:var(--gold); font-size:2rem;">RÉSULTAT FINAL</h2>
-            <div style="font-size:3.5rem; font-weight:bold; margin:20px 0; color:white;">${score} <span style="font-size:1.5rem; opacity:0.5;">/ ${total}</span></div>
-            
-            <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; max-width:400px; margin:auto;">
-                <button onclick="afficherCorrectionDetaillee()" style="padding:18px; background:var(--gold); color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.1rem;">
-                    👁️ VOIR LA CORRECTION
-                </button>
-                <button onclick="fermerModalDevoir()" style="padding:15px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.3); border-radius:12px; cursor:pointer;">
-                    RETOUR AU SOMMAIRE
-                </button>
-            </div>
-        </div>
-    `;
-}
 
 function afficherCorrectionDetaillee() {
     // On utilise le conteneur actif (conteneurSommaire pour les devoirs, overlay-body pour les exos)
@@ -3670,6 +3650,56 @@ async function validerEvaluation() {
         
         // On affiche tout de même le résultat à l'élève
         afficherEcranResultat(scoreBrut, totalQuestions);
+    }
+}
+
+function afficherEcranResultat(score, total) {
+    // Détection du conteneur selon le mode (Devoir ou Exercice)
+    const corps = document.getElementById("conteneurSommaire") || document.getElementById("overlay-body");
+    
+    if (!corps) return;
+
+    // Calcul de la note sur 20 pour l'affichage informatif
+    const noteSur20 = Math.round((score / total) * 20);
+    
+    // Sélection de l'émoji et du message selon la performance
+    let message = "Continue tes efforts ! 💪";
+    let emoji = "📚";
+    if (noteSur20 >= 16) { emoji = "🔥"; message = "Excellent travail ! 🌟"; }
+    else if (noteSur20 >= 10) { emoji = "🏆"; message = "Félicitations, tu as réussi ! ✨"; }
+
+    corps.innerHTML = `
+        <div style="text-align:center; padding:50px 20px; background:#1a1c23; min-height:100vh; color:white;" class="anim-slide-up">
+            <div style="font-size:80px; margin-bottom:10px;">${emoji}</div>
+            
+            <h2 style="color:var(--gold); font-size:1.8rem; letter-spacing:1px; margin-bottom:5px;">RÉSULTAT FINAL</h2>
+            <p style="opacity:0.7; font-size:1.1rem; margin-bottom:30px;">${message}</p>
+
+            <div style="background:rgba(255,255,255,0.03); padding:30px; border-radius:20px; border:1px solid rgba(255,255,255,0.1); max-width:300px; margin: 0 auto 40px auto;">
+                <div style="font-size:3.5rem; font-weight:bold; color:white;">
+                    ${score} <span style="font-size:1.5rem; opacity:0.5;">/ ${total}</span>
+                </div>
+                <div style="font-size:1.2rem; color:var(--gold); margin-top:10px; font-weight:bold; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+                    Note : ${noteSur20} / 20
+                </div>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:15px; max-width:400px; margin:auto;">
+                <button onclick="afficherCorrectionDetaillee()" style="padding:20px; background:var(--gold); color:black; border:none; border-radius:15px; font-weight:bold; cursor:pointer; font-size:1.1rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
+                    👁️ VOIR LA CORRECTION
+                </button>
+
+                <button onclick="${(examenEnCours.type === 'EXERCICE') ? 'closeWorkOverlay()' : 'fermerModalDevoir()'}" 
+                        style="padding:15px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:12px; cursor:pointer; font-size:1rem;">
+                    RETOUR AU SOMMAIRE
+                </button>
+            </div>
+        </div>
+    `;
+
+    // Petit effet de vibration si le score est parfait
+    if (score === total && window.navigator.vibrate) {
+        window.navigator.vibrate([100, 50, 100]);
     }
 }
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
