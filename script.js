@@ -114,25 +114,31 @@ function activerSignalEnLigne() {
         console.log("📡 Signal de présence activé");
     }
 }
-
 function surveillerConnexion() {
     const ledContainer = document.getElementById('cloud-status');
-    if (!ledContainer) return;
+    if (!ledContainer) {
+        console.error("❌ Élément 'cloud-status' introuvable dans le HTML");
+        return;
+    }
+
+    const cercle = ledContainer.querySelector('.led-circle');
+    const texte = ledContainer.querySelector('.led-text');
 
     database.ref(".info/connected").on("value", (snap) => {
-        const cercle = ledContainer.querySelector('.led-circle');
-        const texte = ledContainer.querySelector('.led-text');
         if (snap.val() === true) {
+            console.log("🟢 Firebase Connecté");
             ledContainer.style.background = "rgba(16, 185, 129, 0.1)";
-            if(cercle) cercle.style.background = "#10b981";
+            if(cercle) cercle.style.background = "#10b981"; // Vert
             if(texte) texte.innerText = "LIVE";
         } else {
+            console.log("⚪ Firebase Déconnecté");
             ledContainer.style.background = "rgba(0,0,0,0.6)";
-            if(cercle) cercle.style.background = "#666";
+            if(cercle) cercle.style.background = "#666"; // Gris
             if(texte) texte.innerText = "OFFLINE";
         }
     });
 }
+
 
 
 const SECRET_KEY = 7391;
@@ -256,33 +262,64 @@ function ouvrirLogin() {
     document.getElementById('license-gate').style.display = 'flex';
 }
 
+// ==========================================
+// INITIALISATION GÉNÉRALE DU SYSTÈME
+// ==========================================
 function verifierEtatInitial() {
+    console.log("🛠️ Vérification de l'état initial...");
+
+    // 1. ALLUMAGE DU VOYANT (Indispensable dès le départ)
+    if (typeof surveillerConnexion === "function") {
+        surveillerConnexion();
+    } else {
+        console.warn("⚠️ Fonction surveillerConnexion introuvable.");
+    }
+
+    // 2. RÉCUPÉRATION DES DONNÉES LOCALES
     const tel = localStorage.getItem('user_tel_id');
     const active = localStorage.getItem('v32_active');
 
-    // On cache tout au départ
-    document.getElementById('license-gate').style.display = 'none';
-    document.getElementById('registration-gate').style.display = 'none';
-    document.getElementById('hub-accueil').style.display = 'none';
+    // 3. RÉFÉRENCES AUX ÉCRANS (SÉCURISÉES)
+    const gateLicense = document.getElementById('license-gate');
+    const gateReg = document.getElementById('registration-gate');
+    const hubAccueil = document.getElementById('hub-accueil');
 
+    // On cache tout par défaut pour éviter les superpositions
+    if (gateLicense) gateLicense.style.display = 'none';
+    if (gateReg) gateReg.style.display = 'none';
+    if (hubAccueil) hubAccueil.style.display = 'none';
+
+    // 4. LOGIQUE D'ORIENTATION
     if (active === 'true' && tel) {
-        // CAS 1 : Tout est OK -> Accès aux cours
-        document.getElementById('hub-accueil').style.display = 'block'; 
+        // --- CAS 1 : UTILISATEUR VALIDE ---
+        console.log("✅ Accès autorisé : Hub Accueil");
+        if (hubAccueil) hubAccueil.style.display = 'block';
+        
+        // Active les services de surveillance en ligne
+        if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
+        if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(tel);
+        if (typeof surveillerSession === "function") surveillerSession();
     } 
     else if (tel) {
-        // CAS 2 : Inscrit mais pas encore activé -> Demande le PIN
-        document.getElementById('license-gate').style.display = 'flex';
-        // Affiche l'ID appareil automatiquement
-        const displayElem = document.getElementById('display-device-id');
-        if(displayElem) displayElem.innerText = getDeviceId();
+        // --- CAS 2 : INSCRIT MAIS NON ACTIVÉ ---
+        console.log("🔑 Attente du code PIN");
+        if (gateLicense) {
+            gateLicense.style.display = 'flex';
+            // Mise à jour de l'ID appareil pour le Keygen
+            const displayElem = document.getElementById('display-device-id');
+            if (displayElem && typeof getDeviceId === 'function') {
+                displayElem.innerText = getDeviceId();
+            }
+        }
     } 
     else {
-        // CAS 3 : Premier lancement -> Formulaire de Profil
-        document.getElementById('registration-gate').style.display = 'flex';
+        // --- CAS 3 : NOUVEL UTILISATEUR ---
+        console.log("📝 Direction Inscription");
+        if (gateReg) gateReg.style.display = 'flex';
     }
 }
 
-// Lancement automatique au démarrage
+// Lancement automatique au chargement complet
 window.onload = verifierEtatInitial;
 
 // ==========================================
