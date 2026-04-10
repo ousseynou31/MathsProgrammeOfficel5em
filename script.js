@@ -3515,6 +3515,14 @@ function chargerExos(id) {
     const corps = document.getElementById("overlay-body");
     if (!corps) return;
 
+    // 1. Initialisation CRUCIALE de l'objet global pour éviter les erreurs plus tard
+    window.examenEnCours = {
+        id: id,
+        type: "EXERCICE", // Identifiant clé pour afficherEcranResultat
+        questions: [],
+        timer: null
+    };
+
     // Arrêt d'un éventuel chrono en cours
     if (window.chronoInterval) clearInterval(window.chronoInterval);
 
@@ -3524,15 +3532,13 @@ function chargerExos(id) {
         const exercices = snapshot.val();
 
         if (exercices) {
-            // 1. Conversion et mélange pour extraire exactement 10 questions
+            // 2. Conversion et mélange
             const listeBrute = Array.isArray(exercices) ? exercices : Object.values(exercices);
             
-            examenEnCours.id = id;
-            examenEnCours.type = "EXERCICE"; 
-            // On mélange et on prend 10
+            // On mélange et on prend 10 questions au hasard
             examenEnCours.questions = [...listeBrute].sort(() => Math.random() - 0.5).slice(0, 10);
 
-            // 2. Structure HTML avec Barre de Chrono
+            // 3. Structure HTML
             let htmlExos = `
                 <div style="padding: 20px; max-width: 800px; margin: auto; background:#1a1c23; color:white;" class="anim-slide-up">
                     
@@ -3545,7 +3551,6 @@ function chargerExos(id) {
                     <p style="text-align:center; opacity:0.6; margin-bottom:30px;">Répondez aux 10 questions avant la fin du temps.</p>
             `;
 
-            // 3. Génération des blocs de questions (Type Radio pour validation globale)
             examenEnCours.questions.forEach((exo, index) => {
                 htmlExos += `
                     <div class="glass-card" style="margin-bottom:25px; padding:20px; border-radius:15px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1);">
@@ -3563,7 +3568,6 @@ function chargerExos(id) {
                     </div>`;
             });
 
-            // 4. Boutons d'action
             htmlExos += `
                 <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; padding-bottom:50px;">
                     <button onclick="validerEvaluation()" style="width:100%; padding:20px; background:#00d2ff; color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);">
@@ -3582,10 +3586,9 @@ function chargerExos(id) {
 
             corps.innerHTML = htmlExos;
 
-            // 5. Lancement du Chrono de 10 minutes
+            // 4. Lancement Chrono et Rendu Math
             lancerChronoEvaluation(10 * 60);
 
-            // 6. Rendu Mathématique KaTeX
             if (window.renderMathInElement) {
                 renderMathInElement(corps, {
                     delimiters: [
@@ -3654,53 +3657,49 @@ async function validerEvaluation() {
 }
 
 function afficherEcranResultat(score, total) {
-    // Détection du conteneur selon le mode (Devoir ou Exercice)
-    const corps = document.getElementById("conteneurSommaire") || document.getElementById("overlay-body");
+    // FORCE le choix du conteneur selon le type d'examen pour éviter les conflits
+    let corps;
+    if (examenEnCours.type === 'EXERCICE') {
+        corps = document.getElementById("overlay-body");
+    } else {
+        corps = document.getElementById("conteneurSommaire");
+    }
     
+    // Si le conteneur spécifique n'est pas trouvé, on cherche l'autre par sécurité
+    if (!corps) corps = document.getElementById("overlay-body") || document.getElementById("conteneurSommaire");
     if (!corps) return;
 
-    // Calcul de la note sur 20 pour l'affichage informatif
+    // Calcul de la note
     const noteSur20 = Math.round((score / total) * 20);
     
-    // Sélection de l'émoji et du message selon la performance
-    let message = "Continue tes efforts ! 💪";
-    let emoji = "📚";
-    if (noteSur20 >= 16) { emoji = "🔥"; message = "Excellent travail ! 🌟"; }
-    else if (noteSur20 >= 10) { emoji = "🏆"; message = "Félicitations, tu as réussi ! ✨"; }
+    // Remonter en haut pour voir l'émoji immédiatement
+    corps.scrollTop = 0;
 
     corps.innerHTML = `
-        <div style="text-align:center; padding:50px 20px; background:#1a1c23; min-height:100vh; color:white;" class="anim-slide-up">
-            <div style="font-size:80px; margin-bottom:10px;">${emoji}</div>
+        <div style="text-align:center; padding:40px 20px; background:#1a1c23; min-height:100%; color:white; display:flex; flex-direction:column; align-items:center;">
+            <div style="font-size:70px; margin-bottom:10px;">${noteSur20 >= 10 ? '🏆' : '📚'}</div>
             
-            <h2 style="color:var(--gold); font-size:1.8rem; letter-spacing:1px; margin-bottom:5px;">RÉSULTAT FINAL</h2>
-            <p style="opacity:0.7; font-size:1.1rem; margin-bottom:30px;">${message}</p>
+            <h2 style="color:var(--gold); font-size:1.8rem; margin-bottom:5px;">RÉSULTAT FINAL</h2>
+            <p style="opacity:0.7; margin-bottom:25px;">${noteSur20 >= 10 ? 'Félicitations !' : 'Continue tes efforts !'}</p>
 
-            <div style="background:rgba(255,255,255,0.03); padding:30px; border-radius:20px; border:1px solid rgba(255,255,255,0.1); max-width:300px; margin: 0 auto 40px auto;">
-                <div style="font-size:3.5rem; font-weight:bold; color:white;">
-                    ${score} <span style="font-size:1.5rem; opacity:0.5;">/ ${total}</span>
-                </div>
-                <div style="font-size:1.2rem; color:var(--gold); margin-top:10px; font-weight:bold; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
-                    Note : ${noteSur20} / 20
-                </div>
+            <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.1); width:100%; max-width:280px; margin-bottom:30px;">
+                <div style="font-size:3rem; font-weight:bold;">${score} <span style="font-size:1.2rem; opacity:0.5;">/ ${total}</span></div>
+                <div style="font-size:1.1rem; color:var(--gold); margin-top:5px; font-weight:bold;">Note : ${noteSur20} / 20</div>
             </div>
             
-            <div style="display:flex; flex-direction:column; gap:15px; max-width:400px; margin:auto;">
-                <button onclick="afficherCorrectionDetaillee()" style="padding:20px; background:var(--gold); color:black; border:none; border-radius:15px; font-weight:bold; cursor:pointer; font-size:1.1rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
+            <div style="display:flex; flex-direction:column; gap:12px; width:100%; max-width:350px;">
+                <button onclick="afficherCorrectionDetaillee()" 
+                        style="display:block; width:100%; padding:18px; background:var(--gold); color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.1rem;">
                     👁️ VOIR LA CORRECTION
                 </button>
 
                 <button onclick="${(examenEnCours.type === 'EXERCICE') ? 'closeWorkOverlay()' : 'fermerModalDevoir()'}" 
-                        style="padding:15px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:12px; cursor:pointer; font-size:1rem;">
+                        style="display:block; width:100%; padding:15px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:12px; cursor:pointer;">
                     RETOUR AU SOMMAIRE
                 </button>
             </div>
         </div>
     `;
-
-    // Petit effet de vibration si le score est parfait
-    if (score === total && window.navigator.vibrate) {
-        window.navigator.vibrate([100, 50, 100]);
-    }
 }
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
