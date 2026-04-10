@@ -3446,60 +3446,74 @@ function lancerChronoEvaluation(secondes) {
 
 
 function afficherCorrectionDetaillee() {
-    // On utilise le conteneur actif (conteneurSommaire pour les devoirs, overlay-body pour les exos)
-    const corps = document.getElementById("conteneurSommaire") || document.getElementById("overlay-body");
-    
-    if (!corps) return;
+    // 1. Détection intelligente du conteneur selon le contexte actif
+    let corps;
+    if (examenEnCours.type === "EXERCICE") {
+        corps = document.getElementById("overlay-body");
+    } else {
+        corps = document.getElementById("conteneurSommaire");
+    }
 
-    // Remonter en haut pour que l'élève commence la lecture au début
+    // Sécurité : si le conteneur attendu n'est pas là, on cherche l'autre
+    if (!corps) corps = document.getElementById("overlay-body") || document.getElementById("conteneurSommaire");
+    
+    if (!corps) {
+        console.error("Erreur : Aucun conteneur trouvé pour afficher la correction.");
+        return;
+    }
+
+    // 2. Remonter en haut de l'overlay pour que l'élève voie le début de la correction
     corps.scrollTop = 0;
 
     let html = `
-        <div style="padding:20px; background:#1a1c23; color:white; min-height:100vh;">
-            <h2 style="text-align:center; color:var(--gold); letter-spacing:2px;">CORRECTION DÉTAILLÉE</h2>
+        <div style="padding:20px; background:#1a1c23; color:white; min-height:100vh;" class="anim-slide-up">
+            <h2 style="text-align:center; color:var(--gold); letter-spacing:2px; margin-top:10px;">CORRECTION DÉTAILLÉE</h2>
             <p style="text-align:center; opacity:0.6; margin-bottom:30px;">Analyse de tes erreurs et réussites</p>
     `;
 
+    // 3. Boucle sur les questions stockées dans l'objet global
     examenEnCours.questions.forEach((q, index) => {
         const estCorrect = q.reponseEleve === q.correct;
         
         html += `
             <div class="glass-card" style="margin-bottom:20px; padding:20px; border-radius:15px; border:1px solid ${estCorrect ? '#27ae60' : '#e74c3c'}; background:rgba(255,255,255,0.02);">
-                <p style="font-size:1.1rem; margin-bottom:15px;"><strong>Q${index + 1}.</strong> ${q.enonce}</p>
+                <p style="font-size:1.1rem; margin-bottom:15px;">
+                    <strong style="color:var(--gold);">Q${index + 1}.</strong> ${q.enonce}
+                </p>
                 
                 <div style="padding:15px; border-radius:10px; background:${estCorrect ? 'rgba(39, 174, 96, 0.1)' : 'rgba(231, 76, 60, 0.1)'};">
-                    <p style="color:${estCorrect ? '#2ecc71' : '#ff4757'}; margin:0; font-weight:bold;">
-                        ${estCorrect ? '✅ Bravo ! C\'est la bonne réponse.' : '❌ Erreur.'}
+                    <p style="color:${estCorrect ? '#2ecc71' : '#ff4757'}; margin:0; font-weight:bold; display:flex; align-items:center; gap:8px;">
+                        ${estCorrect ? '✅ Bravo ! C\'est la bonne réponse.' : '❌ Erreur de raisonnement.'}
                     </p>
                     
                     ${!estCorrect ? `
-                        <p style="margin:8px 0 0 0; color:#94a3b8; font-size:0.95rem;">
-                            Ta réponse : <span style="text-decoration:line-through;">${q.reponseEleve !== null ? q.options[q.reponseEleve] : 'Aucune'}</span>
+                        <p style="margin:10px 0 5px 0; color:#94a3b8; font-size:0.95rem;">
+                            Ta réponse : <span style="text-decoration:line-through; color:#e74c3c;">${q.reponseEleve !== null ? q.options[q.reponseEleve] : 'Aucune réponse'}</span>
                         </p>
                     ` : ''}
 
                     <p style="margin:8px 0 0 0; color:#2ecc71; font-weight:bold; font-size:1rem;">
-                        ${estCorrect ? '' : '✔️ '}La réponse correcte : ${q.options[q.correct]}
+                        ${estCorrect ? '' : '✔️ '}La réponse correcte : <span style="color:white;">${q.options[q.correct]}</span>
                     </p>
                 </div>
             </div>
         `;
     });
 
-    // Bouton de fermeture (adapte selon si c'est un devoir ou un exo)
+    // 4. Adaptation dynamique du bouton de fermeture
     const actionFermeture = (examenEnCours.type === "EXERCICE") ? "closeWorkOverlay()" : "fermerModalDevoir()";
 
     html += `
-            <button onclick="${actionFermeture}" style="width:100%; padding:20px; background:var(--gold); color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:30px; margin-bottom:50px; font-size:1.1rem; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);">
+            <button onclick="${actionFermeture}" style="width:100%; padding:20px; background:var(--gold); color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:30px; margin-bottom:50px; font-size:1.1rem; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);">
                 J'AI COMPRIS MES ERREURS
             </button>
         </div>
     `;
 
+    // 5. Injection du HTML
     corps.innerHTML = html;
     
-    // --- RENDU MATHÉMATIQUE KATEX ---
-    // On scanne tout le bloc de correction pour transformer le LaTeX en formules
+    // 6. Rendu Mathématique KaTeX pour les formules dans la correction
     if (window.renderMathInElement) {
         renderMathInElement(corps, {
             delimiters: [
