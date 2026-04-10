@@ -3785,18 +3785,16 @@ async function validerEvaluation() {
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
-
-
 // =========================================================
 //  LOGIQUE DE SUPPRESSION (VERSION BLINDÉE)
 // =========================================================
-window.modeSuppression = false; // On attache à window pour la visibilité globale
+window.modeSuppression = false; 
 
 window.activerSuppression = function() {
     window.modeSuppression = !window.modeSuppression;
     const btn = document.getElementById('btn-poubelle');
     
-    console.log("Mode suppression :", window.modeSuppression); // Debug console
+    console.log("Mode suppression :", window.modeSuppression); 
 
     if (btn) {
         if (window.modeSuppression) {
@@ -3812,7 +3810,6 @@ window.activerSuppression = function() {
 };
 
 window.gererClicSuppression = function(x, y) {
-    // Tolérance de clic augmentée à 20 pixels pour plus de facilité
     const indexPoint = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 20);
 
     if (indexPoint !== -1) {
@@ -3821,7 +3818,6 @@ window.gererClicSuppression = function(x, y) {
         if (confirm(`Voulez-vous supprimer le point ${pointASupprimer.label} ?`)) {
             points.splice(indexPoint, 1);
             
-            // On nettoie les segments
             if (window.elements) {
                 elements = elements.filter(el => 
                     el.type !== 'segment' || (el.p1 !== pointASupprimer && el.p2 !== pointASupprimer)
@@ -3829,7 +3825,7 @@ window.gererClicSuppression = function(x, y) {
             }
 
             if (typeof refreshCanvas === "function") refreshCanvas();
-            window.activerSuppression(); // Désactive le mode après suppression
+            window.activerSuppression(); 
         }
     }
 };
@@ -3839,6 +3835,12 @@ window.gererClicSuppression = function(x, y) {
 // =========================================================
 window.addEventListener('load', async () => {
     console.log("🚀 Initialisation du moteur Maths 5em...");
+
+    // --- ÉTAPE 0 : ALLUMAGE PRIORITAIRE DU VOYANT CLOUD ---
+    // On lance la surveillance avant tout pour éviter le voyant gris
+    if (typeof surveillerConnexion === "function") {
+        surveillerConnexion();
+    }
 
     // 1. AFFICHAGE IMMÉDIAT DE L'ID
     const devIdDisplay = document.getElementById('display-device-id');
@@ -3858,12 +3860,15 @@ window.addEventListener('load', async () => {
         } catch(e) { console.warn("Mode local activé."); }
     }
 
-    // 4. LE TUNNEL DE SÉCURITÉ
-    if (typeof launchApp === "function") {
+    // 4. LE TUNNEL DE SÉCURITÉ ET NAVIGATION (Fusionné)
+    // On utilise verifierEtatInitial car il contient la logique de redirection
+    if (typeof verifierEtatInitial === "function") {
+        await verifierEtatInitial();
+    } else if (typeof launchApp === "function") {
         await launchApp();
     }
 
-    // 5. ACTIVATION DES SERVICES
+    // 5. ACTIVATION DES SERVICES (SIGNAL EN LIGNE)
     const telLocal = localStorage.getItem('user_tel_id');
     const estActif = localStorage.getItem('v32_active') === 'true';
     if (telLocal && estActif) {
@@ -3916,9 +3921,11 @@ window.addEventListener('load', async () => {
 window.addEventListener('resize', () => {
     const area = document.getElementById('canvas-area');
     const canvas = document.getElementById('geoCanvas');
-    if (canvas && area && document.getElementById('geo-container').style.display === 'flex') {
+    if (canvas && area && document.getElementById('geo-container') && document.getElementById('geo-container').style.display === 'flex') {
         canvas.width = area.clientWidth;
         canvas.height = area.clientHeight;
         if (typeof refreshCanvas === "function") refreshCanvas();
     }
 });
+
+
