@@ -3110,60 +3110,7 @@ async function chargerLecon(id) {
     }
 }
 
-/** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS */
-function chargerExos(id) {
-    const corps = document.getElementById("overlay-body");
-    if (!corps) return;
 
-    corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">Chargement des exercices...</div>`;
-
-    database.ref('exercices/' + id).once('value').then((snapshot) => {
-        const exercices = snapshot.val();
-
-        if (exercices) {
-            let htmlExos = `
-                <div style="padding: 20px; max-width: 800px; margin: auto;" class="anim-slide-up">
-                    <button onclick="chargerLecon('${id}')" style="background:none; border:1px solid #64748b; color:#64748b; padding:5px 15px; border-radius:20px; cursor:pointer; margin-bottom:20px;">
-                        ← REVOIR LE COURS
-                    </button>
-                    <h2 style="color:var(--gold); margin-bottom:30px; text-align:center;">🎯 ENTRAÎNEMENT</h2>`;
-
-            exercices.forEach((exo, index) => {
-                htmlExos += `
-                    <div class="glass-card" style="margin-bottom:25px; padding:20px; border-radius:15px; background:rgba(255,255,255,0.03);">
-                        <p style="color:white; font-size:1.1rem; margin-bottom:15px;">
-                            <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${exo.enonce}
-                        </p>
-                        <div style="display:grid; gap:10px;">
-                            ${exo.options.map((opt, i) => `
-                                <button class="btn-option" 
-                                        onclick="verifierReponse(this, ${exo.correct}, ${i}, '${exo.aide.replace(/'/g, "\\'")}')"
-                                        style="text-align:left; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:white; cursor:pointer; transition:0.3s;">
-                                    ${opt}
-                                </button>
-                            `).join('')}
-                        </div>
-                        <div class="feedback" style="margin-top:15px; font-size:0.9rem; display:none; padding:10px; border-radius:8px;"></div>
-                    </div>`;
-            });
-
-            htmlExos += `</div>`;
-            corps.innerHTML = htmlExos;
-
-            // --- DÉCLENCHEMENT DU RENDU MATHÉMATIQUE ---
-            renderMathInElement(corps, {
-                delimiters: [
-                    {left: '$$', right: '$$', display: true},
-                    {left: '$', right: '$', display: false}
-                ],
-                throwOnError : false
-            });
-
-        } else {
-            corps.innerHTML = `<div style="padding:50px; text-align:center;">Aucun exercice disponible.</div>`;
-        }
-    });
-}
 /** FONCTION DE VÉRIFICATION (Logique universelle) */
 function verifierReponse(btn, indexCorrect, indexChoisi, aide) {
     const parent = btn.parentElement;
@@ -3496,42 +3443,7 @@ function lancerChronoEvaluation(secondes) {
         temps--;
     }, 1000);
 }
-async function validerEvaluation() {
-    let scoreBrut = 0;
-    const totalQuestions = examenEnCours.questions.length;
 
-    // Arrêt du chrono dès la validation
-    if (window.chronoInterval) clearInterval(window.chronoInterval);
-
-    // 1. Calcul du score + Stockage des réponses pour la correction
-    examenEnCours.questions.forEach((q, index) => {
-        const input = document.querySelector(`input[name="q${index}"]:checked`);
-        // On sauvegarde le choix de l'élève (index de l'option ou null)
-        q.reponseEleve = input ? parseInt(input.value) : null; 
-        
-        if (q.reponseEleve === q.correct) {
-            scoreBrut++;
-        }
-    });
-
-    const noteSur20 = Math.round((scoreBrut / totalQuestions) * 20);
-    const nomChapitre = "DEVOIR : " + examenEnCours.id;
-    
-    try {
-        // 2. Enregistrement Firebase pour les parents (Inchangé)
-        await genererRapportParent(nomChapitre, noteSur20);
-        
-        // 3. Affichage du résultat et transition vers la correction
-        alert(`🎯 Évaluation enregistrée !\nNote : ${scoreBrut}/${totalQuestions} (${noteSur20}/20)`);
-        
-        // AU LIEU DE FERMER, ON AFFICHE LE BILAN
-        afficherEcranResultat(scoreBrut, totalQuestions);
-
-    } catch (e) {
-        alert("Erreur lors de l'envoi du rapport.");
-        console.error(e);
-    }
-}
 function afficherEcranResultat(score, total) {
     const corps = document.getElementById("conteneurSommaire");
     
@@ -3554,10 +3466,17 @@ function afficherEcranResultat(score, total) {
 }
 
 function afficherCorrectionDetaillee() {
-    const corps = document.getElementById("conteneurSommaire");
+    // On utilise le conteneur actif (conteneurSommaire pour les devoirs, overlay-body pour les exos)
+    const corps = document.getElementById("conteneurSommaire") || document.getElementById("overlay-body");
+    
+    if (!corps) return;
+
+    // Remonter en haut pour que l'élève commence la lecture au début
+    corps.scrollTop = 0;
+
     let html = `
         <div style="padding:20px; background:#1a1c23; color:white; min-height:100vh;">
-            <h2 style="text-align:center; color:var(--gold);">CORRECTION DÉTAILLÉE</h2>
+            <h2 style="text-align:center; color:var(--gold); letter-spacing:2px;">CORRECTION DÉTAILLÉE</h2>
             <p style="text-align:center; opacity:0.6; margin-bottom:30px;">Analyse de tes erreurs et réussites</p>
     `;
 
@@ -3565,40 +3484,194 @@ function afficherCorrectionDetaillee() {
         const estCorrect = q.reponseEleve === q.correct;
         
         html += `
-            <div style="margin-bottom:20px; padding:20px; border-radius:15px; border:1px solid ${estCorrect ? '#27ae60' : '#e74c3c'}; background:rgba(255,255,255,0.02);">
+            <div class="glass-card" style="margin-bottom:20px; padding:20px; border-radius:15px; border:1px solid ${estCorrect ? '#27ae60' : '#e74c3c'}; background:rgba(255,255,255,0.02);">
                 <p style="font-size:1.1rem; margin-bottom:15px;"><strong>Q${index + 1}.</strong> ${q.enonce}</p>
                 
-                <div style="padding:12px; border-radius:10px; background:${estCorrect ? 'rgba(39, 174, 96, 0.1)' : 'rgba(231, 76, 60, 0.1)'};">
-                    <p style="color:${estCorrect ? '#2ecc71' : '#ff4757'}; margin:0;">
-                        ${estCorrect ? '✅ <b>Bravo !</b> C\'est la bonne réponse.' : '❌ <b>Erreur.</b>'}
+                <div style="padding:15px; border-radius:10px; background:${estCorrect ? 'rgba(39, 174, 96, 0.1)' : 'rgba(231, 76, 60, 0.1)'};">
+                    <p style="color:${estCorrect ? '#2ecc71' : '#ff4757'}; margin:0; font-weight:bold;">
+                        ${estCorrect ? '✅ Bravo ! C\'est la bonne réponse.' : '❌ Erreur.'}
                     </p>
+                    
                     ${!estCorrect ? `
-                        <p style="margin:5px 0 0 0; color:#94a3b8;">
+                        <p style="margin:8px 0 0 0; color:#94a3b8; font-size:0.95rem;">
                             Ta réponse : <span style="text-decoration:line-through;">${q.reponseEleve !== null ? q.options[q.reponseEleve] : 'Aucune'}</span>
                         </p>
-                        <p style="margin:5px 0 0 0; color:#2ecc71; font-weight:bold;">
-                            ✔️ La bonne réponse était : ${q.options[q.correct]}
-                        </p>
                     ` : ''}
+
+                    <p style="margin:8px 0 0 0; color:#2ecc71; font-weight:bold; font-size:1rem;">
+                        ${estCorrect ? '' : '✔️ '}La réponse correcte : ${q.options[q.correct]}
+                    </p>
                 </div>
             </div>
         `;
     });
 
+    // Bouton de fermeture (adapte selon si c'est un devoir ou un exo)
+    const actionFermeture = (examenEnCours.type === "EXERCICE") ? "closeWorkOverlay()" : "fermerModalDevoir()";
+
     html += `
-        <button onclick="fermerModalDevoir()" style="width:100%; padding:20px; background:var(--gold); color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:30px; margin-bottom:50px;">
-            J'AI COMPRIS MES ERREURS
-        </button>
-    </div>`;
+            <button onclick="${actionFermeture}" style="width:100%; padding:20px; background:var(--gold); color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:30px; margin-bottom:50px; font-size:1.1rem; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);">
+                J'AI COMPRIS MES ERREURS
+            </button>
+        </div>
+    `;
 
     corps.innerHTML = html;
     
-    // Rendu des formules mathématiques dans la correction
+    // --- RENDU MATHÉMATIQUE KATEX ---
+    // On scanne tout le bloc de correction pour transformer le LaTeX en formules
     if (window.renderMathInElement) {
-        renderMathInElement(corps, { delimiters: [{left: '$', right: '$', display: false}] });
+        renderMathInElement(corps, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+            ],
+            throwOnError : false
+        });
     }
 }
+/** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
+function chargerExos(id) {
+    const corps = document.getElementById("overlay-body");
+    if (!corps) return;
 
+    // Arrêt d'un éventuel chrono en cours
+    if (window.chronoInterval) clearInterval(window.chronoInterval);
+
+    corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Préparation de vos 10 exercices...</div>`;
+
+    database.ref('exercices/' + id).once('value').then((snapshot) => {
+        const exercices = snapshot.val();
+
+        if (exercices) {
+            // 1. Conversion et mélange pour extraire exactement 10 questions
+            const listeBrute = Array.isArray(exercices) ? exercices : Object.values(exercices);
+            
+            examenEnCours.id = id;
+            examenEnCours.type = "EXERCICE"; 
+            // On mélange et on prend 10
+            examenEnCours.questions = [...listeBrute].sort(() => Math.random() - 0.5).slice(0, 10);
+
+            // 2. Structure HTML avec Barre de Chrono
+            let htmlExos = `
+                <div style="padding: 20px; max-width: 800px; margin: auto; background:#1a1c23; color:white;" class="anim-slide-up">
+                    
+                    <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid #00d2ff; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 20px -20px;">
+                        <div style="color:#00d2ff; font-weight:bold; font-size:1.1rem;">⏱️ TEMPS : <span id="timer-display">10:00</span></div>
+                        <button onclick="closeWorkOverlay()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+                    </div>
+
+                    <h2 style="color:var(--gold); margin:30px 0 10px 0; text-align:center;">🎯 ENTRAÎNEMENT : ${id}</h2>
+                    <p style="text-align:center; opacity:0.6; margin-bottom:30px;">Répondez aux 10 questions avant la fin du temps.</p>
+            `;
+
+            // 3. Génération des blocs de questions (Type Radio pour validation globale)
+            examenEnCours.questions.forEach((exo, index) => {
+                htmlExos += `
+                    <div class="glass-card" style="margin-bottom:25px; padding:20px; border-radius:15px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1);">
+                        <p style="color:white; font-size:1.1rem; margin-bottom:15px;">
+                            <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${exo.enonce}
+                        </p>
+                        <div style="display:grid; gap:10px;">
+                            ${exo.options.map((opt, i) => `
+                                <label style="display:flex; align-items:center; gap:10px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:white; cursor:pointer; transition:0.3s;">
+                                    <input type="radio" name="q${index}" value="${i}" style="accent-color:#00d2ff; width:18px; height:18px;">
+                                    <span>${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>`;
+            });
+
+            // 4. Boutons d'action
+            htmlExos += `
+                <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; padding-bottom:50px;">
+                    <button onclick="validerEvaluation()" style="width:100%; padding:20px; background:#00d2ff; color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);">
+                        ✅ VALIDER ET VOIR MA NOTE
+                    </button>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <button onclick="chargerExos('${id}')" style="padding:12px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer;">
+                            🔄 AUTRES QUESTIONS
+                        </button>
+                        <button onclick="closeWorkOverlay()" style="padding:12px; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border:1px solid #e74c3c; border-radius:10px; cursor:pointer;">
+                            ❌ QUITTER
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+
+            corps.innerHTML = htmlExos;
+
+            // 5. Lancement du Chrono de 10 minutes
+            lancerChronoEvaluation(10 * 60);
+
+            // 6. Rendu Mathématique KaTeX
+            if (window.renderMathInElement) {
+                renderMathInElement(corps, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError : false
+                });
+            }
+
+        } else {
+            corps.innerHTML = `<div style="padding:50px; text-align:center;">Aucun exercice disponible.</div>`;
+        }
+    });
+}
+/** VALIDE L'ÉVALUATION, ENVOIE AU PARENT ET PRÉPARE LA CORRECTION */
+async function validerEvaluation() {
+    let scoreBrut = 0;
+    const totalQuestions = examenEnCours.questions.length;
+
+    // 1. Arrêt définitif du chrono
+    if (window.chronoInterval) clearInterval(window.chronoInterval);
+    if (examenEnCours.timer) clearInterval(examenEnCours.timer);
+
+    // 2. Calcul du score + Stockage des réponses pour la correction détaillée
+    examenEnCours.questions.forEach((q, index) => {
+        // Sélection de l'input radio coché pour cette question
+        const input = document.querySelector(`input[name="q${index}"]:checked`);
+        
+        // Sauvegarde du choix (index de l'option choisie ou null si non répondu)
+        q.reponseEleve = input ? parseInt(input.value) : null; 
+        
+        // Comparaison avec la bonne réponse stockée dans l'objet question
+        if (q.reponseEleve === q.correct) {
+            scoreBrut++;
+        }
+    });
+
+    // 3. Normalisation de la note sur 20 (pour la cohérence du suivi parent)
+    const noteSur20 = Math.round((scoreBrut / totalQuestions) * 20);
+    
+    // Détermination automatique du préfixe selon le mode
+    const prefixe = (examenEnCours.type === "EXERCICE") ? "EXERCICE : " : "DEVOIR : ";
+    const nomChapitre = prefixe + examenEnCours.id;
+    
+    try {
+        // 4. Envoi automatique vers Firebase (Branche suivi_parent)
+        // Cette fonction utilise déjà le téléphone stocké dans localStorage
+        await genererRapportParent(nomChapitre, noteSur20);
+        
+        // 5. Feedback visuel immédiat pour l'élève
+        const messageSucces = (noteSur20 >= 10) ? "Bravo ! Travail bien enregistré. 🌟" : "C'est enregistré. Continue tes efforts ! 💪";
+        alert(`🎯 ${messageSucces}\nNote : ${scoreBrut}/${totalQuestions} (${noteSur20}/20)`);
+        
+        // 6. Transition vers l'écran de bilan (où se trouve le bouton "Correction détaillée")
+        afficherEcranResultat(scoreBrut, totalQuestions);
+
+    } catch (e) {
+        // Sécurité en cas de problème réseau
+        alert("⚠️ Problème de connexion : La note sera sauvegardée localement.");
+        console.error("Erreur de synchronisation Firebase:", e);
+        
+        // On affiche tout de même le résultat à l'élève
+        afficherEcranResultat(scoreBrut, totalQuestions);
+    }
+}
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
