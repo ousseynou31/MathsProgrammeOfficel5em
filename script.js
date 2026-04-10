@@ -18,7 +18,14 @@ if (typeof canvas === 'undefined') {
     var timerClic = null;
 }
 let chronoInterval; // Variable globale pour stopper le chrono si besoin
-
+// Déclaration initiale sécurisée
+window.examenEnCours = {
+    id: null,
+    type: null, // "EXERCICE" ou "DEVOIR"
+    timer: null,
+    tempsRestant: 2700,
+    questions: []
+};
 // Variables globales pour la session
 let heureDebutSession = null;
 
@@ -3207,12 +3214,7 @@ function fermerModal() {
     document.getElementById('modalDevoir').style.display = "none";
 }
 
-let examenEnCours = {
-    id: null,
-    timer: null,
-    tempsRestant: 2700,
-    questions: []
-};
+
 
 
 function lancerChronoUniversel() {
