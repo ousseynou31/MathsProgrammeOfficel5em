@@ -3679,24 +3679,27 @@ function afficherCorrectionDetaillee() {
     console.log("✅ Correction injectée.");
 }
 /** VALIDE L'ÉVALUATION, ENVOIE AU PARENT ET PRÉPARE LA CORRECTION */
+/** VALIDE L'ÉVALUATION, ENVOIE AU PARENT ET PRÉPARE LA CORRECTION */
 async function validerEvaluation() {
-    // 1. Sécurité : Vérifier que les questions existent avant de commencer
+    // 1. On s'assure de travailler sur l'objet global window
     if (!window.examenEnCours || !window.examenEnCours.questions) {
-        console.error("Erreur : Aucune donnée d'examen à valider.");
+        console.error("Erreur : window.examenEnCours est vide.");
+        alert("⚠️ Erreur technique : impossible de trouver les questions.");
         return;
     }
 
     let scoreBrut = 0;
-    const totalQuestions = window.examenEnCours.questions.length;
+    const questions = window.examenEnCours.questions; // Référence directe
+    const totalQuestions = questions.length;
 
-    // 2. Arrêt définitif du chrono
+    // 2. Arrêt des timers
     if (window.chronoInterval) clearInterval(window.chronoInterval);
     if (window.examenEnCours.timer) clearInterval(window.examenEnCours.timer);
 
-    // 3. Calcul du score + Stockage des réponses dans l'objet GLOBAL
-    window.examenEnCours.questions.forEach((q, index) => {
+    // 3. Calcul et STOCKAGE des réponses
+    questions.forEach((q, index) => {
         const input = document.querySelector(`input[name="q${index}"]:checked`);
-        // On enregistre précieusement le choix de l'élève pour la correction
+        // On écrit directement dans l'objet window
         q.reponseEleve = input ? parseInt(input.value) : null; 
         
         if (q.reponseEleve === q.correct) {
@@ -3704,28 +3707,24 @@ async function validerEvaluation() {
         }
     });
 
-    // 4. Normalisation de la note
     const noteSur20 = Math.round((scoreBrut / totalQuestions) * 20);
-    const prefixe = (window.examenEnCours.type === "EXERCICE") ? "EXERCICE : " : "DEVOIR : ";
-    const nomChapitre = prefixe + window.examenEnCours.id;
+    const nomChapitre = (window.examenEnCours.type === "EXERCICE" ? "EXERCICE : " : "DEVOIR : ") + window.examenEnCours.id;
     
     try {
-        // 5. Envoi vers Firebase (Attente de confirmation)
+        // 4. Envoi Firebase (On attend la réponse avant d'activer le bouton)
         await genererRapportParent(nomChapitre, noteSur20);
         
-        // 6. --- ACTIVATION VISUELLE ---
+        // 5. Mise à jour de l'interface
         const btnValider = document.getElementById("btn-valider-exo");
         const btnCorrection = document.getElementById("btn-correction-exo");
 
         if (btnValider && btnCorrection) {
-            // Style du bouton validé
             btnValider.disabled = true;
             btnValider.style.background = "#1e293b";
             btnValider.style.color = "#64748b";
-            btnValider.style.cursor = "default";
-            btnValider.innerHTML = `✅ SCORE ENREGISTRÉ : ${scoreBrut}/${totalQuestions}`;
+            btnValider.innerHTML = `✅ SCORE : ${scoreBrut}/${totalQuestions}`;
 
-            // Style du bouton de correction activé
+            // ALLUMAGE DU BOUTON CORRECTION
             btnCorrection.disabled = false;
             btnCorrection.style.background = "var(--gold)"; 
             btnCorrection.style.color = "black";
@@ -3734,21 +3733,14 @@ async function validerEvaluation() {
             btnCorrection.innerHTML = "👁️ VOIR LA CORRECTION MAINTENANT";
         }
 
-        // 7. Feedback à l'élève
-        const messageSucces = (noteSur20 >= 10) ? "Bravo ! Travail bien enregistré. 🌟" : "C'est enregistré. Continue tes efforts ! 💪";
-        alert(`🎯 ${messageSucces}\nNote : ${scoreBrut}/${totalQuestions} (${noteSur20}/20)`);
+        const msg = (noteSur20 >= 10) ? "Bravo ! C'est enregistré. 🌟" : "C'est enregistré. Continue tes efforts ! 💪";
+        alert(`🎯 ${msg}\nNote : ${scoreBrut}/${totalQuestions} (${noteSur20}/20)`);
 
     } catch (e) {
-        console.error("Erreur de synchronisation Firebase:", e);
-        alert("⚠️ Note calculée, mais problème de connexion pour l'envoi.");
-        
-        // Sécurité : on active quand même la correction
+        console.error("Erreur Firebase:", e);
+        // On active quand même la correction même si Firebase échoue
         const btnC = document.getElementById("btn-correction-exo");
-        if (btnC) {
-            btnC.disabled = false;
-            btnC.style.background = "var(--gold)";
-            btnC.style.color = "black";
-        }
+        if (btnC) btnC.disabled = false;
     }
 }
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
