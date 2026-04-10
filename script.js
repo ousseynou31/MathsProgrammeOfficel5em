@@ -3649,49 +3649,56 @@ function afficherEcranResultat(score, total) {
     `;
 }
 function afficherCorrectionDetaillee() {
-    // 0. DIAGNOSTIC : On vérifie immédiatement si la fonction démarre
     console.log("🛠️ Tentative d'affichage de la correction...");
 
-    // On s'assure que l'objet global existe
+    // 1. Accès sécurisé à l'objet global
     const examen = window.examenEnCours;
-    if (!examen || !examen.questions) {
-        console.error("❌ Erreur : L'objet 'examenEnCours' est vide ou introuvable.");
-        alert("Impossible d'afficher la correction : données manquantes.");
-        return;
-    }
-
-    // 1. Détection forcée du conteneur
-    let corps;
-    if (examen.type === "EXERCICE") {
-        corps = document.getElementById("overlay-body");
-    } else {
-        corps = document.getElementById("conteneurSommaire");
-    }
-
-    // Sécurité ultime pour le conteneur
-    if (!corps) corps = document.getElementById("overlay-body") || document.getElementById("conteneurSommaire");
     
-    if (!corps) {
-        console.error("❌ Erreur : Aucun conteneur (overlay-body ou conteneurSommaire) trouvé.");
+    // 2. Détection du conteneur
+    let corps = (examen && examen.type === "EXERCICE") 
+                ? document.getElementById("overlay-body") 
+                : document.getElementById("conteneurSommaire");
+
+    if (!corps) corps = document.getElementById("overlay-body") || document.getElementById("conteneurSommaire");
+    if (!corps) return;
+
+    // --- SÉCURITÉ : Si l'objet est vide, on affiche une erreur au lieu d'une page vide ---
+    if (!examen || !examen.questions || examen.questions.length === 0) {
+        corps.innerHTML = `
+            <div style="padding:40px; text-align:center; color:white;">
+                <h2 style="color:#e74c3c;">⚠️ Données introuvables</h2>
+                <p>Les questions n'ont pas pu être récupérées pour la correction.</p>
+                <button onclick="location.reload()" style="margin-top:20px; padding:15px; background:var(--gold); border:none; border-radius:10px; cursor:pointer; font-weight:bold;">
+                    🔄 RECHARGER L'APPLICATION
+                </button>
+            </div>`;
         return;
     }
 
-    // 2. Préparation de l'affichage
     corps.scrollTop = 0; 
 
+    // 3. Construction du HTML
     let html = `
-        <div style="padding:20px; background:#1a1c23; color:white; min-height:100vh;" class="anim-slide-up">
+        <div style="padding:20px; background:#1a1c23; color:white; min-height:100vh;">
             <div style="text-align:center; margin-bottom:30px;">
                 <h2 style="color:var(--gold); letter-spacing:2px; margin-bottom:5px;">CORRECTION DÉTAILLÉE</h2>
                 <div style="width:50px; height:3px; background:var(--gold); margin:auto; border-radius:10px;"></div>
-                <p style="opacity:0.6; margin-top:10px; font-size:0.9rem;">Examen : ${examen.id}</p>
             </div>
     `;
 
-    // 3. Génération des blocs de questions
+    // 4. Génération des blocs (avec vérification de chaque question)
     examen.questions.forEach((q, index) => {
+        // Sécurité : vérifier que les options existent pour cette question
+        if (!q.options) return;
+
         const estCorrect = q.reponseEleve === q.correct;
         
+        // On récupère le texte des options pour éviter les erreurs d'affichage
+        const texteChoixEleve = (q.reponseEleve !== null && q.options[q.reponseEleve]) 
+                                ? q.options[q.reponseEleve] 
+                                : "Aucune réponse donnée";
+        const texteBonneReponse = q.options[q.correct] || "Erreur de donnée";
+
         html += `
             <div class="glass-card" style="margin-bottom:20px; padding:20px; border-radius:15px; border:1px solid ${estCorrect ? '#27ae60' : '#e74c3c'}; background:rgba(255,255,255,0.02);">
                 <p style="font-size:1.1rem; margin-bottom:15px;">
@@ -3705,31 +3712,30 @@ function afficherCorrectionDetaillee() {
                     
                     ${!estCorrect ? `
                         <p style="margin:10px 0 5px 0; color:#94a3b8; font-size:0.95rem;">
-                            Ton choix : <span style="text-decoration:line-through; color:#e74c3c;">${q.reponseEleve !== null ? q.options[q.reponseEleve] : 'Aucune réponse'}</span>
+                            Ton choix : <span style="text-decoration:line-through; color:#e74c3c;">${texteChoixEleve}</span>
                         </p>
                     ` : ''}
 
                     <p style="margin:8px 0 0 0; color:#2ecc71; font-weight:bold; font-size:1rem;">
-                        ${estCorrect ? '✔️' : '👉'} La bonne réponse était : <span style="color:white;">${q.options[q.correct]}</span>
+                        ${estCorrect ? '✔️' : '👉'} La bonne réponse était : <span style="color:white;">${texteBonneReponse}</span>
                     </p>
                 </div>
             </div>
         `;
     });
 
-    // 4. Bouton de sortie
     const actionFermeture = (examen.type === "EXERCICE") ? "closeWorkOverlay()" : "fermerModalDevoir()";
 
     html += `
-            <button onclick="${actionFermeture}" style="width:100%; padding:20px; background:var(--gold); color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:30px; margin-bottom:50px; font-size:1.1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
+            <button id="btn-fermer-correction" onclick="${actionFermeture}" style="width:100%; padding:20px; background:var(--gold); color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin:30px 0 50px 0; font-size:1.1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
                 J'AI COMPRIS MES ERREURS
             </button>
         </div>
     `;
 
-    // 5. Injection et Rendu Math
     corps.innerHTML = html;
     
+    // 5. Rendu Maths
     if (window.renderMathInElement) {
         renderMathInElement(corps, {
             delimiters: [
@@ -3739,8 +3745,7 @@ function afficherCorrectionDetaillee() {
             throwOnError : false
         });
     }
-
-    console.log("✅ Correction affichée avec succès.");
+    console.log("✅ Correction injectée.");
 }
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
