@@ -3515,38 +3515,28 @@ function chargerExos(id) {
     const corps = document.getElementById("overlay-body");
     if (!corps) return;
 
-    // 1. Initialisation CRUCIALE de l'objet global pour éviter les erreurs plus tard
     window.examenEnCours = {
         id: id,
-        type: "EXERCICE", // Identifiant clé pour afficherEcranResultat
+        type: "EXERCICE",
         questions: [],
         timer: null
     };
 
-    // Arrêt d'un éventuel chrono en cours
     if (window.chronoInterval) clearInterval(window.chronoInterval);
-
     corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Préparation de vos 10 exercices...</div>`;
 
     database.ref('exercices/' + id).once('value').then((snapshot) => {
         const exercices = snapshot.val();
-
         if (exercices) {
-            // 2. Conversion et mélange
             const listeBrute = Array.isArray(exercices) ? exercices : Object.values(exercices);
-            
-            // On mélange et on prend 10 questions au hasard
             examenEnCours.questions = [...listeBrute].sort(() => Math.random() - 0.5).slice(0, 10);
 
-            // 3. Structure HTML
             let htmlExos = `
                 <div style="padding: 20px; max-width: 800px; margin: auto; background:#1a1c23; color:white;" class="anim-slide-up">
-                    
                     <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid #00d2ff; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 20px -20px;">
                         <div style="color:#00d2ff; font-weight:bold; font-size:1.1rem;">⏱️ TEMPS : <span id="timer-display">10:00</span></div>
                         <button onclick="closeWorkOverlay()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
                     </div>
-
                     <h2 style="color:var(--gold); margin:30px 0 10px 0; text-align:center;">🎯 ENTRAÎNEMENT : ${id}</h2>
                     <p style="text-align:center; opacity:0.6; margin-bottom:30px;">Répondez aux 10 questions avant la fin du temps.</p>
             `;
@@ -3568,11 +3558,17 @@ function chargerExos(id) {
                     </div>`;
             });
 
+            // --- SECTION BOUTONS MODIFIÉE ---
             htmlExos += `
                 <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; padding-bottom:50px;">
-                    <button onclick="validerEvaluation()" style="width:100%; padding:20px; background:#00d2ff; color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);">
+                    <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:20px; background:#00d2ff; color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);">
                         ✅ VALIDER ET VOIR MA NOTE
                     </button>
+
+                    <button id="btn-correction-exo" onclick="afficherCorrectionDetaillee()" disabled style="width:100%; padding:18px; background:#334155; color:rgba(255,255,255,0.2); border:none; border-radius:12px; font-weight:bold; cursor:not-allowed; font-size:1.1rem; transition:0.3s;">
+                        👁️ VOIR LA CORRECTION
+                    </button>
+
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                         <button onclick="chargerExos('${id}')" style="padding:12px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer;">
                             🔄 AUTRES QUESTIONS
@@ -3585,8 +3581,6 @@ function chargerExos(id) {
             </div>`;
 
             corps.innerHTML = htmlExos;
-
-            // 4. Lancement Chrono et Rendu Math
             lancerChronoEvaluation(10 * 60);
 
             if (window.renderMathInElement) {
@@ -3598,7 +3592,6 @@ function chargerExos(id) {
                     throwOnError : false
                 });
             }
-
         } else {
             corps.innerHTML = `<div style="padding:50px; text-align:center;">Aucun exercice disponible.</div>`;
         }
@@ -3613,46 +3606,64 @@ async function validerEvaluation() {
     if (window.chronoInterval) clearInterval(window.chronoInterval);
     if (examenEnCours.timer) clearInterval(examenEnCours.timer);
 
-    // 2. Calcul du score + Stockage des réponses pour la correction détaillée
+    // 2. Calcul du score + Stockage des réponses
     examenEnCours.questions.forEach((q, index) => {
-        // Sélection de l'input radio coché pour cette question
         const input = document.querySelector(`input[name="q${index}"]:checked`);
-        
-        // Sauvegarde du choix (index de l'option choisie ou null si non répondu)
         q.reponseEleve = input ? parseInt(input.value) : null; 
         
-        // Comparaison avec la bonne réponse stockée dans l'objet question
         if (q.reponseEleve === q.correct) {
             scoreBrut++;
         }
     });
 
-    // 3. Normalisation de la note sur 20 (pour la cohérence du suivi parent)
+    // 3. Normalisation de la note sur 20
     const noteSur20 = Math.round((scoreBrut / totalQuestions) * 20);
-    
-    // Détermination automatique du préfixe selon le mode
     const prefixe = (examenEnCours.type === "EXERCICE") ? "EXERCICE : " : "DEVOIR : ";
     const nomChapitre = prefixe + examenEnCours.id;
     
     try {
-        // 4. Envoi automatique vers Firebase (Branche suivi_parent)
-        // Cette fonction utilise déjà le téléphone stocké dans localStorage
+        // 4. Envoi vers Firebase
         await genererRapportParent(nomChapitre, noteSur20);
         
-        // 5. Feedback visuel immédiat pour l'élève
+        // --- LOGIQUE D'ACTIVATION DES BOUTONS (LA MÊME MUSIQUE) ---
+        const btnValider = document.getElementById("btn-valider-exo");
+        const btnCorrection = document.getElementById("btn-correction-exo");
+
+        if (btnValider && btnCorrection) {
+            // Désactiver le bouton Valider pour marquer la fin
+            btnValider.disabled = true;
+            btnValider.style.background = "#1e293b";
+            btnValider.style.color = "#64748b";
+            btnValider.style.cursor = "default";
+            btnValider.innerHTML = `✅ SCORE ENREGISTRÉ : ${scoreBrut}/${totalQuestions}`;
+
+            // ACTIVER LE BOUTON CORRECTION
+            btnCorrection.disabled = false;
+            btnCorrection.style.background = "var(--gold)"; // Devient doré
+            btnCorrection.style.color = "black";
+            btnCorrection.style.cursor = "pointer";
+            btnCorrection.style.boxShadow = "0 4px 15px rgba(255, 215, 0, 0.4)";
+            btnCorrection.innerHTML = "👁️ VOIR LA CORRECTION MAINTENANT";
+        }
+
+        // 5. Feedback visuel
         const messageSucces = (noteSur20 >= 10) ? "Bravo ! Travail bien enregistré. 🌟" : "C'est enregistré. Continue tes efforts ! 💪";
         alert(`🎯 ${messageSucces}\nNote : ${scoreBrut}/${totalQuestions} (${noteSur20}/20)`);
-        
-        // 6. Transition vers l'écran de bilan (où se trouve le bouton "Correction détaillée")
-        afficherEcranResultat(scoreBrut, totalQuestions);
+
+        // Note : On ne force plus afficherEcranResultat ici si vous voulez que l'élève 
+        // puisse scroller ses questions et cliquer lui-même sur le bouton correction.
 
     } catch (e) {
-        // Sécurité en cas de problème réseau
         alert("⚠️ Problème de connexion : La note sera sauvegardée localement.");
         console.error("Erreur de synchronisation Firebase:", e);
         
-        // On affiche tout de même le résultat à l'élève
-        afficherEcranResultat(scoreBrut, totalQuestions);
+        // En cas d'erreur, on active quand même la correction pour ne pas bloquer l'élève
+        const btnCorrection = document.getElementById("btn-correction-exo");
+        if (btnCorrection) {
+            btnCorrection.disabled = false;
+            btnCorrection.style.background = "var(--gold)";
+            btnCorrection.style.color = "black";
+        }
     }
 }
 
