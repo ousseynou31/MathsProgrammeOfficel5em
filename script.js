@@ -3533,75 +3533,6 @@ function chargerExos(id) {
         }
     });
 }
-/** VALIDE L'ÉVALUATION, ENVOIE AU PARENT ET PRÉPARE LA CORRECTION */
-async function validerEvaluation() {
-    let scoreBrut = 0;
-    const totalQuestions = examenEnCours.questions.length;
-
-    // 1. Arrêt définitif du chrono
-    if (window.chronoInterval) clearInterval(window.chronoInterval);
-    if (examenEnCours.timer) clearInterval(examenEnCours.timer);
-
-    // 2. Calcul du score + Stockage des réponses
-    examenEnCours.questions.forEach((q, index) => {
-        const input = document.querySelector(`input[name="q${index}"]:checked`);
-        q.reponseEleve = input ? parseInt(input.value) : null; 
-        
-        if (q.reponseEleve === q.correct) {
-            scoreBrut++;
-        }
-    });
-
-    // 3. Normalisation de la note sur 20
-    const noteSur20 = Math.round((scoreBrut / totalQuestions) * 20);
-    const prefixe = (examenEnCours.type === "EXERCICE") ? "EXERCICE : " : "DEVOIR : ";
-    const nomChapitre = prefixe + examenEnCours.id;
-    
-    try {
-        // 4. Envoi vers Firebase
-        await genererRapportParent(nomChapitre, noteSur20);
-        
-        // --- LOGIQUE D'ACTIVATION DES BOUTONS (LA MÊME MUSIQUE) ---
-        const btnValider = document.getElementById("btn-valider-exo");
-        const btnCorrection = document.getElementById("btn-correction-exo");
-
-        if (btnValider && btnCorrection) {
-            // Désactiver le bouton Valider pour marquer la fin
-            btnValider.disabled = true;
-            btnValider.style.background = "#1e293b";
-            btnValider.style.color = "#64748b";
-            btnValider.style.cursor = "default";
-            btnValider.innerHTML = `✅ SCORE ENREGISTRÉ : ${scoreBrut}/${totalQuestions}`;
-
-            // ACTIVER LE BOUTON CORRECTION
-            btnCorrection.disabled = false;
-            btnCorrection.style.background = "var(--gold)"; // Devient doré
-            btnCorrection.style.color = "black";
-            btnCorrection.style.cursor = "pointer";
-            btnCorrection.style.boxShadow = "0 4px 15px rgba(255, 215, 0, 0.4)";
-            btnCorrection.innerHTML = "👁️ VOIR LA CORRECTION MAINTENANT";
-        }
-
-        // 5. Feedback visuel
-        const messageSucces = (noteSur20 >= 10) ? "Bravo ! Travail bien enregistré. 🌟" : "C'est enregistré. Continue tes efforts ! 💪";
-        alert(`🎯 ${messageSucces}\nNote : ${scoreBrut}/${totalQuestions} (${noteSur20}/20)`);
-
-        // Note : On ne force plus afficherEcranResultat ici si vous voulez que l'élève 
-        // puisse scroller ses questions et cliquer lui-même sur le bouton correction.
-
-    } catch (e) {
-        alert("⚠️ Problème de connexion : La note sera sauvegardée localement.");
-        console.error("Erreur de synchronisation Firebase:", e);
-        
-        // En cas d'erreur, on active quand même la correction pour ne pas bloquer l'élève
-        const btnCorrection = document.getElementById("btn-correction-exo");
-        if (btnCorrection) {
-            btnCorrection.disabled = false;
-            btnCorrection.style.background = "var(--gold)";
-            btnCorrection.style.color = "black";
-        }
-    }
-}
 
 function afficherEcranResultat(score, total) {
     // FORCE le choix du conteneur selon le type d'examen pour éviter les conflits
@@ -3746,6 +3677,79 @@ function afficherCorrectionDetaillee() {
         });
     }
     console.log("✅ Correction injectée.");
+}
+/** VALIDE L'ÉVALUATION, ENVOIE AU PARENT ET PRÉPARE LA CORRECTION */
+async function validerEvaluation() {
+    // 1. Sécurité : Vérifier que les questions existent avant de commencer
+    if (!window.examenEnCours || !window.examenEnCours.questions) {
+        console.error("Erreur : Aucune donnée d'examen à valider.");
+        return;
+    }
+
+    let scoreBrut = 0;
+    const totalQuestions = window.examenEnCours.questions.length;
+
+    // 2. Arrêt définitif du chrono
+    if (window.chronoInterval) clearInterval(window.chronoInterval);
+    if (window.examenEnCours.timer) clearInterval(window.examenEnCours.timer);
+
+    // 3. Calcul du score + Stockage des réponses dans l'objet GLOBAL
+    window.examenEnCours.questions.forEach((q, index) => {
+        const input = document.querySelector(`input[name="q${index}"]:checked`);
+        // On enregistre précieusement le choix de l'élève pour la correction
+        q.reponseEleve = input ? parseInt(input.value) : null; 
+        
+        if (q.reponseEleve === q.correct) {
+            scoreBrut++;
+        }
+    });
+
+    // 4. Normalisation de la note
+    const noteSur20 = Math.round((scoreBrut / totalQuestions) * 20);
+    const prefixe = (window.examenEnCours.type === "EXERCICE") ? "EXERCICE : " : "DEVOIR : ";
+    const nomChapitre = prefixe + window.examenEnCours.id;
+    
+    try {
+        // 5. Envoi vers Firebase (Attente de confirmation)
+        await genererRapportParent(nomChapitre, noteSur20);
+        
+        // 6. --- ACTIVATION VISUELLE ---
+        const btnValider = document.getElementById("btn-valider-exo");
+        const btnCorrection = document.getElementById("btn-correction-exo");
+
+        if (btnValider && btnCorrection) {
+            // Style du bouton validé
+            btnValider.disabled = true;
+            btnValider.style.background = "#1e293b";
+            btnValider.style.color = "#64748b";
+            btnValider.style.cursor = "default";
+            btnValider.innerHTML = `✅ SCORE ENREGISTRÉ : ${scoreBrut}/${totalQuestions}`;
+
+            // Style du bouton de correction activé
+            btnCorrection.disabled = false;
+            btnCorrection.style.background = "var(--gold)"; 
+            btnCorrection.style.color = "black";
+            btnCorrection.style.cursor = "pointer";
+            btnCorrection.style.boxShadow = "0 4px 15px rgba(255, 215, 0, 0.4)";
+            btnCorrection.innerHTML = "👁️ VOIR LA CORRECTION MAINTENANT";
+        }
+
+        // 7. Feedback à l'élève
+        const messageSucces = (noteSur20 >= 10) ? "Bravo ! Travail bien enregistré. 🌟" : "C'est enregistré. Continue tes efforts ! 💪";
+        alert(`🎯 ${messageSucces}\nNote : ${scoreBrut}/${totalQuestions} (${noteSur20}/20)`);
+
+    } catch (e) {
+        console.error("Erreur de synchronisation Firebase:", e);
+        alert("⚠️ Note calculée, mais problème de connexion pour l'envoi.");
+        
+        // Sécurité : on active quand même la correction
+        const btnC = document.getElementById("btn-correction-exo");
+        if (btnC) {
+            btnC.disabled = false;
+            btnC.style.background = "var(--gold)";
+            btnC.style.color = "black";
+        }
+    }
 }
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
