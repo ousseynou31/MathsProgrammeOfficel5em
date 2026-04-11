@@ -3751,15 +3751,18 @@ async function validerEvaluation() {
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
+
 // =========================================================
 //  LOGIQUE DE SUPPRESSION (VERSION BLINDÉE)
 // =========================================================
-window.modeSuppression = false; 
+window.modeSuppression = false; // On attache à window pour la visibilité globale
 
 window.activerSuppression = function() {
     window.modeSuppression = !window.modeSuppression;
     const btn = document.getElementById('btn-poubelle');
     
+    console.log("Mode suppression :", window.modeSuppression); // Debug console
+
     if (btn) {
         if (window.modeSuppression) {
             btn.style.setProperty('background', '#b91c1c', 'important');
@@ -3768,22 +3771,30 @@ window.activerSuppression = function() {
             btn.style.background = ""; 
             btn.style.color = "";
         }
+    } else {
+        console.error("ERREUR : Le bouton avec l'ID 'btn-poubelle' est introuvable.");
     }
 };
 
 window.gererClicSuppression = function(x, y) {
+    // Tolérance de clic augmentée à 20 pixels pour plus de facilité
     const indexPoint = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 20);
+
     if (indexPoint !== -1) {
         const pointASupprimer = points[indexPoint];
+        
         if (confirm(`Voulez-vous supprimer le point ${pointASupprimer.label} ?`)) {
             points.splice(indexPoint, 1);
+            
+            // On nettoie les segments
             if (window.elements) {
                 elements = elements.filter(el => 
                     el.type !== 'segment' || (el.p1 !== pointASupprimer && el.p2 !== pointASupprimer)
                 );
             }
+
             if (typeof refreshCanvas === "function") refreshCanvas();
-            window.activerSuppression(); 
+            window.activerSuppression(); // Désactive le mode après suppression
         }
     }
 };
@@ -3794,50 +3805,41 @@ window.gererClicSuppression = function(x, y) {
 window.addEventListener('load', async () => {
     console.log("🚀 Initialisation du moteur Maths 5em...");
 
-    // --- ÉTAPE 0 : ALLUMAGE PRIORITAIRE DU VOYANT CLOUD ---
-    if (typeof surveillerConnexion === "function") {
-        surveillerConnexion();
-    }
-
-    // 1. VÉRIFICATION RADICALE DE LA SÉCURITÉ
-    // On récupère les états AVANT de décider d'afficher le sommaire
-    const telLocal = localStorage.getItem('user_tel_id');
-    const estActif = localStorage.getItem('v32_active') === 'true';
-
-    // On exécute la fonction d'affichage des écrans (Activation/Inscription/Hub)
-    if (typeof verifierEtatInitial === "function") {
-        await verifierEtatInitial();
-    }
-
-    // --- LE COUPE-CIRCUIT ---
-    // Si l'utilisateur n'est pas activé, on ARRÊTE le script ici.
-    // Cela empêche le chargement du sommaire et des cours.
-    if (!estActif || !telLocal) {
-        console.warn("🛑 Sécurité : Accès restreint. Chargement du sommaire annulé.");
-        return; 
-    }
-
-    // 2. PRÉPARATION DES OUTILS (Uniquement si autorisé)
+    // 1. AFFICHAGE IMMÉDIAT DE L'ID
     const devIdDisplay = document.getElementById('display-device-id');
     if (devIdDisplay && typeof getDeviceId === "function") {
         devIdDisplay.innerText = getDeviceId();
     }
 
-    if (typeof initAdminTrigger === "function") initAdminTrigger();
-
-    // 3. SYNCHRONISATION DES DONNÉES
-    if (typeof chargerTarifs === "function") {
-        try { await chargerTarifs(); } catch(e) { console.warn("Mode local."); }
+    // 2. PRÉPARATION DES OUTILS ADMIN
+    if (typeof initAdminTrigger === "function") {
+        initAdminTrigger();
     }
 
-    // 4. ACTIVATION DES SERVICES TEMPS RÉEL
-    if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
-    if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
+    // 3. SYNCHRONISATION DES DONNÉES (Tarifs)
+    if (typeof chargerTarifs === "function") {
+        try {
+            await chargerTarifs();
+        } catch(e) { console.warn("Mode local activé."); }
+    }
 
-    // 5. GÉNÉRATION DU SOMMAIRE (Enfin sécurisée)
+    // 4. LE TUNNEL DE SÉCURITÉ
+    if (typeof launchApp === "function") {
+        await launchApp();
+    }
+
+    // 5. ACTIVATION DES SERVICES
+    const telLocal = localStorage.getItem('user_tel_id');
+    const estActif = localStorage.getItem('v32_active') === 'true';
+    if (telLocal && estActif) {
+        if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
+        if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
+    }
+
+    // 6. GÉNÉRATION DU SOMMAIRE
     if (typeof chargerSommaire === "function") chargerSommaire();
 
-    // 6. RESTAURATION DU THÈME
+    // 7. RESTAURATION DU THÈME
     const themeSauve = localStorage.getItem('theme_prefere');
     if (themeSauve && typeof changerTheme === "function") changerTheme(themeSauve);
 
@@ -3853,30 +3855,33 @@ window.addEventListener('load', async () => {
         }
     });
 
-    // 7. ÉCOUTEUR TECHNIQUE GÉOMÉTRIE
+    // 8. ÉCOUTEUR TECHNIQUE UNIQUE (Gère Tracé + Suppression + Zoom)
     document.addEventListener('pointerdown', (e) => {
         if (e.target.id !== 'geoCanvas') return;
+        
         const r = e.target.getBoundingClientRect(); 
         const zoom = window.zoomActuel || 1;
+        
         const x = (e.clientX - r.left) / zoom;
         const y = (e.clientY - r.top) / zoom;
         
         if (window.modeSuppression) {
             window.gererClicSuppression(x, y);
-        } else if (typeof handleInput === "function") {
-            handleInput(x, y);
+        } else {
+            if (typeof handleInput === "function") {
+                handleInput(x, y);
+            }
         }
     }); 
     
-    console.log("✅ Système Diouf Maths 5ème prêt et sécurisé.");
+    console.log("✅ Système Diouf Maths 5ème prêt.");
 });
 
 // --- REDIMENSIONNEMENT ---
 window.addEventListener('resize', () => {
     const area = document.getElementById('canvas-area');
     const canvas = document.getElementById('geoCanvas');
-    const geoCont = document.getElementById('geo-container');
-    if (canvas && area && geoCont && geoCont.style.display === 'flex') {
+    if (canvas && area && document.getElementById('geo-container').style.display === 'flex') {
         canvas.width = area.clientWidth;
         canvas.height = area.clientHeight;
         if (typeof refreshCanvas === "function") refreshCanvas();
