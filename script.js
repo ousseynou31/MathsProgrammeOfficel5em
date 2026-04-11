@@ -3760,8 +3760,6 @@ window.activerSuppression = function() {
     window.modeSuppression = !window.modeSuppression;
     const btn = document.getElementById('btn-poubelle');
     
-    console.log("Mode suppression :", window.modeSuppression); 
-
     if (btn) {
         if (window.modeSuppression) {
             btn.style.setProperty('background', '#b91c1c', 'important');
@@ -3770,26 +3768,20 @@ window.activerSuppression = function() {
             btn.style.background = ""; 
             btn.style.color = "";
         }
-    } else {
-        console.error("ERREUR : Le bouton avec l'ID 'btn-poubelle' est introuvable.");
     }
 };
 
 window.gererClicSuppression = function(x, y) {
     const indexPoint = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 20);
-
     if (indexPoint !== -1) {
         const pointASupprimer = points[indexPoint];
-        
         if (confirm(`Voulez-vous supprimer le point ${pointASupprimer.label} ?`)) {
             points.splice(indexPoint, 1);
-            
             if (window.elements) {
                 elements = elements.filter(el => 
                     el.type !== 'segment' || (el.p1 !== pointASupprimer && el.p2 !== pointASupprimer)
                 );
             }
-
             if (typeof refreshCanvas === "function") refreshCanvas();
             window.activerSuppression(); 
         }
@@ -3803,49 +3795,49 @@ window.addEventListener('load', async () => {
     console.log("🚀 Initialisation du moteur Maths 5em...");
 
     // --- ÉTAPE 0 : ALLUMAGE PRIORITAIRE DU VOYANT CLOUD ---
-    // On lance la surveillance avant tout pour éviter le voyant gris
     if (typeof surveillerConnexion === "function") {
         surveillerConnexion();
     }
 
-    // 1. AFFICHAGE IMMÉDIAT DE L'ID
+    // 1. VÉRIFICATION RADICALE DE LA SÉCURITÉ
+    // On récupère les états AVANT de décider d'afficher le sommaire
+    const telLocal = localStorage.getItem('user_tel_id');
+    const estActif = localStorage.getItem('v32_active') === 'true';
+
+    // On exécute la fonction d'affichage des écrans (Activation/Inscription/Hub)
+    if (typeof verifierEtatInitial === "function") {
+        await verifierEtatInitial();
+    }
+
+    // --- LE COUPE-CIRCUIT ---
+    // Si l'utilisateur n'est pas activé, on ARRÊTE le script ici.
+    // Cela empêche le chargement du sommaire et des cours.
+    if (!estActif || !telLocal) {
+        console.warn("🛑 Sécurité : Accès restreint. Chargement du sommaire annulé.");
+        return; 
+    }
+
+    // 2. PRÉPARATION DES OUTILS (Uniquement si autorisé)
     const devIdDisplay = document.getElementById('display-device-id');
     if (devIdDisplay && typeof getDeviceId === "function") {
         devIdDisplay.innerText = getDeviceId();
     }
 
-    // 2. PRÉPARATION DES OUTILS ADMIN
-    if (typeof initAdminTrigger === "function") {
-        initAdminTrigger();
-    }
+    if (typeof initAdminTrigger === "function") initAdminTrigger();
 
-    // 3. SYNCHRONISATION DES DONNÉES (Tarifs)
+    // 3. SYNCHRONISATION DES DONNÉES
     if (typeof chargerTarifs === "function") {
-        try {
-            await chargerTarifs();
-        } catch(e) { console.warn("Mode local activé."); }
+        try { await chargerTarifs(); } catch(e) { console.warn("Mode local."); }
     }
 
-    // 4. LE TUNNEL DE SÉCURITÉ ET NAVIGATION (Fusionné)
-    // On utilise verifierEtatInitial car il contient la logique de redirection
-    if (typeof verifierEtatInitial === "function") {
-        await verifierEtatInitial();
-    } else if (typeof launchApp === "function") {
-        await launchApp();
-    }
+    // 4. ACTIVATION DES SERVICES TEMPS RÉEL
+    if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
+    if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
 
-    // 5. ACTIVATION DES SERVICES (SIGNAL EN LIGNE)
-    const telLocal = localStorage.getItem('user_tel_id');
-    const estActif = localStorage.getItem('v32_active') === 'true';
-    if (telLocal && estActif) {
-        if (typeof activerSignalEnLigne === "function") activerSignalEnLigne();
-        if (typeof surveillerStatutEnDirect === "function") surveillerStatutEnDirect(telLocal);
-    }
-
-    // 6. GÉNÉRATION DU SOMMAIRE
+    // 5. GÉNÉRATION DU SOMMAIRE (Enfin sécurisée)
     if (typeof chargerSommaire === "function") chargerSommaire();
 
-    // 7. RESTAURATION DU THÈME
+    // 6. RESTAURATION DU THÈME
     const themeSauve = localStorage.getItem('theme_prefere');
     if (themeSauve && typeof changerTheme === "function") changerTheme(themeSauve);
 
@@ -3861,37 +3853,32 @@ window.addEventListener('load', async () => {
         }
     });
 
-    // 8. ÉCOUTEUR TECHNIQUE UNIQUE (Gère Tracé + Suppression + Zoom)
+    // 7. ÉCOUTEUR TECHNIQUE GÉOMÉTRIE
     document.addEventListener('pointerdown', (e) => {
         if (e.target.id !== 'geoCanvas') return;
-        
         const r = e.target.getBoundingClientRect(); 
         const zoom = window.zoomActuel || 1;
-        
         const x = (e.clientX - r.left) / zoom;
         const y = (e.clientY - r.top) / zoom;
         
         if (window.modeSuppression) {
             window.gererClicSuppression(x, y);
-        } else {
-            if (typeof handleInput === "function") {
-                handleInput(x, y);
-            }
+        } else if (typeof handleInput === "function") {
+            handleInput(x, y);
         }
     }); 
     
-    console.log("✅ Système Diouf Maths 5ème prêt.");
+    console.log("✅ Système Diouf Maths 5ème prêt et sécurisé.");
 });
 
 // --- REDIMENSIONNEMENT ---
 window.addEventListener('resize', () => {
     const area = document.getElementById('canvas-area');
     const canvas = document.getElementById('geoCanvas');
-    if (canvas && area && document.getElementById('geo-container') && document.getElementById('geo-container').style.display === 'flex') {
+    const geoCont = document.getElementById('geo-container');
+    if (canvas && area && geoCont && geoCont.style.display === 'flex') {
         canvas.width = area.clientWidth;
         canvas.height = area.clientHeight;
         if (typeof refreshCanvas === "function") refreshCanvas();
     }
 });
-
-
