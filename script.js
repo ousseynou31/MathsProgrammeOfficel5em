@@ -3128,26 +3128,31 @@ function verifierReponse(btn, indexCorrect, indexChoisi, aide) {
     const feedback = parent.nextElementSibling;
     const tousLesBtns = parent.querySelectorAll('button');
 
-    // Désactiver les boutons après le choix
     tousLesBtns.forEach(b => b.style.pointerEvents = "none");
-
     feedback.style.display = "block";
 
+    // Sécurité : Vérifier si l'aide existe
+    const detailCorrection = aide ? aide : "Explication non disponible.";
+
     if (indexChoisi === indexCorrect) {
-        btn.style.background = "#2ecc71"; // Vert
-        btn.style.borderColor = "#2ecc71";
-        // ON AJOUTE L'AIDE ICI AUSSI
-        feedback.innerHTML = `✅ **Bravo !** C'est la bonne réponse.<br><div style="margin-top:10px; color:#2c3e50; font-weight:normal; font-size:0.9em; background:#f9f9f9; padding:10px; border-radius:5px; border-left:4px solid #2ecc71">${aide}</div>`;
+        btn.style.background = "#2ecc71";
+        btn.style.color = "white";
+        feedback.innerHTML = `
+            <div style="margin-bottom:8px">✅ **Bravo !**</div>
+            <div style="color:#2c3e50; font-weight:normal; font-size:0.9em; background:#f1f5f9; padding:12px; border-radius:8px; border-left:5px solid #2ecc71">
+                ${detailCorrection}
+            </div>`;
         feedback.style.color = "#2ecc71";
     } else {
-        btn.style.background = "#e74c3c"; // Rouge
-        btn.style.borderColor = "#e74c3c";
-        // ON GARDE L'AIDE ICI
-        feedback.innerHTML = `❌ **Ce n'est pas tout à fait ça.**<br>La bonne réponse était : **${tousLesBtns[indexCorrect].innerText}**<br><div style="margin-top:10px; color:#2c3e50; font-weight:normal; font-size:0.9em; background:#f9f9f9; padding:10px; border-radius:5px; border-left:4px solid #e74c3c">${aide}</div>`;
+        btn.style.background = "#e74c3c";
+        btn.style.color = "white";
+        feedback.innerHTML = `
+            <div style="margin-bottom:8px">❌ **Oups...** La bonne réponse était : **${tousLesBtns[indexCorrect].innerText}**</div>
+            <div style="color:#2c3e50; font-weight:normal; font-size:0.9em; background:#f1f5f9; padding:12px; border-radius:8px; border-left:5px solid #e74c3c">
+                ${detailCorrection}
+            </div>`;
         feedback.style.color = "#e74c3c";
-        
-        // Montrer la bonne réponse avec une bordure verte
-        tousLesBtns[indexCorrect].style.border = "2px solid #2ecc71";
+        tousLesBtns[indexCorrect].style.border = "3px solid #2ecc71";
     }
 }
 function ouvrirDevoirs(event) {
