@@ -3122,6 +3122,7 @@ async function chargerLecon(id) {
 
 
 /** FONCTION DE VÉRIFICATION (Logique universelle) */
+/** FONCTION DE VÉRIFICATION AMÉLIORÉE */
 function verifierReponse(btn, indexCorrect, indexChoisi, aide) {
     const parent = btn.parentElement;
     const feedback = parent.nextElementSibling;
@@ -3135,15 +3136,18 @@ function verifierReponse(btn, indexCorrect, indexChoisi, aide) {
     if (indexChoisi === indexCorrect) {
         btn.style.background = "#2ecc71"; // Vert
         btn.style.borderColor = "#2ecc71";
-        feedback.innerHTML = "✅ **Bravo !** C'est la bonne réponse.";
+        // ON AJOUTE L'AIDE ICI AUSSI
+        feedback.innerHTML = `✅ **Bravo !** C'est la bonne réponse.<br><div style="margin-top:10px; color:#2c3e50; font-weight:normal; font-size:0.9em; background:#f9f9f9; padding:10px; border-radius:5px; border-left:4px solid #2ecc71">${aide}</div>`;
         feedback.style.color = "#2ecc71";
     } else {
         btn.style.background = "#e74c3c"; // Rouge
         btn.style.borderColor = "#e74c3c";
-        feedback.innerHTML = `❌ **Oups...** La bonne réponse était la ${indexCorrect + 1}. <br><small style="color:#cbd5e1">${aide}</small>`;
+        // ON GARDE L'AIDE ICI
+        feedback.innerHTML = `❌ **Ce n'est pas tout à fait ça.**<br>La bonne réponse était : **${tousLesBtns[indexCorrect].innerText}**<br><div style="margin-top:10px; color:#2c3e50; font-weight:normal; font-size:0.9em; background:#f9f9f9; padding:10px; border-radius:5px; border-left:4px solid #e74c3c">${aide}</div>`;
         feedback.style.color = "#e74c3c";
-        // Montrer la bonne réponse en vert
-        tousLesBtns[indexCorrect].style.border = "1px solid #2ecc71";
+        
+        // Montrer la bonne réponse avec une bordure verte
+        tousLesBtns[indexCorrect].style.border = "2px solid #2ecc71";
     }
 }
 function ouvrirDevoirs(event) {
