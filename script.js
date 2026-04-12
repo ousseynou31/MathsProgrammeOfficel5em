@@ -3455,6 +3455,7 @@ function lancerChronoEvaluation(secondes) {
 
 
 /** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
+/** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
 function chargerExos(id) {
     const corps = document.getElementById("overlay-body");
     if (!corps) return;
@@ -3493,23 +3494,23 @@ function chargerExos(id) {
                         </p>
                         <div style="display:grid; gap:10px;">
                             ${exo.options.map((opt, i) => `
-                                <label style="display:flex; align-items:center; gap:10px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:white; cursor:pointer; transition:0.3s;">
+                                <label class="label-option" style="display:flex; align-items:center; gap:10px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:white; cursor:pointer; transition:0.3s;">
                                     <input type="radio" name="q${index}" value="${i}" style="accent-color:#00d2ff; width:18px; height:18px;">
                                     <span>${opt}</span>
                                 </label>
                             `).join('')}
                         </div>
+                        <div class="feedback-zone" style="display:none; margin-top:15px; padding:15px; border-radius:10px; border-left:4px solid var(--gold); background:rgba(255,215,0,0.05);"></div>
                     </div>`;
             });
 
-            // --- SECTION BOUTONS MODIFIÉE ---
             htmlExos += `
                 <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; padding-bottom:50px;">
                     <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:20px; background:#00d2ff; color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);">
                         ✅ VALIDER ET VOIR MA NOTE
                     </button>
 
-                    <button id="btn-correction-exo" onclick="afficherCorrectionDetaillee()" disabled style="width:100%; padding:18px; background:#334155; color:rgba(255,255,255,0.2); border:none; border-radius:12px; font-weight:bold; cursor:not-allowed; font-size:1.1rem; transition:0.3s;">
+                    <button id="btn-correction-exo" onclick="afficherCorrectionDetaillee()" disabled style="width:100%; padding:18px; background:#334155; color:white; border:none; border-radius:12px; font-weight:bold; cursor:not-allowed; font-size:1.1rem; transition:0.3s;">
                         👁️ VOIR LA CORRECTION
                     </button>
 
