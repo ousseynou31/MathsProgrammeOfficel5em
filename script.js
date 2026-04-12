@@ -3594,7 +3594,7 @@ function afficherEcranResultat(score, total) {
     `;
 }
 function afficherCorrectionDetaillee() {
-    console.log("🛠️ Tentative d'affichage de la correction...");
+    console.log("🛠️ Tentative d'affichage de la correction avec détails...");
 
     // 1. Accès sécurisé à l'objet global
     const examen = window.examenEnCours;
@@ -3607,7 +3607,7 @@ function afficherCorrectionDetaillee() {
     if (!corps) corps = document.getElementById("overlay-body") || document.getElementById("conteneurSommaire");
     if (!corps) return;
 
-    // --- SÉCURITÉ : Si l'objet est vide, on affiche une erreur au lieu d'une page vide ---
+    // --- SÉCURITÉ ---
     if (!examen || !examen.questions || examen.questions.length === 0) {
         corps.innerHTML = `
             <div style="padding:40px; text-align:center; color:white;">
@@ -3631,39 +3631,45 @@ function afficherCorrectionDetaillee() {
             </div>
     `;
 
-    // 4. Génération des blocs (avec vérification de chaque question)
+    // 4. Génération des blocs
     examen.questions.forEach((q, index) => {
-        // Sécurité : vérifier que les options existent pour cette question
         if (!q.options) return;
 
         const estCorrect = q.reponseEleve === q.correct;
         
-        // On récupère le texte des options pour éviter les erreurs d'affichage
         const texteChoixEleve = (q.reponseEleve !== null && q.options[q.reponseEleve]) 
                                 ? q.options[q.reponseEleve] 
                                 : "Aucune réponse donnée";
         const texteBonneReponse = q.options[q.correct] || "Erreur de donnée";
 
+        // RÉCUPÉRATION DE L'AIDE (Détails pédagogiques)
+        const detailAide = q.aide ? q.aide : "Pas d'explication supplémentaire disponible.";
+
         html += `
-            <div class="glass-card" style="margin-bottom:20px; padding:20px; border-radius:15px; border:1px solid ${estCorrect ? '#27ae60' : '#e74c3c'}; background:rgba(255,255,255,0.02);">
+            <div class="glass-card" style="margin-bottom:25px; padding:20px; border-radius:15px; border:1px solid ${estCorrect ? '#27ae60' : '#e74c3c'}; background:rgba(255,255,255,0.02);">
                 <p style="font-size:1.1rem; margin-bottom:15px;">
                     <strong style="color:var(--gold);">Q${index + 1}.</strong> ${q.enonce}
                 </p>
                 
                 <div style="padding:15px; border-radius:10px; background:${estCorrect ? 'rgba(39, 174, 96, 0.1)' : 'rgba(231, 76, 60, 0.1)'};">
-                    <p style="color:${estCorrect ? '#2ecc71' : '#ff4757'}; margin:0; font-weight:bold;">
+                    <p style="color:${estCorrect ? '#2ecc71' : '#ff4757'}; margin:0 0 10px 0; font-weight:bold;">
                         ${estCorrect ? '✅ Bravo ! Réponse juste.' : '❌ Ce n\'est pas tout à fait ça.'}
                     </p>
                     
                     ${!estCorrect ? `
-                        <p style="margin:10px 0 5px 0; color:#94a3b8; font-size:0.95rem;">
+                        <p style="margin:5px 0 5px 0; color:#94a3b8; font-size:0.95rem;">
                             Ton choix : <span style="text-decoration:line-through; color:#e74c3c;">${texteChoixEleve}</span>
                         </p>
                     ` : ''}
 
-                    <p style="margin:8px 0 0 0; color:#2ecc71; font-weight:bold; font-size:1rem;">
+                    <p style="margin:5px 0 0 0; color:#2ecc71; font-weight:bold; font-size:1rem;">
                         ${estCorrect ? '✔️' : '👉'} La bonne réponse était : <span style="color:white;">${texteBonneReponse}</span>
                     </p>
+                </div>
+
+                <div style="margin-top:15px; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; border-left:4px solid var(--gold);">
+                    <p style="color:var(--gold); font-weight:bold; margin:0 0 5px 0; font-size:0.9rem;">💡 EXPLICATION :</p>
+                    <div style="color:#cbd5e1; font-size:0.95rem; line-height:1.5;">${detailAide}</div>
                 </div>
             </div>
         `;
@@ -3690,7 +3696,7 @@ function afficherCorrectionDetaillee() {
             throwOnError : false
         });
     }
-    console.log("✅ Correction injectée.");
+    console.log("✅ Correction avec explications injectée.");
 }
 /** VALIDE L'ÉVALUATION, ENVOIE AU PARENT ET PRÉPARE LA CORRECTION */
 /** VALIDE L'ÉVALUATION, ENVOIE AU PARENT ET PRÉPARE LA CORRECTION */
@@ -3703,18 +3709,23 @@ async function validerEvaluation() {
     }
 
     let scoreBrut = 0;
-    const questions = window.examenEnCours.questions; // Référence directe
+    const questions = window.examenEnCours.questions; 
     const totalQuestions = questions.length;
 
     // 2. Arrêt des timers
     if (window.chronoInterval) clearInterval(window.chronoInterval);
     if (window.examenEnCours.timer) clearInterval(window.examenEnCours.timer);
 
-    // 3. Calcul et STOCKAGE des réponses
+    // 3. Calcul, STOCKAGE des réponses et désactivation des inputs
     questions.forEach((q, index) => {
         const input = document.querySelector(`input[name="q${index}"]:checked`);
-        // On écrit directement dans l'objet window
+        const tousLesRadios = document.querySelectorAll(`input[name="q${index}"]`);
+        
+        // On enregistre le choix de l'élève
         q.reponseEleve = input ? parseInt(input.value) : null; 
+        
+        // On bloque les radios pour éviter les triches après validation
+        tousLesRadios.forEach(r => r.disabled = true);
         
         if (q.reponseEleve === q.correct) {
             scoreBrut++;
@@ -3733,28 +3744,35 @@ async function validerEvaluation() {
         const btnCorrection = document.getElementById("btn-correction-exo");
 
         if (btnValider && btnCorrection) {
+            // Transformation du bouton Valider en affichage de score
             btnValider.disabled = true;
             btnValider.style.background = "#1e293b";
             btnValider.style.color = "#64748b";
-            btnValider.innerHTML = `✅ SCORE : ${scoreBrut}/${totalQuestions}`;
+            btnValider.style.boxShadow = "none";
+            btnValider.innerHTML = `✅ SCORE FINAL : ${scoreBrut} / ${totalQuestions} (${noteSur20}/20)`;
 
-            // ALLUMAGE DU BOUTON CORRECTION
+            // ALLUMAGE DYNAMIQUE DU BOUTON CORRECTION
             btnCorrection.disabled = false;
-            btnCorrection.style.background = "var(--gold)"; 
-            btnCorrection.style.color = "black";
+            btnCorrection.style.background = "#2ecc71"; // Un vert éclatant pour attirer l'œil
+            btnCorrection.style.color = "white";
             btnCorrection.style.cursor = "pointer";
-            btnCorrection.style.boxShadow = "0 4px 15px rgba(255, 215, 0, 0.4)";
-            btnCorrection.innerHTML = "👁️ VOIR LA CORRECTION MAINTENANT";
+            btnCorrection.style.opacity = "1";
+            btnCorrection.style.boxShadow = "0 0 20px rgba(46, 204, 113, 0.4)";
+            btnCorrection.innerHTML = "👁️ VOIR LES EXPLICATIONS DÉTAILLÉES";
         }
 
-        const msg = (noteSur20 >= 10) ? "Bravo ! C'est enregistré. 🌟" : "C'est enregistré. Continue tes efforts ! 💪";
+        const msg = (noteSur20 >= 10) ? "Bravo ! C'est enregistré. 🌟" : "C'est enregistré. Regarde la correction pour progresser ! 💪";
         alert(`🎯 ${msg}\nNote : ${scoreBrut}/${totalQuestions} (${noteSur20}/20)`);
 
     } catch (e) {
         console.error("Erreur Firebase:", e);
         // On active quand même la correction même si Firebase échoue
         const btnC = document.getElementById("btn-correction-exo");
-        if (btnC) btnC.disabled = false;
+        if (btnC) {
+            btnC.disabled = false;
+            btnC.style.background = "#2ecc71";
+            btnC.style.color = "white";
+        }
     }
 }
 // MENU DES 3 TRAITS GAUCHE°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
