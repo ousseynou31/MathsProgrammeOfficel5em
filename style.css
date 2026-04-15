@@ -1401,3 +1401,26 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
     background: rgba(0, 0, 0, 0.7); /* Fond semi-transparent */
 }
 @keyframes blink { 50% { opacity: 0.5; } }
+/* Empêche les figures et le contenu de déborder */
+#firebase-content svg {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+    margin: 20px auto;
+}
+
+/* Force le plein écran sur l'overlay */
+#work-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: #0f172a !important; /* Couleur sombre Diouf 2026 */
+    z-index: 9999 !important;
+}
+
+#overlay-body {
+    width: 100% !important;
+    height: 100% !important;
+}
