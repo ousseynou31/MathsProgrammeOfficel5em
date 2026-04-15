@@ -3079,26 +3079,47 @@ async function chargerLecon(id) {
 
         if (data) {
             corps.innerHTML = `
-                <div id="cours-scroll-container" style="height: 100%; overflow-y: auto; padding: 20px;">
-                    <div class="anim-slide-up" style="color: var(--text); max-width: 800px; margin: auto;">
-                        <button onclick="ouvrirChapitre('${id}')" style="background: rgba(255,255,255,0.05); border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 50px; cursor: pointer; margin-bottom: 25px; font-size: 0.7rem;">
+                <style>
+                    /* Force le contenu à ne jamais déborder */
+                    #firebase-content {
+                        width: 100%;
+                        overflow-x: hidden;
+                    }
+                    /* Rend les figures SVG responsives : elles s'adaptent à la largeur sans dépasser */
+                    #firebase-content svg {
+                        max-width: 100% !important;
+                        height: auto !important;
+                        display: block;
+                        margin: 25px auto;
+                    }
+                    /* Ajustement pour les tableaux s'il y en a dans le cours */
+                    #firebase-content table {
+                        width: 100% !important;
+                        display: block;
+                        overflow-x: auto;
+                    }
+                </style>
+
+                <div id="cours-scroll-container" style="height: 100%; overflow-y: auto; padding: 20px; width: 100%;">
+                    <div class="anim-slide-up" style="color: var(--text); max-width: 1000px; width: 95%; margin: auto;">
+                        
+                        <button onclick="ouvrirChapitre('${id}')" style="background: rgba(255,255,255,0.05); border: 1px solid var(--gold); color: var(--gold); padding: 10px 20px; border-radius: 50px; cursor: pointer; margin-bottom: 25px; font-size: 0.8rem; font-weight: bold;">
                             ← RETOUR AU MENU
                         </button>
 
                         <div style="text-align: center; margin-bottom: 40px;">
-                            <h2 class="glow-text" style="font-size: 1.8rem; letter-spacing: 4px; margin-bottom: 5px;">${data.titre.toUpperCase()}</h2>
-                            <p style="color: #64748b; font-size: 0.7rem; text-transform: uppercase;">Chapitre ${id} • ${data.niveau}</p>
-                            <div style="width: 40px; height: 2px; background: var(--gold); margin: 15px auto;"></div>
+                            <h2 class="glow-text" style="font-size: 2.2rem; letter-spacing: 4px; margin-bottom: 5px; text-transform: uppercase;">${data.titre}</h2>
+                            <p style="color: #64748b; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Chapitre ${id} • ${data.niveau}</p>
+                            <div style="width: 60px; height: 3px; background: var(--gold); margin: 20px auto; border-radius: 10px;"></div>
                         </div>
 
                         <div id="firebase-content">${data.contenu_html}</div>
 
-                        <div style="text-align: center; margin-top: 40px;">
-                            <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="width: 100%; max-width: 350px;">
-                                <span>FAIRE LES EXERCICES</span>
+                        <div style="text-align: center; margin-top: 50px; padding-bottom: 80px;">
+                            <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="width: 100%; max-width: 400px; padding: 20px; font-size: 1.1rem;">
+                                📝 FAIRE LES EXERCICES DU CHAPITRE
                             </button>
                         </div>
-                        <div style="height: 60px;"></div>
                     </div>
                 </div>`;
 
@@ -3112,14 +3133,13 @@ async function chargerLecon(id) {
             });
 
         } else {
-            corps.innerHTML = `<div style="text-align:center; padding:100px;"><h3>🚧 Chapitre en rédaction...</h3></div>`;
+            corps.innerHTML = `<div style="text-align:center; padding:100px; color:var(--gold);"><h3>🚧 Chapitre en rédaction...</h3></div>`;
         }
     } catch (error) {
         console.error("Erreur Firebase:", error);
         corps.innerHTML = `<div style="text-align:center; padding:100px; color:red;">Erreur de connexion.</div>`;
     }
 }
-
 
 /** FONCTION DE VÉRIFICATION (Logique universelle) */
 /** FONCTION DE VÉRIFICATION AMÉLIORÉE */
