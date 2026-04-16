@@ -3481,6 +3481,7 @@ function lancerChronoEvaluation(secondes) {
 
 /** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
  /** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
+/** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
 function chargerExos(id) {
     const corps = document.getElementById("overlay-body");
     if (!corps) return;
@@ -3494,9 +3495,8 @@ function chargerExos(id) {
 
     if (window.chronoInterval) clearInterval(window.chronoInterval);
     
-    // Loader centré
     corps.innerHTML = `
-        <div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--gold);">
+        <div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--gold); background:#1a1c23;">
             <div class="anim-pulse">🚀 PRÉPARATION DE VOS 10 EXERCICES...</div>
         </div>`;
 
@@ -3508,18 +3508,20 @@ function chargerExos(id) {
 
             let htmlExos = `
                 <style>
-                    /* Style pour forcer le plein écran et la réactivité */
                     #exos-wrapper {
                         width: 100%;
                         height: 100%;
                         background: #1a1c23;
                         overflow-y: auto;
                         display: block;
+                        padding: 0;
+                        margin: 0;
                     }
-                    .full-container {
-                        width: 100%;
-                        max-width: 1200px; /* Agrandissement de la zone de lecture */
-                        margin: 0 auto;
+                    /* CONTENEUR DIMENSION MAXIMALE */
+                    .full-container-ultra {
+                        width: 100% !important;
+                        max-width: 100% !important; /* On casse la limite des 1200px */
+                        margin: 0;
                         padding: 20px;
                         box-sizing: border-box;
                     }
@@ -3527,15 +3529,24 @@ function chargerExos(id) {
                         background: rgba(255, 255, 255, 0.03);
                         border: 1px solid rgba(255, 255, 255, 0.1);
                         border-radius: 15px;
-                        padding: 30px;
-                        margin-bottom: 25px;
+                        padding: 25px;
+                        margin-bottom: 20px;
+                        width: 100%;
+                        box-sizing: border-box;
+                    }
+                    .options-grid {
+                        display: grid;
+                        /* Utilise tout l'espace : colonnes larges sur PC, une seule sur mobile */
+                        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+                        gap: 15px;
+                        width: 100%;
                     }
                     .label-option {
                         display: flex;
                         align-items: center;
                         gap: 15px;
-                        padding: 15px;
-                        border-radius: 10px;
+                        padding: 18px;
+                        border-radius: 12px;
                         border: 1px solid rgba(255, 255, 255, 0.1);
                         background: rgba(255, 255, 255, 0.05);
                         color: white;
@@ -3543,56 +3554,60 @@ function chargerExos(id) {
                         transition: 0.3s;
                     }
                     .label-option:hover {
-                        background: rgba(0, 210, 255, 0.1);
+                        background: rgba(0, 210, 255, 0.15);
                         border-color: #00d2ff;
                     }
                 </style>
 
                 <div id="exos-wrapper" class="anim-slide-up">
-                    <div id="barre-chrono" style="position: sticky; top: 0; z-index: 1000; background: rgba(26, 28, 35, 0.95); padding: 20px; border-bottom: 2px solid #00d2ff; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px);">
-                        <div style="color:#00d2ff; font-weight:bold; font-size:1.2rem; letter-spacing:1px;">⏱️ TEMPS : <span id="timer-display">10:00</span></div>
-                        <button onclick="closeWorkOverlay()" style="background:none; border:none; color:white; font-size:30px; cursor:pointer;">&times;</button>
+                    <div id="barre-chrono" style="position: sticky; top: 0; z-index: 1000; background: rgba(26, 28, 35, 0.98); padding: 20px; border-bottom: 2px solid #00d2ff; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px);">
+                        <div style="color:#00d2ff; font-weight:bold; font-size:1.3rem;">⏱️ CHRONO : <span id="timer-display">10:00</span></div>
+                        <button onclick="closeWorkOverlay()" style="background:none; border:none; color:white; font-size:35px; cursor:pointer; padding:0 10px;">&times;</button>
                     </div>
 
-                    <div class="full-container">
-                        <h2 style="color:var(--gold); margin:20px 0; text-align:center; text-transform:uppercase; letter-spacing:3px;">🎯 ENTRAÎNEMENT : ${id}</h2>
-                        <p style="text-align:center; opacity:0.6; margin-bottom:40px;">Répondez aux 10 questions pour valider ce chapitre.</p>
+                    <div class="full-container-ultra">
+                        <h2 style="color:var(--gold); margin:20px 0; text-align:center; text-transform:uppercase; letter-spacing:4px; font-size:1.8rem;">🎯 SESSION D'EXERCICES : ${id}</h2>
+                        
+                        <div id="liste-questions-container" style="width: 100%;">
             `;
 
             examenEnCours.questions.forEach((exo, index) => {
                 htmlExos += `
                     <div class="glass-card">
-                        <p style="color:white; font-size:1.2rem; margin-bottom:20px; line-height:1.6;">
-                            <span style="color:var(--gold); font-weight:bold; font-size:1.3rem;">Q${index + 1}.</span> ${exo.enonce}
+                        <p style="color:white; font-size:1.3rem; margin-bottom:25px; line-height:1.5;">
+                            <span style="color:#00d2ff; font-weight:bold; font-size:1.4rem;">QUESTION ${index + 1}</span><br>
+                            ${exo.enonce}
                         </p>
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px;">
+                        <div class="options-grid">
                             ${exo.options.map((opt, i) => `
                                 <label class="label-option">
-                                    <input type="radio" name="q${index}" value="${i}" style="accent-color:#00d2ff; width:20px; height:20px;">
-                                    <span style="font-size:1.05rem;">${opt}</span>
+                                    <input type="radio" name="q${index}" value="${i}" style="accent-color:#00d2ff; width:22px; height:22px; cursor:pointer;">
+                                    <span style="font-size:1.1rem;">${opt}</span>
                                 </label>
                             `).join('')}
                         </div>
-                        <div class="feedback-zone" style="display:none; margin-top:20px; padding:20px; border-radius:10px; border-left:5px solid var(--gold); background:rgba(255,215,0,0.05); color:white;"></div>
+                        <div class="feedback-zone" style="display:none; margin-top:20px; padding:20px; border-radius:12px; border-left:6px solid var(--gold); background:rgba(255,215,0,0.05); color:white; font-size:1.1rem;"></div>
                     </div>`;
             });
 
             htmlExos += `
-                        <div style="margin-top:50px; display:flex; flex-direction:column; gap:20px; padding-bottom:100px;">
-                            <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:25px; background:#00d2ff; color:black; border:none; border-radius:15px; font-weight:900; cursor:pointer; font-size:1.4rem; box-shadow: 0 10px 25px rgba(0, 210, 255, 0.3);">
-                                ✅ VALIDER ET VOIR MA NOTE
+                        </div>
+
+                        <div style="margin: 50px 0; display:flex; flex-direction:column; gap:20px; padding-bottom:120px;">
+                            <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:30px; background:#00d2ff; color:black; border:none; border-radius:15px; font-weight:900; cursor:pointer; font-size:1.5rem; letter-spacing:2px; box-shadow: 0 10px 30px rgba(0, 210, 255, 0.4);">
+                                ✅ ENREGISTRER MES RÉPONSES ET VOIR MA NOTE
                             </button>
 
-                            <button id="btn-correction-exo" onclick="afficherCorrectionDetaillee()" disabled style="width:100%; padding:20px; background:#334155; color:rgba(255,255,255,0.4); border:none; border-radius:15px; font-weight:bold; cursor:not-allowed; font-size:1.1rem;">
-                                👁️ VOIR LA CORRECTION
+                            <button id="btn-correction-exo" onclick="afficherCorrectionDetaillee()" disabled style="width:100%; padding:20px; background:#334155; color:rgba(255,255,255,0.3); border:none; border-radius:15px; font-weight:bold; cursor:not-allowed; font-size:1.2rem;">
+                                👁️ ACCÉDER À LA CORRECTION DÉTAILLÉE
                             </button>
 
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                                <button onclick="chargerExos('${id}')" style="padding:15px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:12px; cursor:pointer; font-weight:bold;">
-                                    🔄 AUTRES QUESTIONS
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                                <button onclick="chargerExos('${id}')" style="padding:20px; background:rgba(255,255,255,0.07); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:12px; cursor:pointer; font-weight:bold; font-size:1rem;">
+                                    🔄 CHANGER LES QUESTIONS
                                 </button>
-                                <button onclick="closeWorkOverlay()" style="padding:15px; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border:1px solid #e74c3c; border-radius:12px; cursor:pointer; font-weight:bold;">
-                                    ❌ QUITTER
+                                <button onclick="closeWorkOverlay()" style="padding:20px; background:rgba(231, 76, 60, 0.15); color:#ff5e5e; border:1px solid #e74c3c; border-radius:12px; cursor:pointer; font-weight:bold; font-size:1rem;">
+                                    ❌ ABANDONNER L'EXERCICE
                                 </button>
                             </div>
                         </div>
@@ -3611,8 +3626,6 @@ function chargerExos(id) {
                     throwOnError : false
                 });
             }
-        } else {
-            corps.innerHTML = `<div style="padding:100px; text-align:center; color:white;"><h3>Aucun exercice disponible.</h3></div>`;
         }
     });
 }
