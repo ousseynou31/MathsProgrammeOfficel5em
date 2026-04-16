@@ -3480,22 +3480,7 @@ function lancerChronoEvaluation(secondes) {
 
 
 /** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
-
-
-function afficherEcranResultat(score, total) {
-    // FORCE le choix du conteneur selon le type d'examen pour éviter les conflits
-    let corps;
-    if (examenEnCours.type === 'EXERCICE') {
-        corps = document.getElementById("overlay-body");
-    } else {
-        corps = document.getElementById("conteneurSommaire");
-    }
-    
-    // Si le conteneur spécifique n'est pas trouvé, on cherche l'autre par sécurité
-    if (!corps) corps = document.getElementById("overlay-body") || document.getElementById("conteneurSommaire");
-    if (!corps) return;
-
-    // Calcul de la note/** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
+ // Calcul de la note/** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
 function chargerExos(id) {
     const corps = document.getElementById("overlay-body");
     if (!corps) return;
@@ -3605,6 +3590,19 @@ function chargerExos(id) {
         }
     });
 }
+
+function afficherEcranResultat(score, total) {
+    // FORCE le choix du conteneur selon le type d'examen pour éviter les conflits
+    let corps;
+    if (examenEnCours.type === 'EXERCICE') {
+        corps = document.getElementById("overlay-body");
+    } else {
+        corps = document.getElementById("conteneurSommaire");
+    }
+    
+    // Si le conteneur spécifique n'est pas trouvé, on cherche l'autre par sécurité
+    if (!corps) corps = document.getElementById("overlay-body") || document.getElementById("conteneurSommaire");
+    if (!corps) return;
     const noteSur20 = Math.round((score / total) * 20);
     
     // Remonter en haut pour voir l'émoji immédiatement
