@@ -3372,7 +3372,7 @@ function chargerDevoir(id) {
                 .slice(0, 20);
 
             let html = `
-                <div style="padding:20px; background:#1a1c23; min-height:100vh; position:relative;">
+                <div style="width: 100%; max-width: 100vw; padding: 20px; background: #1a1c23; min-height: 100vh; position: relative; box-sizing: border-box;">
                     <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 20px -20px;">
                         <div style="color:var(--gold); font-weight:bold; font-size:1.1rem;">⏳ TEMPS : <span id="timer-display">45:00</span></div>
                         <button onclick="fermerModalDevoir()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
