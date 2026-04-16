@@ -3341,6 +3341,12 @@ function chargerDevoir(id) {
     const corps = document.getElementById("conteneurSommaire");
     if (!corps) return;
 
+// --- FORCER LA LARGEUR TOTALE ICI ---
+    corps.style.width = "100%";
+    corps.style.maxWidth = "100%";
+    corps.style.padding = "0"; 
+    // --------------
+    
     // 1. INITIALISATION DE L'OBJET GLOBAL (Crucial pour la correction)
     window.examenEnCours = {
         id: id,
@@ -3372,7 +3378,8 @@ function chargerDevoir(id) {
                 .slice(0, 20);
 
             let html = `
-                <div style="width: 100%; max-width: 100vw; padding: 20px; background: #1a1c23; min-height: 100vh; position: relative; box-sizing: border-box;">
+            <div id="wrapper-devoir" style="width: 100vw; margin: 0; padding: 20px; background: #1a1c23; min-height: 100vh; box-sizing: border-box;">
+               
                     <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 20px -20px;">
                         <div style="color:var(--gold); font-weight:bold; font-size:1.1rem;">⏳ TEMPS : <span id="timer-display">45:00</span></div>
                         <button onclick="fermerModalDevoir()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
