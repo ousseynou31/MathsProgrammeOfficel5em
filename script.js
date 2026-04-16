@@ -3064,6 +3064,7 @@ window.onload = () => {
     chargerSommaire();
 };
 /** CHARGE LE CONTENU DEPUIS FIREBASE + RENDU MATHS */
+/** CHARGE LE CONTENU DEPUIS FIREBASE + RENDU MATHS */
 async function chargerLecon(id) {
     const corps = document.getElementById("overlay-body");
     if (!corps) return;
@@ -3079,47 +3080,26 @@ async function chargerLecon(id) {
 
         if (data) {
             corps.innerHTML = `
-                <style>
-                    /* Force le contenu à ne jamais déborder */
-                    #firebase-content {
-                        width: 100%;
-                        overflow-x: hidden;
-                    }
-                    /* Rend les figures SVG responsives : elles s'adaptent à la largeur sans dépasser */
-                    #firebase-content svg {
-                        max-width: 100% !important;
-                        height: auto !important;
-                        display: block;
-                        margin: 25px auto;
-                    }
-                    /* Ajustement pour les tableaux s'il y en a dans le cours */
-                    #firebase-content table {
-                        width: 100% !important;
-                        display: block;
-                        overflow-x: auto;
-                    }
-                </style>
-
-                <div id="cours-scroll-container" style="height: 100%; overflow-y: auto; padding: 20px; width: 100%;">
-                    <div class="anim-slide-up" style="color: var(--text); max-width: 1000px; width: 95%; margin: auto;">
-                        
-                        <button onclick="ouvrirChapitre('${id}')" style="background: rgba(255,255,255,0.05); border: 1px solid var(--gold); color: var(--gold); padding: 10px 20px; border-radius: 50px; cursor: pointer; margin-bottom: 25px; font-size: 0.8rem; font-weight: bold;">
+                <div id="cours-scroll-container" style="height: 100%; overflow-y: auto; padding: 20px;">
+                    <div class="anim-slide-up" style="color: var(--text); max-width: 800px; margin: auto;">
+                        <button onclick="ouvrirChapitre('${id}')" style="background: rgba(255,255,255,0.05); border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 50px; cursor: pointer; margin-bottom: 25px; font-size: 0.7rem;">
                             ← RETOUR AU MENU
                         </button>
 
                         <div style="text-align: center; margin-bottom: 40px;">
-                            <h2 class="glow-text" style="font-size: 2.2rem; letter-spacing: 4px; margin-bottom: 5px; text-transform: uppercase;">${data.titre}</h2>
-                            <p style="color: #64748b; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Chapitre ${id} • ${data.niveau}</p>
-                            <div style="width: 60px; height: 3px; background: var(--gold); margin: 20px auto; border-radius: 10px;"></div>
+                            <h2 class="glow-text" style="font-size: 1.8rem; letter-spacing: 4px; margin-bottom: 5px;">${data.titre.toUpperCase()}</h2>
+                            <p style="color: #64748b; font-size: 0.7rem; text-transform: uppercase;">Chapitre ${id} • ${data.niveau}</p>
+                            <div style="width: 40px; height: 2px; background: var(--gold); margin: 15px auto;"></div>
                         </div>
 
                         <div id="firebase-content">${data.contenu_html}</div>
 
-                        <div style="text-align: center; margin-top: 50px; padding-bottom: 80px;">
-                            <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="width: 100%; max-width: 400px; padding: 20px; font-size: 1.1rem;">
-                                📝 FAIRE LES EXERCICES DU CHAPITRE
+                        <div style="text-align: center; margin-top: 40px;">
+                            <button class="btn-modern-2026" onclick="chargerExos('${id}')" style="width: 100%; max-width: 350px;">
+                                <span>FAIRE LES EXERCICES</span>
                             </button>
                         </div>
+                        <div style="height: 60px;"></div>
                     </div>
                 </div>`;
 
@@ -3133,13 +3113,14 @@ async function chargerLecon(id) {
             });
 
         } else {
-            corps.innerHTML = `<div style="text-align:center; padding:100px; color:var(--gold);"><h3>🚧 Chapitre en rédaction...</h3></div>`;
+            corps.innerHTML = `<div style="text-align:center; padding:100px;"><h3>🚧 Chapitre en rédaction...</h3></div>`;
         }
     } catch (error) {
         console.error("Erreur Firebase:", error);
         corps.innerHTML = `<div style="text-align:center; padding:100px; color:red;">Erreur de connexion.</div>`;
     }
 }
+
 
 /** FONCTION DE VÉRIFICATION (Logique universelle) */
 /** FONCTION DE VÉRIFICATION AMÉLIORÉE */
@@ -3480,7 +3461,6 @@ function lancerChronoEvaluation(secondes) {
 
 
 /** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
- /** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
 /** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
 function chargerExos(id) {
     const corps = document.getElementById("overlay-body");
@@ -3494,11 +3474,7 @@ function chargerExos(id) {
     };
 
     if (window.chronoInterval) clearInterval(window.chronoInterval);
-    
-    corps.innerHTML = `
-        <div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--gold); background:#1a1c23;">
-            <div class="anim-pulse">🚀 PRÉPARATION DE VOS 10 EXERCICES...</div>
-        </div>`;
+    corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Préparation de vos 10 exercices...</div>`;
 
     database.ref('exercices/' + id).once('value').then((snapshot) => {
         const exercices = snapshot.val();
@@ -3507,112 +3483,53 @@ function chargerExos(id) {
             examenEnCours.questions = [...listeBrute].sort(() => Math.random() - 0.5).slice(0, 10);
 
             let htmlExos = `
-                <style>
-                    #exos-wrapper {
-                        width: 100%;
-                        height: 100%;
-                        background: #1a1c23;
-                        overflow-y: auto;
-                        display: block;
-                        padding: 0;
-                        margin: 0;
-                    }
-                    /* CONTENEUR DIMENSION MAXIMALE */
-                    .full-container-ultra {
-                        width: 100% !important;
-                        max-width: 100% !important; /* On casse la limite des 1200px */
-                        margin: 0;
-                        padding: 20px;
-                        box-sizing: border-box;
-                    }
-                    .glass-card {
-                        background: rgba(255, 255, 255, 0.03);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        border-radius: 15px;
-                        padding: 25px;
-                        margin-bottom: 20px;
-                        width: 100%;
-                        box-sizing: border-box;
-                    }
-                    .options-grid {
-                        display: grid;
-                        /* Utilise tout l'espace : colonnes larges sur PC, une seule sur mobile */
-                        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-                        gap: 15px;
-                        width: 100%;
-                    }
-                    .label-option {
-                        display: flex;
-                        align-items: center;
-                        gap: 15px;
-                        padding: 18px;
-                        border-radius: 12px;
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        background: rgba(255, 255, 255, 0.05);
-                        color: white;
-                        cursor: pointer;
-                        transition: 0.3s;
-                    }
-                    .label-option:hover {
-                        background: rgba(0, 210, 255, 0.15);
-                        border-color: #00d2ff;
-                    }
-                </style>
-
-                <div id="exos-wrapper" class="anim-slide-up">
-                    <div id="barre-chrono" style="position: sticky; top: 0; z-index: 1000; background: rgba(26, 28, 35, 0.98); padding: 20px; border-bottom: 2px solid #00d2ff; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px);">
-                        <div style="color:#00d2ff; font-weight:bold; font-size:1.3rem;">⏱️ CHRONO : <span id="timer-display">10:00</span></div>
-                        <button onclick="closeWorkOverlay()" style="background:none; border:none; color:white; font-size:35px; cursor:pointer; padding:0 10px;">&times;</button>
+                <div style="padding: 20px; max-width: 800px; margin: auto; background:#1a1c23; color:white;" class="anim-slide-up">
+                    <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid #00d2ff; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 20px -20px;">
+                        <div style="color:#00d2ff; font-weight:bold; font-size:1.1rem;">⏱️ TEMPS : <span id="timer-display">10:00</span></div>
+                        <button onclick="closeWorkOverlay()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
                     </div>
-
-                    <div class="full-container-ultra">
-                        <h2 style="color:var(--gold); margin:20px 0; text-align:center; text-transform:uppercase; letter-spacing:4px; font-size:1.8rem;">🎯 SESSION D'EXERCICES : ${id}</h2>
-                        
-                        <div id="liste-questions-container" style="width: 100%;">
+                    <h2 style="color:var(--gold); margin:30px 0 10px 0; text-align:center;">🎯 ENTRAÎNEMENT : ${id}</h2>
+                    <p style="text-align:center; opacity:0.6; margin-bottom:30px;">Répondez aux 10 questions avant la fin du temps.</p>
             `;
 
             examenEnCours.questions.forEach((exo, index) => {
                 htmlExos += `
-                    <div class="glass-card">
-                        <p style="color:white; font-size:1.3rem; margin-bottom:25px; line-height:1.5;">
-                            <span style="color:#00d2ff; font-weight:bold; font-size:1.4rem;">QUESTION ${index + 1}</span><br>
-                            ${exo.enonce}
+                    <div class="glass-card" style="margin-bottom:25px; padding:20px; border-radius:15px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1);">
+                        <p style="color:white; font-size:1.1rem; margin-bottom:15px;">
+                            <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${exo.enonce}
                         </p>
-                        <div class="options-grid">
+                        <div style="display:grid; gap:10px;">
                             ${exo.options.map((opt, i) => `
-                                <label class="label-option">
-                                    <input type="radio" name="q${index}" value="${i}" style="accent-color:#00d2ff; width:22px; height:22px; cursor:pointer;">
-                                    <span style="font-size:1.1rem;">${opt}</span>
+                                <label class="label-option" style="display:flex; align-items:center; gap:10px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:white; cursor:pointer; transition:0.3s;">
+                                    <input type="radio" name="q${index}" value="${i}" style="accent-color:#00d2ff; width:18px; height:18px;">
+                                    <span>${opt}</span>
                                 </label>
                             `).join('')}
                         </div>
-                        <div class="feedback-zone" style="display:none; margin-top:20px; padding:20px; border-radius:12px; border-left:6px solid var(--gold); background:rgba(255,215,0,0.05); color:white; font-size:1.1rem;"></div>
+                        <div class="feedback-zone" style="display:none; margin-top:15px; padding:15px; border-radius:10px; border-left:4px solid var(--gold); background:rgba(255,215,0,0.05);"></div>
                     </div>`;
             });
 
             htmlExos += `
-                        </div>
+                <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; padding-bottom:50px;">
+                    <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:20px; background:#00d2ff; color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);">
+                        ✅ VALIDER ET VOIR MA NOTE
+                    </button>
 
-                        <div style="margin: 50px 0; display:flex; flex-direction:column; gap:20px; padding-bottom:120px;">
-                            <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:30px; background:#00d2ff; color:black; border:none; border-radius:15px; font-weight:900; cursor:pointer; font-size:1.5rem; letter-spacing:2px; box-shadow: 0 10px 30px rgba(0, 210, 255, 0.4);">
-                                ✅ ENREGISTRER MES RÉPONSES ET VOIR MA NOTE
-                            </button>
+                    <button id="btn-correction-exo" onclick="afficherCorrectionDetaillee()" disabled style="width:100%; padding:18px; background:#334155; color:white; border:none; border-radius:12px; font-weight:bold; cursor:not-allowed; font-size:1.1rem; transition:0.3s;">
+                        👁️ VOIR LA CORRECTION
+                    </button>
 
-                            <button id="btn-correction-exo" onclick="afficherCorrectionDetaillee()" disabled style="width:100%; padding:20px; background:#334155; color:rgba(255,255,255,0.3); border:none; border-radius:15px; font-weight:bold; cursor:not-allowed; font-size:1.2rem;">
-                                👁️ ACCÉDER À LA CORRECTION DÉTAILLÉE
-                            </button>
-
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                                <button onclick="chargerExos('${id}')" style="padding:20px; background:rgba(255,255,255,0.07); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:12px; cursor:pointer; font-weight:bold; font-size:1rem;">
-                                    🔄 CHANGER LES QUESTIONS
-                                </button>
-                                <button onclick="closeWorkOverlay()" style="padding:20px; background:rgba(231, 76, 60, 0.15); color:#ff5e5e; border:1px solid #e74c3c; border-radius:12px; cursor:pointer; font-weight:bold; font-size:1rem;">
-                                    ❌ ABANDONNER L'EXERCICE
-                                </button>
-                            </div>
-                        </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <button onclick="chargerExos('${id}')" style="padding:12px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer;">
+                            🔄 AUTRES QUESTIONS
+                        </button>
+                        <button onclick="closeWorkOverlay()" style="padding:12px; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border:1px solid #e74c3c; border-radius:10px; cursor:pointer;">
+                            ❌ QUITTER
+                        </button>
                     </div>
-                </div>`;
+                </div>
+            </div>`;
 
             corps.innerHTML = htmlExos;
             lancerChronoEvaluation(10 * 60);
@@ -3626,9 +3543,12 @@ function chargerExos(id) {
                     throwOnError : false
                 });
             }
+        } else {
+            corps.innerHTML = `<div style="padding:50px; text-align:center;">Aucun exercice disponible.</div>`;
         }
     });
 }
+
 function afficherEcranResultat(score, total) {
     // FORCE le choix du conteneur selon le type d'examen pour éviter les conflits
     let corps;
