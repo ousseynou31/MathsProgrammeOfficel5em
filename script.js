@@ -3335,102 +3335,101 @@ function verrouillerEtEnvoyerAutomatiquement() {
 
 /** * CHARGE LE DEVOIR DEPUIS FIREBASE + GÈRE L'INTERFACE + CHRONO 45 MIN
  */
-
 function chargerDevoir(id) {
-    const corps = document.getElementById("conteneurSommaire");
-    if (!corps) return;
+    const corps = document.getElementById("conteneurSommaire");
+    if (!corps) return;
 
-    // 1. INITIALISATION DE L'OBJET GLOBAL (Crucial pour la correction)
-    window.examenEnCours = {
-        id: id,
-        type: "DEVOIR", // Changement de type ici
-        questions: [],
-        timer: null,
-        tempsRestant: 45 * 60 // 45 minutes
-    };
+    // 1. INITIALISATION DE L'OBJET GLOBAL
+    window.examenEnCours = {
+        id: id,
+        type: "DEVOIR",
+        questions: [],
+        timer: null,
+        tempsRestant: 45 * 60 
+    };
 
-    if (window.chronoInterval) clearInterval(window.chronoInterval);
+    if (window.chronoInterval) clearInterval(window.chronoInterval);
 
-    corps.style.backgroundColor = "#1a1c23"; 
-    corps.style.color = "white";
-    corps.style.minHeight = "100%";
-    
-    corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Préparation de votre évaluation...</div>`;
+    corps.style.backgroundColor = "#1a1c23"; 
+    corps.style.color = "white";
+    corps.style.minHeight = "100%";
+    
+    corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Préparation de votre évaluation...</div>`;
 
-    const cheminFirebase = 'DEVOIRS/evaluation_' + id;
+    const cheminFirebase = 'DEVOIRS/evaluation_' + id;
 
-    database.ref(cheminFirebase).once('value').then((snapshot) => {
-        const banqueQuestions = snapshot.val();
+    database.ref(cheminFirebase).once('value').then((snapshot) => {
+        const banqueQuestions = snapshot.val();
 
-        if (banqueQuestions) {
-            const listeComplete = Array.isArray(banqueQuestions) ? banqueQuestions : Object.values(banqueQuestions);
-            
-            // On mélange et on prend 20 questions
-            window.examenEnCours.questions = [...listeComplete]
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 20);
+        if (banqueQuestions) {
+            const listeComplete = Array.isArray(banqueQuestions) ? banqueQuestions : Object.values(banqueQuestions);
+            
+            window.examenEnCours.questions = [...listeComplete]
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 20);
 
-            let html = `
-                <div style="width: 100%; max-width: 100%; margin: 0; padding: 10px; background: #1a1c23; min-height: 100vh; box-sizing: border-box;">
-                    <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 20px -20px;">
-                        <div style="color:var(--gold); font-weight:bold; font-size:1.1rem;">⏳ TEMPS : <span id="timer-display">45:00</span></div>
-                        <button onclick="fermerModalDevoir()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
-                    </div>
+            // CONTENEUR PRINCIPAL ÉLARGI (width: 100% et max-width: 100%)
+            let html = `
+                <div style="width: 100%; max-width: 100%; margin: 0; padding: 20px; background: #1a1c23; min-height: 100vh; box-sizing: border-box;">
+                    <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 20px -20px;">
+                        <div style="color:var(--gold); font-weight:bold; font-size:1.1rem;">⏳ TEMPS : <span id="timer-display">45:00</span></div>
+                        <button onclick="fermerModalDevoir()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+                    </div>
 
-                    <h2 style="text-align:center; color:var(--gold); font-size:1.5rem; text-transform:uppercase; margin-top:20px;">📝 ÉVALUATION : ${id}</h2>
-                    <p style="text-align:center; opacity:0.7; color:#a4b0be;">Session de 20 questions — Bonne chance !</p>
-                    <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
-            `;
+                    <h2 style="text-align:center; color:var(--gold); font-size:1.5rem; text-transform:uppercase; margin-top:20px;">📝 ÉVALUATION : ${id}</h2>
+                    <p style="text-align:center; opacity:0.7; color:#a4b0be;">Session de 20 questions — Bonne chance !</p>
+                    <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
+            `;
 
-            window.examenEnCours.questions.forEach((q, index) => {
-                html += `
-                   <div class="glass-card" style="width: 100%; max-width: 100%; margin-bottom: 20px; padding: 30px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; box-sizing: border-box;">
+            window.examenEnCours.questions.forEach((q, index) => {
+                // GLASS CARD ÉLARGIE
+                html += `
+                    <div class="glass-card" style="width: 100%; max-width: 100%; margin-bottom: 25px; padding: 30px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; box-sizing: border-box;">
+                        <p style="font-size:1.2rem; margin-bottom:15px; color:white;">
+                            <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${q.enonce}
+                        </p>
+                        <div style="display:grid; gap:12px;">
+                            ${q.options.map((opt, i) => `
+                                <label style="display:flex; align-items:center; gap:12px; padding:15px; background:rgba(255,255,255,0.03); border-radius:10px; cursor:pointer; transition:0.3s; border:1px solid rgba(255,255,255,0.05); color:#e1e4e8;">
+                                    <input type="radio" name="q${index}" value="${i}" style="width:20px; height:20px; accent-color:var(--gold);"> 
+                                    <span style="font-size:1.1rem;">${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>`;
+            });
+
+            html += `
+                <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; padding-bottom:50px; width: 100%;">
+                    <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:20px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.3rem; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">
+                        ✅ VALIDER ET ENREGISTRER
+                    </button>
+                    
+                    <button id="btn-correction-exo" onclick="afficherCorrectionDetaillee()" disabled style="width:100%; padding:18px; background:#334155; color:rgba(255,255,255,0.2); border:none; border-radius:12px; font-weight:bold; cursor:not-allowed; font-size:1.1rem;">
+                        👁️ VOIR LA CORRECTION
+                    </button>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <button onclick="chargerDevoir('${id}')" style="padding:15px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer;">
+                            🔄 AUTRES QUESTIONS
+                        </button>
+                        <button onclick="fermerModalDevoir()" style="padding:15px; background:#e74c3c; color:white; border:none; border-radius:10px; cursor:pointer;">
+                            ❌ QUITTER
+                        </button>
+                    </div>
+                </div>
             </div>`;
-                        <p style="font-size:1.1rem; margin-bottom:15px; color:white;">
-                            <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${q.enonce}
-                        </p>
-                        <div style="display:grid; gap:12px;">
-                            ${q.options.map((opt, i) => `
-                                <label style="display:flex; align-items:center; gap:12px; padding:12px; background:rgba(255,255,255,0.03); border-radius:10px; cursor:pointer; transition:0.3s; border:1px solid rgba(255,255,255,0.05); color:#e1e4e8;">
-                                    <input type="radio" name="q${index}" value="${i}" style="width:18px; height:18px; accent-color:var(--gold);"> 
-                                    <span>${opt}</span>
-                                </label>
-                            `).join('')}
-                        </div>
-                    </div>`;
-            });
 
-            // --- SECTION BOUTONS ADAPTÉE (Identique à l'exercice) ---
-            html += `
-                <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; padding-bottom:50px;">
-                    <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:18px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">
-                        ✅ VALIDER ET ENREGISTRER
-                    </button>
-                    
-                    <button id="btn-correction-exo" onclick="afficherCorrectionDetaillee()" disabled style="width:100%; padding:18px; background:#334155; color:rgba(255,255,255,0.2); border:none; border-radius:12px; font-weight:bold; cursor:not-allowed; font-size:1.1rem; transition:0.3s;">
-                        👁️ VOIR LA CORRECTION
-                    </button>
+            corps.innerHTML = html;
+            lancerChronoEvaluation(45 * 60);
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        <button onclick="chargerDevoir('${id}')" style="padding:12px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer;">
-                            🔄 AUTRES QUESTIONS
-                        </button>
-                        <button onclick="fermerModalDevoir()" style="padding:12px; background:#e74c3c; color:white; border:none; border-radius:10px; cursor:pointer;">
-                            ❌ QUITTER
-                        </button>
-                    </div>
-                </div>
-            </div>`;
-
-            corps.innerHTML = html;
-            lancerChronoEvaluation(45 * 60);
-
-            if (window.renderMathInElement) {
-                renderMathInElement(corps, { delimiters: [{left: '$', right: '$', display: false}] });
-            }
-        }
-    });
+            if (window.renderMathInElement) {
+                renderMathInElement(corps, { delimiters: [{left: '$', right: '$', display: false}] });
+            }
+        }
+    });
 }
+
 function lancerChronoEvaluation(secondes) {
     let temps = secondes;
     const affichage = document.getElementById('timer-display');
