@@ -3420,7 +3420,7 @@ function chargerDevoir(id) {
                         </button>
                     </div>
                 </div>
-            </div>`;
+            </div>`; 
 
             corps.innerHTML = html;
             lancerChronoEvaluation(45 * 60);
