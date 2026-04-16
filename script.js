@@ -3385,7 +3385,7 @@ function chargerDevoir(id) {
 
             window.examenEnCours.questions.forEach((q, index) => {
                 html += `
-                    // Dans la boucle forEach des questions, modifiez le style de la glass-card :
+                    
                     <div class="glass-card" style="width: 100%; margin-bottom: 25px; padding: 30px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; box-sizing: border-box;">
                         <p style="font-size:1.1rem; margin-bottom:15px; color:white;">
                             <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${q.enonce}
