@@ -3481,6 +3481,7 @@ function lancerChronoEvaluation(secondes) {
 
 /** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
  // Calcul de la note/** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
+/** CHARGE LES EXERCICES DEPUIS FIREBASE + RENDU MATHS + LIMITATION 10 QUESTIONS + CHRONO */
 function chargerExos(id) {
     const corps = document.getElementById("overlay-body");
     if (!corps) return;
@@ -3506,66 +3507,64 @@ function chargerExos(id) {
 
             let htmlExos = `
                 <style>
-                    /* Empêche les figures de déborder dans les cartes d'exercices */
-                    .glass-card svg {
-                        max-width: 100% !important;
-                        height: auto !important;
-                        display: block;
-                        margin: 15px auto;
+                    .glass-card svg { max-width: 100% !important; height: auto !important; display: block; margin: 15px auto; }
+                    .label-option:hover { background: rgba(0, 210, 255, 0.1) !important; border-color: #00d2ff !important; }
+                    
+                    /* Correction réactivité bouton */
+                    #btn-valider-exo {
+                        position: relative;
+                        z-index: 10;
+                        pointer-events: auto !important;
+                        -webkit-tap-highlight-color: transparent;
                     }
-                    /* Style au survol des options */
-                    .label-option:hover {
-                        background: rgba(0, 210, 255, 0.1) !important;
-                        border-color: #00d2ff !important;
-                    }
+                    #btn-valider-exo:active { transform: scale(0.98); }
                 </style>
 
-                <div id="exos-scroll-container" style="height: 100%; overflow-y: auto; background:#1a1c23; width:100%;">
+                <div id="exos-scroll-container" style="height: 100%; width: 100%; overflow-y: scroll; background:#1a1c23; display: block;">
                     <div style="padding: 20px; max-width: 1000px; width: 95%; margin: auto; color:white;" class="anim-slide-up">
                         
-                        <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid #00d2ff; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 30px -20px;">
-                            <div style="color:#00d2ff; font-weight:bold; font-size:1.1rem; letter-spacing:1px;">⏱️ TEMPS : <span id="timer-display">10:00</span></div>
-                            <button onclick="closeWorkOverlay()" style="background:none; border:none; color:white; font-size:28px; cursor:pointer; line-height:1;">&times;</button>
+                        <div id="barre-chrono" style="position: sticky; top: 0; z-index: 1000; background: rgba(26, 28, 35, 0.98); padding: 15px; border-bottom: 2px solid #00d2ff; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 30px -20px;">
+                            <div style="color:#00d2ff; font-weight:bold; font-size:1.1rem;">⏱️ TEMPS : <span id="timer-display">10:00</span></div>
+                            <button onclick="closeWorkOverlay()" style="background:none; border:none; color:white; font-size:28px; cursor:pointer;">&times;</button>
                         </div>
 
-                        <h2 style="color:var(--gold); margin-bottom:10px; text-align:center; text-transform:uppercase; letter-spacing:2px;">🎯 ENTRAÎNEMENT : ${id}</h2>
-                        <p style="text-align:center; opacity:0.6; margin-bottom:40px;">Résolvez ces 10 défis pour maîtriser le chapitre.</p>
+                        <h2 style="color:var(--gold); text-align:center; text-transform:uppercase; letter-spacing:2px;">🎯 ENTRAÎNEMENT : ${id}</h2>
+                        <p style="text-align:center; opacity:0.6; margin-bottom:40px;">Répondez à toutes les questions avant la validation.</p>
             `;
 
             examenEnCours.questions.forEach((exo, index) => {
                 htmlExos += `
-                    <div class="glass-card" style="margin-bottom:30px; padding:25px; border-radius:15px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                        <p style="color:white; font-size:1.15rem; margin-bottom:20px; line-height:1.5;">
-                            <span style="color:#00d2ff; font-weight:bold; margin-right:8px;">Q${index + 1}.</span> ${exo.enonce}
+                    <div class="glass-card" style="margin-bottom:30px; padding:25px; border-radius:15px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);">
+                        <p style="color:white; font-size:1.15rem; margin-bottom:20px;">
+                            <span style="color:#00d2ff; font-weight:bold;">Q${index + 1}.</span> ${exo.enonce}
                         </p>
-                        
                         <div style="display:grid; gap:12px;">
                             ${exo.options.map((opt, i) => `
-                                <label class="label-option" style="display:flex; align-items:center; gap:12px; padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:#e1e4e8; cursor:pointer; transition:all 0.2s ease;">
-                                    <input type="radio" name="q${index}" value="${i}" style="accent-color:#00d2ff; width:20px; height:20px; cursor:pointer;">
-                                    <span style="font-size:1rem;">${opt}</span>
+                                <label class="label-option" style="display:flex; align-items:center; gap:12px; padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); cursor:pointer;">
+                                    <input type="radio" name="q${index}" value="${i}" style="width:20px; height:20px;">
+                                    <span>${opt}</span>
                                 </label>
                             `).join('')}
                         </div>
-                        <div class="feedback-zone" style="display:none; margin-top:20px; padding:18px; border-radius:12px; border-left:5px solid var(--gold); background:rgba(255,215,0,0.07); font-size:0.95rem; line-height:1.6;"></div>
+                        <div class="feedback-zone" style="display:none; margin-top:20px; padding:18px; border-radius:12px; border-left:5px solid var(--gold); background:rgba(255,215,0,0.07);"></div>
                     </div>`;
             });
 
             htmlExos += `
-                        <div style="margin-top:50px; display:flex; flex-direction:column; gap:15px; padding-bottom:80px;">
-                            <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:22px; background:#00d2ff; color:black; border:none; border-radius:12px; font-weight:900; cursor:pointer; font-size:1.3rem; letter-spacing:1px; box-shadow: 0 6px 20px rgba(0, 210, 255, 0.4); transition: 0.3s;">
+                        <div style="margin-top:50px; display:flex; flex-direction:column; gap:15px; padding-bottom:100px;">
+                            <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:22px; background:#00d2ff; color:black; border:none; border-radius:12px; font-weight:900; cursor:pointer; font-size:1.3rem; box-shadow: 0 6px 20px rgba(0, 210, 255, 0.4);">
                                 ✅ VALIDER ET VOIR MA NOTE
                             </button>
 
-                            <button id="btn-correction-exo" disabled onclick="afficherCorrectionDetaillee()" style="width:100%; padding:18px; background:#334155; color:rgba(255,255,255,0.3); border:none; border-radius:12px; font-weight:bold; cursor:not-allowed; font-size:1.1rem;">
+                            <button id="btn-correction-exo" disabled onclick="afficherCorrectionDetaillee()" style="width:100%; padding:18px; background:#334155; color:rgba(255,255,255,0.3); border:none; border-radius:12px; font-weight:bold; cursor:not-allowed;">
                                 👁️ VOIR LA CORRECTION DÉTAILLÉE
                             </button>
 
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:10px;">
-                                <button onclick="chargerExos('${id}')" style="padding:15px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer; font-weight:bold;">
-                                    🔄 NOUVELLES QUESTIONS
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                                <button onclick="chargerExos('${id}')" style="padding:15px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer;">
+                                    🔄 NOUVEAU TEST
                                 </button>
-                                <button onclick="closeWorkOverlay()" style="padding:15px; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border:1px solid #e74c3c; border-radius:10px; cursor:pointer; font-weight:bold;">
+                                <button onclick="closeWorkOverlay()" style="padding:15px; background:rgba(231, 76, 60, 0.1); color:#e74c3c; border:1px solid #e74c3c; border-radius:10px; cursor:pointer;">
                                     ❌ QUITTER
                                 </button>
                             </div>
@@ -3585,12 +3584,9 @@ function chargerExos(id) {
                     throwOnError : false
                 });
             }
-        } else {
-            corps.innerHTML = `<div style="padding:100px; text-align:center; color:var(--gold);"><h3>Aucun exercice disponible pour ce chapitre.</h3></div>`;
         }
     });
 }
-
 function afficherEcranResultat(score, total) {
     // FORCE le choix du conteneur selon le type d'examen pour éviter les conflits
     let corps;
