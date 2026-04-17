@@ -3679,36 +3679,20 @@ function chargerDevoir(id) {
     const corps = document.getElementById("conteneurSommaire");
     if (!corps) return;
 
-    // --- FORCE BRUTE : ON BRISE LES LIMITES DU PARENT ---
-    // On remonte au parent pour être sûr qu'il ne bloque rien
-    if (corps.parentElement) {
-        corps.parentElement.style.maxWidth = "100%";
-        corps.parentElement.style.padding = "0";
-        corps.parentElement.style.margin = "0";
-    }
-
-    // On force le conteneur lui-même à être immense
-    corps.style.width = "100vw";
-    corps.style.maxWidth = "100vw";
-    corps.style.marginLeft = "0";
-    corps.style.marginRight = "0";
-    corps.style.padding = "0";
-    corps.style.left = "0";
-    // ---------------------------------------------------
-
+    // 1. INITIALISATION DE L'OBJET GLOBAL (Crucial pour la correction)
     window.examenEnCours = {
         id: id,
-        type: "DEVOIR",
+        type: "DEVOIR", // Changement de type ici
         questions: [],
         timer: null,
-        tempsRestant: 45 * 60 
+        tempsRestant: 45 * 60 // 45 minutes
     };
 
     if (window.chronoInterval) clearInterval(window.chronoInterval);
 
     corps.style.backgroundColor = "#1a1c23"; 
     corps.style.color = "white";
-    corps.style.minHeight = "100vh";
+    corps.style.minHeight = "100%";
     
     corps.innerHTML = `<div style="text-align:center; padding-top:50px; color:var(--gold);">🚀 Préparation de votre évaluation...</div>`;
 
@@ -3720,47 +3704,61 @@ function chargerDevoir(id) {
         if (banqueQuestions) {
             const listeComplete = Array.isArray(banqueQuestions) ? banqueQuestions : Object.values(banqueQuestions);
             
+            // On mélange et on prend 20 questions
             window.examenEnCours.questions = [...listeComplete]
                 .sort(() => Math.random() - 0.5)
                 .slice(0, 20);
 
-            // On utilise width: 100% sur TOUS les éléments internes
             let html = `
-                <div id="super-container" style="width: 100%; margin: 0; padding: 20px; background: #1a1c23; min-height: 100vh; box-sizing: border-box; display: block;">
-                    
-                    <div id="barre-chrono" style="position: sticky; top: 0; z-index: 1000; background: rgba(26, 28, 35, 0.98); padding: 15px; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-between; align-items: center; margin: -20px -20px 20px -20px;">
+                <div style="padding:20px; background:#1a1c23; min-height:100vh; position:relative;">
+                    <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 20px -20px;">
                         <div style="color:var(--gold); font-weight:bold; font-size:1.1rem;">⏳ TEMPS : <span id="timer-display">45:00</span></div>
                         <button onclick="fermerModalDevoir()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
                     </div>
 
-                    <h2 style="text-align:center; color:var(--gold); font-size:1.8rem; text-transform:uppercase; margin: 30px 0;">📝 ÉVALUATION : ${id}</h2>
+                    <h2 style="text-align:center; color:var(--gold); font-size:1.5rem; text-transform:uppercase; margin-top:20px;">📝 ÉVALUATION : ${id}</h2>
+                    <p style="text-align:center; opacity:0.7; color:#a4b0be;">Session de 20 questions — Bonne chance !</p>
                     <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
             `;
 
             window.examenEnCours.questions.forEach((q, index) => {
                 html += `
-                    <div class="glass-card" style="width: 100% !important; margin-bottom: 30px; padding: 40px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; box-sizing: border-box; display: block;">
-                        <p style="font-size:1.3rem; margin-bottom:20px; color:white; line-height:1.6;">
+                    <div class="glass-card" style="margin-bottom:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:15px;">
+                        <p style="font-size:1.1rem; margin-bottom:15px; color:white;">
                             <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${q.enonce}
                         </p>
-                        <div style="display:grid; grid-template-columns: 1fr; gap:15px; width: 100%;">
+                        <div style="display:grid; gap:12px;">
                             ${q.options.map((opt, i) => `
-                                <label style="display:flex; align-items:center; gap:15px; padding:20px; background:rgba(255,255,255,0.03); border-radius:12px; cursor:pointer; border:1px solid rgba(255,255,255,0.05); width: 100%; box-sizing: border-box;">
-                                    <input type="radio" name="q${index}" value="${i}" style="width:22px; height:22px; accent-color:var(--gold);"> 
-                                    <span style="font-size:1.2rem; color:#e1e4e8;">${opt}</span>
+                                <label style="display:flex; align-items:center; gap:12px; padding:12px; background:rgba(255,255,255,0.03); border-radius:10px; cursor:pointer; transition:0.3s; border:1px solid rgba(255,255,255,0.05); color:#e1e4e8;">
+                                    <input type="radio" name="q${index}" value="${i}" style="width:18px; height:18px; accent-color:var(--gold);"> 
+                                    <span>${opt}</span>
                                 </label>
                             `).join('')}
                         </div>
                     </div>`;
             });
 
+            // --- SECTION BOUTONS ADAPTÉE (Identique à l'exercice) ---
             html += `
-                    <div style="width: 100%; padding-bottom: 100px;">
-                         <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:25px; background:#27ae60; color:white; border:none; border-radius:15px; font-weight:bold; cursor:pointer; font-size:1.5rem; margin-bottom:20px;">
-                            ✅ VALIDER ET ENREGISTRER
+                <div style="margin-top:40px; display:flex; flex-direction:column; gap:15px; padding-bottom:50px;">
+                    <button id="btn-valider-exo" onclick="validerEvaluation()" style="width:100%; padding:18px; background:#27ae60; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.2rem; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">
+                        ✅ VALIDER ET ENREGISTRER
+                    </button>
+                    
+                    <button id="btn-correction-exo" onclick="afficherCorrectionDetaillee()" disabled style="width:100%; padding:18px; background:#334155; color:rgba(255,255,255,0.2); border:none; border-radius:12px; font-weight:bold; cursor:not-allowed; font-size:1.1rem; transition:0.3s;">
+                        👁️ VOIR LA CORRECTION
+                    </button>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <button onclick="chargerDevoir('${id}')" style="padding:12px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer;">
+                            🔄 AUTRES QUESTIONS
+                        </button>
+                        <button onclick="fermerModalDevoir()" style="padding:12px; background:#e74c3c; color:white; border:none; border-radius:10px; cursor:pointer;">
+                            ❌ QUITTER
                         </button>
                     </div>
-                </div>`;
+                </div>
+            </div>`;
 
             corps.innerHTML = html;
             lancerChronoEvaluation(45 * 60);
@@ -3809,11 +3807,11 @@ window.addEventListener('load', async () => {
         await launchApp();
     }
 
-    // 5. ACTIVATION DES SERVICES
+    // 5. ACTIVATION DES SERVICES 
     const telLocal = localStorage.getItem('user_tel_id');
     const estActif = localStorage.getItem('v32_active') === 'true';
     
-    // --- CONDITION DE SÉCURITÉ STRICTE ---
+    // --- CONDITION DE SÉCURITÉ STRICTE --- 
     if (!estActif || !telLocal) {
         console.warn("🔒 Accès non activé : arrêt du chargement des menus.");
         return; // ON ARRÊTE TOUT ICI si le compte est supprimé ou non actif
