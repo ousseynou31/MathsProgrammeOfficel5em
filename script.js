@@ -3368,7 +3368,7 @@ function chargerDevoir(id) {
                 .sort(() => Math.random() - 0.5)
                 .slice(0, 20);
 
-            // CONTENEUR PRINCIPAL ÉLARGI (width: 100% et max-width: 100%)
+            // --- CONTENEUR PRINCIPAL (Largeur 100% sans limite) ---
             let html = `
                 <div style="width: 100%; max-width: 100%; margin: 0; padding: 20px; background: #1a1c23; min-height: 100vh; box-sizing: border-box;">
                     <div id="barre-chrono" style="position: sticky; top: 0; z-index: 100; background: rgba(26, 28, 35, 0.95); padding: 15px; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); margin: -20px -20px 20px -20px;">
@@ -3382,17 +3382,29 @@ function chargerDevoir(id) {
             `;
 
             window.examenEnCours.questions.forEach((q, index) => {
-                // GLASS CARD ÉLARGIE
+                // --- GLASS CARD ADAPTATIVE (Flex + height: auto) ---
                 html += `
-                    <div class="glass-card" style="width: 100%; max-width: 100%; margin-bottom: 25px; padding: 30px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; box-sizing: border-box;">
-                        <p style="font-size:1.2rem; margin-bottom:15px; color:white;">
+                    <div class="glass-card" style="
+                        width: 100%; 
+                        max-width: 100%; 
+                        margin-bottom: 25px; 
+                        padding: 30px; 
+                        background: rgba(255,255,255,0.05); 
+                        border: 1px solid rgba(255,255,255,0.1); 
+                        border-radius: 15px; 
+                        box-sizing: border-box;
+                        display: flex;
+                        flex-direction: column;
+                        height: auto;
+                    ">
+                        <p style="font-size:1.2rem; margin-bottom:20px; color:white; line-height:1.6;">
                             <span style="color:var(--gold); font-weight:bold;">Q${index + 1}.</span> ${q.enonce}
                         </p>
-                        <div style="display:grid; gap:12px;">
+                        <div style="display:grid; gap:12px; margin-top: auto;">
                             ${q.options.map((opt, i) => `
                                 <label style="display:flex; align-items:center; gap:12px; padding:15px; background:rgba(255,255,255,0.03); border-radius:10px; cursor:pointer; transition:0.3s; border:1px solid rgba(255,255,255,0.05); color:#e1e4e8;">
                                     <input type="radio" name="q${index}" value="${i}" style="width:20px; height:20px; accent-color:var(--gold);"> 
-                                    <span style="font-size:1.1rem;">${opt}</span>
+                                    <span style="font-size:1.1rem; line-height:1.4;">${opt}</span>
                                 </label>
                             `).join('')}
                         </div>
@@ -3429,7 +3441,6 @@ function chargerDevoir(id) {
         }
     });
 }
-
 function lancerChronoEvaluation(secondes) {
     let temps = secondes;
     const affichage = document.getElementById('timer-display');
