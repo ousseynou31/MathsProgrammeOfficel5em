@@ -1424,3 +1424,26 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
     width: 100% !important;
     height: 100% !important;
 }
+
+/* TRÈS RAPIDE (GPU) */
+.slide-next {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-out;
+}
+
+/* TRÈS LENT (CPU - force le recalcul de toute la page) */
+.slide-next {
+  left: -100%;
+  transition: left 0.3s ease-out;
+}
+.card-exercice {
+  /* 1. Ne rend que ce qui est visible ou proche de l'être */
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 400px; /* Réserve une taille estimée pour éviter les sauts */
+
+  /* 2. Isole le calcul du layout pour que chaque exo soit indépendant */
+  contain: layout style paint;
+
+  /* 3. Prépare le GPU pour les transitions de réponse (vrai/faux) */
+  will-change: transform, opacity;
+}
