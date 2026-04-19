@@ -760,20 +760,21 @@
 </div>
 
 
-   <div id="page-test-positionnement" class="modal-systeme" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; z-index: 100000; overflow-y: auto; color: white; padding: 20px 0;">
-    <div style="width: 95%; max-width: 850px; background: #1e293b; margin: auto; padding: 30px; border-radius: 20px; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+
+
+<div id="page-test-positionnement" class="modal-systeme" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; z-index: 100000; overflow-y: auto; color: white; padding: 20px 0;">
+    <div style="width: 95%; max-width: 850px; background: #1e293b; margin: auto; padding: 30px; border-radius: 20px; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5); min-height: calc(100vh - 40px);">
         
         <div style="text-align: center; margin-bottom: 30px; position: relative;">
-    <button onclick="fermerTestPositionnement()" style="position: absolute; top: 0; right: 0; background: #334155; color: white; border: none; border-radius: 8px; padding: 8px 15px; cursor: pointer; font-size: 0.8em;">
-        QUITTER ×
-    </button>
+            <button onclick="fermerTestPositionnement()" style="position: absolute; top: 0; right: 0; background: #334155; color: white; border: none; border-radius: 8px; padding: 8px 15px; cursor: pointer; font-size: 0.8em;">
+                QUITTER ×
+            </button>
 
-    <h1 style="color: #60a5fa; margin: 0;">📝 TEST DE POSITIONNEMENT</h1>
-    <p style="color: #94a3b8;">Répondez aux 20 questions pour évaluer votre niveau initial.</p>
-</div>
+            <h1 style="color: #60a5fa; margin: 0;">📝 TEST DE POSITIONNEMENT</h1>
+            <p style="color: #94a3b8;">Répondez aux 20 questions pour évaluer votre niveau initial.</p>
+        </div>
 
-        <form id="form-test-position">
-            <h3 style="color: #fbbf24; border-bottom: 1px solid #334155; padding-bottom: 10px;">I. VRAI OU FAUX</h3>
+        <form id="form-test-position" style="padding-bottom: 100px;"> <h3 style="color: #fbbf24; border-bottom: 1px solid #334155; padding-bottom: 10px;">I. VRAI OU FAUX</h3>
             <div class="q-block" style="margin: 15px 0;">
                 <p>1. La règle graduée sert uniquement à tracer des lignes droites.</p>
                 <label><input type="radio" name="q1" value="0"> Vrai</label> &nbsp;
@@ -843,44 +844,46 @@
             <h3 style="color: #fbbf24; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-top: 30px;">III. COMPLÉTER (ÉCRIRE)</h3>
             <div class="q-block" style="margin: 15px 0;">
                 <p>12. La droite perpendiculaire passant par le milieu d'un segment est la : <br>
-                <input type="text" id="q12" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+                <input type="text" id="q12" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:5px; width:100%; max-width:300px;"></p>
             </div>
             <div class="q-block" style="margin: 15px 0;">
                 <p>13. Un angle inférieur à 90° est un angle : <br>
-                <input type="text" id="q13" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+                <input type="text" id="q13" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:5px; width:100%; max-width:300px;"></p>
             </div>
             <div class="q-block" style="margin: 15px 0;">
                 <p>15. La ligne courbe dont tous les points sont à égale distance du centre est le : <br>
-                <input type="text" id="q15" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+                <input type="text" id="q15" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:5px; width:100%; max-width:300px;"></p>
             </div>
             <div class="q-block" style="margin: 15px 0;">
                 <p>16. Périmètre du cercle : P = 2 x <b>...</b> x r <br>
-                <input type="text" id="q16" placeholder="Symbole ou nom" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+                <input type="text" id="q16" placeholder="Symbole ou nom" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:5px; width:100%; max-width:300px;"></p>
             </div>
             <div class="q-block" style="margin: 15px 0;">
                 <p>18. Dans une fraction, le chiffre du haut est le : <br>
-                <input type="text" id="q18" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+                <input type="text" id="q18" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:5px; width:100%; max-width:300px;"></p>
             </div>
             <div class="q-block" style="margin: 15px 0;">
                 <p>20. Un solide à deux bases circulaires et un rectangle courbé est un : <br>
-                <input type="text" id="q20" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+                <input type="text" id="q20" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:5px; width:100%; max-width:300px;"></p>
             </div>
             <div class="q-block" style="margin: 15px 0;">
                 <p>11. Symbole d'appartenance à une droite : <br>
-                <input type="text" id="q11" placeholder="∈ ?" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:100px;"></p>
+                <input type="text" id="q11" placeholder="∈ ?" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:5px; width:100px;"></p>
             </div>
             <div class="q-block" style="margin: 15px 0;">
                 <p>14. Pour multiplier des fractions, on multiplie les : <br>
-                <input type="text" id="q14" style="background:#0f172a; color:white; border:1px solid #334155; padding:5px; border-radius:5px; width:200px;"></p>
+                <input type="text" id="q14" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:5px; width:100%; max-width:300px;"></p>
             </div>
 
-            <button type="button" onclick="corrigerTest()" style="margin-top: 30px; width: 100%; padding: 20px; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.2em;">
+            <button type="button" onclick="corrigerTest()" style="margin: 40px 0; width: 100%; padding: 20px; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.2em; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);">
                 VALIDER ET ENVOYER LE RÉSULTAT
             </button>
         </form>
     </div>
 </div>
 
+
+    
 
 
     <div id="modalDevoir" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
